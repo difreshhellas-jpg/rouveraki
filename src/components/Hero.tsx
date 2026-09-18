@@ -46,7 +46,7 @@ export default function Hero() {
   }`;
 
   return (
-    <section className="relative isolate flex min-h-[100svh] items-end overflow-hidden">
+    <section className="relative isolate flex min-h-[100svh] items-end overflow-hidden [contain:paint]">
       <style dangerouslySetInnerHTML={{ __html: keyframes }} />
 
       {/* --- image / gradient layers ------------------------------------ */}
@@ -93,7 +93,7 @@ export default function Hero() {
         className="relative mx-auto w-full max-w-content px-4 pb-16 pt-32 text-white sm:px-6 sm:pb-24"
         style={{ paddingBottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
       >
-        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-white/85">
+        <p className="eyebrow flex items-center gap-2 !text-white/85">
           {open !== null && (
             <>
               <span
@@ -126,10 +126,7 @@ export default function Hero() {
           <Link href="/menu" className="btn-primary px-8 text-base">
             {t("hero.cta")}
           </Link>
-          <a
-            href="#daypart"
-            className="btn border-2 border-white/70 px-7 text-base text-white hover:bg-white/10"
-          >
+          <a href="#daypart" className="btn-glass px-7 text-base">
             {t("hero.secondaryCta")}
           </a>
         </div>

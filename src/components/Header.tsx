@@ -62,12 +62,15 @@ export default function Header() {
         {t("nav.skipToContent")}
       </a>
 
+      {/*
+        Translucent chrome: content scrolls underneath and shows through the
+        blur. No hard 1px border; the separation is the material itself. Over
+        the hero it is fully transparent so the photo runs edge to edge.
+      */}
       <header
         className={clsx(
-          "sticky top-0 z-50 transition-colors duration-300",
-          scrolled
-            ? "border-b border-line bg-sand/90 backdrop-blur-md"
-            : "bg-transparent",
+          "sticky top-0 z-50 transition-[background-color,box-shadow] duration-300",
+          scrolled ? "glass shadow-card" : "bg-transparent",
         )}
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >

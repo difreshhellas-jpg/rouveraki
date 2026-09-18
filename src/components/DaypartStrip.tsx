@@ -1,19 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { photo, PHOTOS } from "@/lib/images";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { CATEGORIES } from "@/lib/brand";
 import Reveal from "./Reveal";
+import Tilt from "./Tilt";
 
 /**
  * Three cards saying "we are a café, a grill house and a bar" without any live
  * clock logic. Each links straight to the first menu category of its daypart,
  * so the storytelling and the navigation are the same click.
  */
+/** Each card leads with a verified photo of what that part of the day is. */
 const DAYPARTS = [
-  { id: "morning", accent: "from-[#b07a1e] to-[#e0ab55]", icon: CupIcon },
-  { id: "grill", accent: "from-[#8d3d1f] to-[#c2703f]", icon: FlameIcon },
-  { id: "evening", accent: "from-[#123449] to-[#3c6c85]", icon: GlassIcon },
+  { id: "morning", photo: PHOTOS.coffee, icon: CupIcon },
+  { id: "grill", photo: PHOTOS.gyrosPita, icon: FlameIcon },
+  { id: "evening", photo: PHOTOS.cocktails, icon: GlassIcon },
 ] as const;
 
 export default function DaypartStrip() {
@@ -38,15 +42,25 @@ export default function DaypartStrip() {
           const Icon = d.icon;
           return (
             <Reveal key={d.id} delayMs={i * 60}>
+              <Tilt className="h-full rounded-card">
               <Link
                 href={`/menu#${first?.slug ?? ""}`}
-                className="group card flex h-full flex-col overflow-hidden transition-shadow duration-200 hover:shadow-lift"
+                className="group card card-tappable flex h-full flex-col overflow-hidden"
               >
-                <div
-                  className={`flex h-32 items-end bg-gradient-to-br ${d.accent} p-5 text-white`}
-                  aria-hidden="true"
-                >
-                  <Icon />
+                {/* Photo banner with a bottom scrim so the icon stays legible.
+                    The image scales slightly on hover; the card itself tilts. */}
+                <div className="relative h-44 overflow-hidden" aria-hidden="true">
+                  <Image
+                    src={photo(d.photo, 900, 600)}
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.06]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute bottom-4 left-5 text-white drop-shadow">
+                    <Icon />
+                  </div>
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <h3 className="font-display text-xl font-semibold">
@@ -66,6 +80,7 @@ export default function DaypartStrip() {
                   </span>
                 </div>
               </Link>
+              </Tilt>
             </Reveal>
           );
         })}

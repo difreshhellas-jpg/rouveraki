@@ -31,7 +31,10 @@ const nextConfig: NextConfig = {
   // Phosphor glyphs pulls the whole icon set into the route bundle, which put
   // /menu over the performance budget.
   experimental: {
-    optimizePackageImports: ["@phosphor-icons/react", "motion"],
+    optimizePackageImports: ["@phosphor-icons/react"],
+    // Route changes cross-fade via the View Transitions API (styled in
+    // globals.css). Browsers without it navigate with a hard cut, as before.
+    viewTransition: true,
   },
   images: {
     formats: ["image/avif", "image/webp"],

@@ -40,7 +40,7 @@ export default function ContactForm() {
     return (
       <p
         role="status"
-        className="rounded-card border border-sand/25 bg-sand/10 p-4 text-sm"
+        className="rounded-card border border-onband/25 bg-onband/10 p-4 text-sm"
       >
         {t("contact.success")}
       </p>
@@ -51,7 +51,7 @@ export default function ContactForm() {
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="label text-sand/80" htmlFor="contact-name">
+          <label className="label text-onband/80" htmlFor="contact-name">
             {t("contact.name")}
           </label>
           <input
@@ -60,11 +60,11 @@ export default function ContactForm() {
             required
             maxLength={120}
             autoComplete="name"
-            className="field border-sand/25 bg-sand/10 text-sand placeholder:text-sand/40"
+            className="field border-onband/25 bg-onband/10 text-onband placeholder:text-onband/40"
           />
         </div>
         <div>
-          <label className="label text-sand/80" htmlFor="contact-email">
+          <label className="label text-onband/80" htmlFor="contact-email">
             {t("contact.email")}
           </label>
           <input
@@ -74,13 +74,13 @@ export default function ContactForm() {
             required
             maxLength={200}
             autoComplete="email"
-            className="field border-sand/25 bg-sand/10 text-sand placeholder:text-sand/40"
+            className="field border-onband/25 bg-onband/10 text-onband placeholder:text-onband/40"
           />
         </div>
       </div>
 
       <div>
-        <label className="label text-sand/80" htmlFor="contact-message">
+        <label className="label text-onband/80" htmlFor="contact-message">
           {t("contact.message")}
         </label>
         <textarea
@@ -89,7 +89,7 @@ export default function ContactForm() {
           required
           rows={4}
           maxLength={2000}
-          className="field border-sand/25 bg-sand/10 text-sand placeholder:text-sand/40"
+          className="field border-onband/25 bg-onband/10 text-onband placeholder:text-onband/40"
         />
       </div>
 

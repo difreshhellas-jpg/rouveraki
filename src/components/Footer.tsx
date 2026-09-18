@@ -22,7 +22,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="tex-wood mt-24 bg-navy text-sand">
+    <footer className="tex-wood mt-24 bg-band text-onband">
       <div className="mx-auto grid max-w-content gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_1fr]">
         <div>
           <h2 className="font-display text-2xl font-bold">{t("contact.title")}</h2>
@@ -86,7 +86,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-sand/15">
+      <div className="border-t border-onband/15">
         <div
           className="mx-auto flex max-w-content flex-col gap-4 px-4 py-6 text-xs opacity-75 sm:flex-row sm:items-center sm:justify-between sm:px-6"
           style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}

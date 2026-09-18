@@ -7,27 +7,31 @@
  * AA needs 4.5:1 for body text, 3:1 for large text (>=24px, or >=18.66px bold)
  * and 3:1 for meaningful UI boundaries.
  */
+// Keys keep their legacy names so the cases below read unchanged:
+// rust = accent (gold), gold = accent-bright, sand = paper, char = ink.
 const LIGHT = {
-  rust: "#b2502e",
-  navy: "#123449",
-  sand: "#f6efe6",
-  char: "#2b2622",
-  gold: "#b07a1e",
-  surface: "#fffaf3",
-  line: "#e0d3c2",
+  rust: "#a16207",
+  navy: "#1c1917",
+  sand: "#f8f6f1",
+  char: "#0c0a09",
+  gold: "#a56408",
+  surface: "#fdfcfa",
+  line: "#e4e0d8",
   onRust: "#ffffff",
+  stone: "#57534e",
   white: "#ffffff",
 };
 
 const DARK = {
-  rust: "#d9764f",
-  navy: "#8fb6cc",
-  sand: "#1b1815",
-  char: "#efe9e2",
-  gold: "#e0ab55",
-  surface: "#262019",
-  line: "#413830",
-  onRust: "#221c17",
+  rust: "#e0b458",
+  navy: "#050403",
+  sand: "#0c0a09",
+  char: "#faf9f6",
+  gold: "#f0c86e",
+  surface: "#1c1917",
+  line: "#363230",
+  onRust: "#0c0a09",
+  stone: "#a8a29e",
   white: "#ffffff",
 };
 
@@ -54,9 +58,12 @@ const cases = (p: typeof LIGHT): Case[] => [
   { label: "body text on page background", fg: p.char, bg: p.sand, min: 4.5 },
   { label: "body text on card surface", fg: p.char, bg: p.surface, min: 4.5 },
   { label: "muted text (75%) on page", fg: mix(p.char, p.sand, 0.75), bg: p.sand, min: 4.5 },
+  { label: "secondary (stone) text on page", fg: p.stone, bg: p.sand, min: 4.5 },
+  { label: "secondary (stone) text on card", fg: p.stone, bg: p.surface, min: 4.5 },
   { label: "price / link accent on page", fg: p.rust, bg: p.sand, min: 4.5 },
   { label: "price / link accent on card", fg: p.rust, bg: p.surface, min: 4.5 },
   { label: "primary button label on rust", fg: p.onRust, bg: p.rust, min: 4.5 },
+  { label: "button label on accent-bright (hover)", fg: p.onRust, bg: p.gold, min: 4.5 },
   { label: "gold accent on page (large text only)", fg: p.gold, bg: p.sand, min: 3 },
   { label: "hairline border against page", fg: p.line, bg: p.sand, min: 1.2 },
   { label: "focus ring against page", fg: p.rust, bg: p.sand, min: 3 },

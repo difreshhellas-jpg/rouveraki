@@ -3,273 +3,388 @@
 @tailwind utilities;
 
 /* ============================================================================
-   BRAND TOKENS  (spec §2)
+   DESIGN TOKENS
 
-   NOTE FOR LAUNCH: --rouveraki-rust / --rouveraki-navy / --rouveraki-gold are
-   currently *sampled placeholders* in the warm-coastal range. Replace them with
-   values sampled from the real Rouveraki logo file before go-live, then re-run
-   `npm run contrast` to re-audit. Keep each hex and its -rgb channel
-   twin in sync — Tailwind reads the -rgb variant so opacity modifiers work.
+   Direction from ui-ux-pro-max --design-system for this brief: cinematic
+   warm black with a single gold accent, translucent chrome, layered depth.
+   Semantic names first; the legacy Tailwind keys (rust/sand/char/navy/gold)
+   are kept as aliases so every existing class keeps working. Swap a colour
+   here and it changes everywhere in one pass.
+
+   Each hex has an -rgb twin because Tailwind reads the channel form for
+   opacity modifiers. Keep them in sync; `npm run contrast` audits both themes.
    ========================================================================= */
 :root {
-  --rouveraki-rust: #b2502e;       /* warm terracotta / rust — primary accent */
-  --rouveraki-rust-rgb: 178 80 46;
+  /* ---- light ---------------------------------------------------------- */
+  --paper: #f8f6f1;        --paper-rgb: 248 246 241;    /* warm bone, never pure white */
+  --surface: #fdfcfa;      --surface-rgb: 253 252 250;  /* cards, one step up          */
+  --surface-2: #efece6;    --surface-2-rgb: 239 236 230;/* wells, inset areas          */
+  --ink: #0c0a09;          --ink-rgb: 12 10 9;          /* text, never pure black      */
+  --stone: #57534e;        --stone-rgb: 87 83 78;       /* secondary text              */
+  --line: #e4e0d8;         --line-rgb: 228 224 216;     /* hairlines                   */
+  --band: #1c1917;         --band-rgb: 28 25 23;        /* dark structural bands       */
+  --on-band: #f8f6f1;      --on-band-rgb: 248 246 241;
 
-  --rouveraki-navy: #123449;       /* deep sea-blue — text + dark sections     */
-  --rouveraki-navy-rgb: 18 52 73;
+  --accent: #a16207;       --accent-rgb: 161 98 7;      /* gold: 4.8:1 on paper        */
+  --accent-bright: #a56408;--accent-bright-rgb: 165 100 8;  /* hover bg: 4.75:1 with white */
+  --on-accent: #ffffff;    --on-accent-rgb: 255 255 255;
 
-  --rouveraki-sand: #f6efe6;       /* warm cream background, not pure white    */
-  --rouveraki-sand-rgb: 246 239 230;
+  /* ---- legacy aliases (do not use in new code) ------------------------ */
+  --rouveraki-rust: var(--accent);         --rouveraki-rust-rgb: var(--accent-rgb);
+  --rouveraki-gold: var(--accent-bright);  --rouveraki-gold-rgb: var(--accent-bright-rgb);
+  --rouveraki-navy: var(--band);           --rouveraki-navy-rgb: var(--band-rgb);
+  --rouveraki-sand: var(--paper);          --rouveraki-sand-rgb: var(--paper-rgb);
+  --rouveraki-char: var(--ink);            --rouveraki-char-rgb: var(--ink-rgb);
+  --rouveraki-surface: var(--surface);     --rouveraki-surface-rgb: var(--surface-rgb);
+  --rouveraki-line: var(--line);           --rouveraki-line-rgb: var(--line-rgb);
+  --rouveraki-on-rust: var(--on-accent);   --rouveraki-on-rust-rgb: var(--on-accent-rgb);
 
-  --rouveraki-char: #2b2622;       /* warm near-black body text, never #000    */
-  --rouveraki-char-rgb: 43 38 34;
-
-  --rouveraki-gold: #b07a1e;       /* amber accent for prices / CTAs           */
-  --rouveraki-gold-rgb: 176 122 30;
-
-  /* Text/icon colour placed ON the rust accent. Split out from plain white
-     because in dark mode the rust lightens, and white on it falls to 3.2:1 —
-     below AA for a button label. Verified by `npm run contrast`.             */
-  --rouveraki-on-rust: #ffffff;
-  --rouveraki-on-rust-rgb: 255 255 255;
-
-  --rouveraki-surface: #fffaf3;    /* card surface, one step above the sand    */
-  --rouveraki-surface-rgb: 255 250 243;
-
-  --rouveraki-line: #e0d3c2;       /* hairline borders                         */
-  --rouveraki-line-rgb: 224 211 194;
-
-  /* Motion curves. The built-in CSS easings are too weak for deliberate UI
-     motion, so these are the strong custom curves from the animation
-     standards. Every transition in the app uses one of the three. */
+  /* ---- motion ---------------------------------------------------------- */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* entering + exiting */
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* moving on screen   */
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* iOS-like drawer    */
 
+  /* ---- depth: shadows tinted to the page hue, never flat black --------- */
+  --shadow-card:
+    0 1px 2px rgb(var(--ink-rgb) / 0.05),
+    0 10px 30px -14px rgb(var(--ink-rgb) / 0.22);
+  --shadow-lift:
+    0 2px 4px rgb(var(--ink-rgb) / 0.06),
+    0 24px 48px -20px rgb(var(--ink-rgb) / 0.35);
+  --shadow-accent: 0 10px 28px -10px rgb(var(--accent-rgb) / 0.55);
+
   color-scheme: light;
 }
 
+/* Dark is the primary mood for this brand; light is the daytime variant. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --rouveraki-sand: #1b1815;
-    --rouveraki-sand-rgb: 27 24 21;
-    --rouveraki-char: #efe9e2;
-    --rouveraki-char-rgb: 239 233 226;
-    --rouveraki-surface: #262019;
-    --rouveraki-surface-rgb: 38 32 25;
-    --rouveraki-line: #413830;
-    --rouveraki-line-rgb: 65 56 48;
-    --rouveraki-rust: #d9764f;
-    --rouveraki-rust-rgb: 217 118 79;
-    --rouveraki-on-rust: #221c17;
-    --rouveraki-on-rust-rgb: 34 28 23;
-    --rouveraki-gold: #e0ab55;
-    --rouveraki-gold-rgb: 224 171 85;
-    --rouveraki-navy: #8fb6cc;
-    --rouveraki-navy-rgb: 143 182 204;
+    --paper: #0c0a09;        --paper-rgb: 12 10 9;
+    --surface: #1c1917;      --surface-rgb: 28 25 23;
+    --surface-2: #292524;    --surface-2-rgb: 41 37 36;
+    --ink: #faf9f6;          --ink-rgb: 250 249 246;
+    --stone: #a8a29e;        --stone-rgb: 168 162 158;
+    --line: #363230;         --line-rgb: 54 50 48;
+    --band: #050403;         --band-rgb: 5 4 3;
+    --on-band: #faf9f6;      --on-band-rgb: 250 249 246;
+    --accent: #e0b458;       --accent-rgb: 224 180 88;   /* gold: 9.8:1 on paper */
+    --accent-bright: #f0c86e;--accent-bright-rgb: 240 200 110;
+    --on-accent: #0c0a09;    --on-accent-rgb: 12 10 9;
+    --shadow-card:
+      0 1px 2px rgb(0 0 0 / 0.4),
+      0 12px 32px -14px rgb(0 0 0 / 0.7);
+    --shadow-lift:
+      0 2px 4px rgb(0 0 0 / 0.5),
+      0 28px 56px -20px rgb(0 0 0 / 0.85);
+    --shadow-accent: 0 12px 32px -10px rgb(var(--accent-rgb) / 0.35);
     color-scheme: dark;
   }
 }
-
 :root[data-theme="dark"] {
-  --rouveraki-sand: #1b1815;
-  --rouveraki-sand-rgb: 27 24 21;
-  --rouveraki-char: #efe9e2;
-  --rouveraki-char-rgb: 239 233 226;
-  --rouveraki-surface: #262019;
-  --rouveraki-surface-rgb: 38 32 25;
-  --rouveraki-line: #413830;
-  --rouveraki-line-rgb: 65 56 48;
-  --rouveraki-rust: #d9764f;
-  --rouveraki-rust-rgb: 217 118 79;
-  --rouveraki-on-rust: #221c17;
-  --rouveraki-on-rust-rgb: 34 28 23;
-  --rouveraki-gold: #e0ab55;
-  --rouveraki-gold-rgb: 224 171 85;
-  --rouveraki-navy: #8fb6cc;
-  --rouveraki-navy-rgb: 143 182 204;
+  --paper: #0c0a09;        --paper-rgb: 12 10 9;
+  --surface: #1c1917;      --surface-rgb: 28 25 23;
+  --surface-2: #292524;    --surface-2-rgb: 41 37 36;
+  --ink: #faf9f6;          --ink-rgb: 250 249 246;
+  --stone: #a8a29e;        --stone-rgb: 168 162 158;
+  --line: #363230;         --line-rgb: 54 50 48;
+  --band: #050403;         --band-rgb: 5 4 3;
+  --on-band: #faf9f6;      --on-band-rgb: 250 249 246;
+  --accent: #e0b458;       --accent-rgb: 224 180 88;
+  --accent-bright: #f0c86e;--accent-bright-rgb: 240 200 110;
+  --on-accent: #0c0a09;    --on-accent-rgb: 12 10 9;
+  --shadow-card:
+    0 1px 2px rgb(0 0 0 / 0.4),
+    0 12px 32px -14px rgb(0 0 0 / 0.7);
+  --shadow-lift:
+    0 2px 4px rgb(0 0 0 / 0.5),
+    0 28px 56px -20px rgb(0 0 0 / 0.85);
+  --shadow-accent: 0 12px 32px -10px rgb(var(--accent-rgb) / 0.35);
   color-scheme: dark;
 }
 
 /* ===== base ============================================================== */
 @layer base {
-  * {
-    @apply border-line;
-  }
+  * { @apply border-line; }
+
   html {
     scroll-behavior: smooth;
-    /* offset for the sticky header when jumping to #category anchors */
     scroll-padding-top: 8.5rem;
   }
   body {
-    @apply bg-sand text-char font-sans antialiased;
-    font-size: 16px; /* 16px floor, spec §2 */
+    @apply bg-paper text-ink font-sans antialiased;
+    font-size: 16px;
+    font-optical-sizing: auto;
+    /* Body tracking stays at 0; only display sizes get negative tracking. */
+    letter-spacing: 0;
   }
-  h1, h2, h3, h4 {
-    @apply font-display text-balance;
-  }
-  /* Visible, brand-coloured focus ring everywhere — checkout must be fully
-     keyboard navigable (spec §7). */
+
+  /* Type scale. Tracking is size-specific (apple-design §15): display sizes
+     tighten as they grow, small caps labels open up. Weight and leading are
+     set together with size so hierarchy comes from all three. */
+  h1, h2, h3, h4 { @apply font-display text-balance; font-optical-sizing: auto; }
+  h1 { letter-spacing: -0.025em; line-height: 1.02; font-weight: 600; }
+  h2 { letter-spacing: -0.018em; line-height: 1.08; font-weight: 600; }
+  h3 { letter-spacing: -0.01em;  line-height: 1.2;  font-weight: 600; }
+
   :focus-visible {
-    outline: 3px solid rgb(var(--rouveraki-rust-rgb));
+    outline: 3px solid rgb(var(--accent-rgb));
     outline-offset: 2px;
     border-radius: 4px;
   }
-  /* Hide the horizontal scrollbar on the category pill rail without
-     preventing scroll. */
+
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Route changes cross-fade with a small rise, so a navigation reads as one
+     surface replacing another rather than a hard cut. 280ms, under the UI
+     budget, ease-out because it is an entrance. */
+  ::view-transition-old(root) {
+    animation: vt-out 200ms var(--ease-out) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in 280ms var(--ease-out) both;
+  }
+  @keyframes vt-out { to { opacity: 0; } }
+  @keyframes vt-in  { from { opacity: 0; transform: translateY(8px); } }
 }
 
-/* ===== texture accents (CSS-only, no image payload — spec §1) ============ */
+/* ===== components ======================================================== */
 @layer components {
-  /* Fine linen weave for large cream areas. */
-  .tex-linen {
-    background-image:
-      repeating-linear-gradient(45deg, rgb(var(--rouveraki-char-rgb) / 0.018) 0 1px, transparent 1px 4px),
-      repeating-linear-gradient(-45deg, rgb(var(--rouveraki-char-rgb) / 0.018) 0 1px, transparent 1px 4px);
-  }
-  /* Horizontal wood grain for section dividers / dark bands. */
-  .tex-wood {
-    background-image: repeating-linear-gradient(
-      0deg,
-      rgb(var(--rouveraki-char-rgb) / 0.05) 0 1px,
-      transparent 1px 3px,
-      rgb(var(--rouveraki-char-rgb) / 0.03) 3px 4px,
-      transparent 4px 9px
-    );
-  }
-  /* Twisted-rope rule, used as a section separator. */
-  .tex-rope {
-    height: 6px;
-    background-image: repeating-linear-gradient(
-      115deg,
-      rgb(var(--rouveraki-gold-rgb) / 0.55) 0 4px,
-      rgb(var(--rouveraki-gold-rgb) / 0.15) 4px 9px
-    );
-    border-radius: 999px;
+  /* ---- small caps label (eyebrows, meta) -------------------------------- */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase text-stone;
+    letter-spacing: 0.08em;
   }
 
-  /* Press feedback. 160ms ease-out, scale 0.97: subtle enough to read as a
-     press rather than a shrink. scale() takes the label and icon with it,
-     which is what makes it feel physical.
-     No hover gating needed on :active — it is a real press on touch. */
+  /* ---- gold rule: replaces the old rope texture -------------------------- */
+  .tex-rope {
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      rgb(var(--accent-rgb)) 0%,
+      rgb(var(--accent-bright-rgb)) 55%,
+      rgb(var(--accent-rgb) / 0) 100%
+    );
+  }
+
+  /* ---- translucent chrome (apple-design §12) ---------------------------- */
+  /* Content scrolls underneath; the bright top edge is light catching the
+     material. No hard border: the separation is the blur itself plus a soft
+     scroll-edge gradient added by .glass-edge. */
+  .glass {
+    background: rgb(var(--paper-rgb) / 0.72);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgb(255 255 255 / 0.35);
+  }
+  :root[data-theme="dark"] .glass,
+  :root:not([data-theme="light"]) .glass {
+    border-top-color: rgb(255 255 255 / 0.08);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) .glass { border-top-color: rgb(255 255 255 / 0.35); }
+  }
+  .glass-edge {
+    -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent);
+    mask-image: linear-gradient(to bottom, black 85%, transparent);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .glass { background: rgb(var(--paper-rgb)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  }
+
+  /* ---- buttons ---------------------------------------------------------- */
+  /* Feedback on pointer-down (:active fires there), 160ms ease-out, 0.97. */
   .btn {
     @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-full px-6
            text-base font-semibold;
     transition:
       transform 160ms var(--ease-out),
+      box-shadow 160ms var(--ease-out),
       background-color 150ms ease,
       color 150ms ease;
+    will-change: transform;
   }
   .btn:active { transform: scale(0.97); }
-
-  /* Hover motion is gated on a real pointer: touch fires a false hover on tap,
-     which leaves the button stuck in its hover state after the finger lifts. */
   @media (hover: hover) and (pointer: fine) {
-    .btn:hover { transform: scale(1.02); }
+    .btn:hover { transform: translateY(-1px) scale(1.02); }
+    .btn:hover:active { transform: scale(0.97); }
   }
-  .btn-primary { @apply btn bg-rust text-onrust shadow-card hover:bg-rust/90; }
+
+  /* Gold, with a bright inner top edge so it reads as a lit material rather
+     than a flat fill, and a tinted glow that lifts it off the page. */
+  .btn-primary {
+    @apply btn text-onaccent;
+    background: linear-gradient(180deg, rgb(var(--accent-bright-rgb)) 0%, rgb(var(--accent-rgb)) 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      inset 0 -1px 0 rgb(0 0 0 / 0.12),
+      var(--shadow-accent);
+  }
   .btn-secondary {
-    @apply btn border-2 border-current bg-transparent text-char hover:bg-char/5;
+    @apply btn border border-ink/20 bg-transparent text-ink hover:bg-ink/5;
   }
-  .btn-ghost { @apply btn px-4 text-char/80 hover:bg-char/5; }
+  .btn-ghost { @apply btn px-4 text-ink/80 hover:bg-ink/5; }
 
-  /* Scroll reveal. clip-path wipes the content in from the bottom edge rather
-     than sliding a box around, which reads as the content arriving rather than
-     the layout moving. 600ms ease-in-out per the recipe: this is a marketing
-     surface, so it is allowed to be slower than the 300ms UI budget. */
-  .reveal {
-    clip-path: inset(0 0 100% 0);
-    opacity: 0;
-    transition:
-      clip-path 600ms var(--ease-in-out),
-      opacity 400ms var(--ease-out);
-  }
-  .reveal[data-visible] {
-    clip-path: inset(0 0 0 0);
-    opacity: 1;
+  /* On photography: a glass button, not an outline. */
+  .btn-glass {
+    @apply btn text-white;
+    background: rgb(255 255 255 / 0.12);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgb(255 255 255 / 0.28);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
   }
 
-  .card { @apply rounded-card border border-line bg-surface shadow-card; }
-
-  /* A card that is itself a button. Same press language as .btn, scaled down
-     slightly because the surface is larger. */
+  /* ---- surfaces --------------------------------------------------------- */
+  .card {
+    @apply rounded-card border border-line bg-surface;
+    box-shadow: var(--shadow-card);
+  }
   .card-tappable {
     transition:
       transform 160ms var(--ease-out),
-      box-shadow 180ms ease;
+      box-shadow 220ms var(--ease-out);
   }
   .card-tappable:active { transform: scale(0.985); }
 
+  /* ---- 3D tilt (pointer: fine only) ------------------------------------- */
+  /* A card reads as a physical object under the cursor: the surface tilts
+     toward the pointer and a specular highlight moves across it. --rx/--ry/
+     --gx/--gy are set on the element itself by Tilt.tsx, never on a parent.
+     Touch and coarse pointers get none of this; there is no cursor to tilt
+     toward, and it would fight the scroll. */
+  .tilt {
+    transform-style: preserve-3d;
+    transform: perspective(900px)
+               rotateX(var(--rx, 0deg))
+               rotateY(var(--ry, 0deg))
+               translateZ(0);
+    transition: transform 320ms var(--ease-out), box-shadow 320ms var(--ease-out);
+    will-change: transform;
+  }
+  .tilt-glint {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: var(--glint, 0);
+    background: radial-gradient(
+      420px circle at var(--gx, 50%) var(--gy, 50%),
+      rgb(255 255 255 / 0.18),
+      transparent 60%
+    );
+    transition: opacity 320ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tilt[data-active] { box-shadow: var(--shadow-lift); }
+  }
+
+  /* ---- scroll reveal (customer pages only) ------------------------------- */
+  /* Scroll-driven, no JavaScript. Where the browser has no view() timeline the
+     rule below never applies and content is simply visible: nothing can ever
+     be stranded hidden waiting for an observer that did not fire. */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 38%;
+    }
+  }
+  @keyframes reveal-in {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- forms ------------------------------------------------------------ */
   .field {
     @apply min-h-touch w-full rounded-xl border border-line bg-surface px-4 py-3
-           text-base text-char placeholder:text-char/40;
+           text-base text-ink placeholder:text-stone/70;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
   }
-  .label { @apply mb-1.5 block text-sm font-semibold text-char/80; }
+  .field:focus {
+    outline: none;
+    border-color: rgb(var(--accent-rgb));
+    box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.22);
+  }
+  .label { @apply mb-1.5 block text-sm font-semibold text-ink/80; }
+
+  /* ---- textures (kept, quieter) ---------------------------------------- */
+  .tex-linen {
+    background-image:
+      repeating-linear-gradient(45deg, rgb(var(--ink-rgb) / 0.012) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(-45deg, rgb(var(--ink-rgb) / 0.012) 0 1px, transparent 1px 4px);
+  }
+  .tex-wood {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgb(var(--on-band-rgb) / 0.035) 0 1px,
+      transparent 1px 3px,
+      rgb(var(--on-band-rgb) / 0.02) 3px 4px,
+      transparent 4px 9px
+    );
+  }
 }
 
-/* ===== intro ==============================================================
-   A two second curtain on first load. This is a rare, first-impression moment,
-   so it gets some of the delight budget that a button press never would.
+/* ===== hero ================================================================ */
+/* Each slide drifts slowly while it is showing (Ken Burns). Constant motion,
+   so the easing is linear; it is far below the strobing threshold and it is
+   what stops a photo crossfade from feeling like a slideshow. */
+@keyframes hero-drift {
+  from { transform: scale(1.04) translate3d(0, 0, 0); }
+  to   { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+}
+/* will-change promotes each slide to its own compositor layer, so the drift
+   is a GPU transform of a rasterized-once bitmap rather than a re-raster of
+   a 2000px photo on every frame. Without it this section stalls the renderer. */
+[data-hero-slide] img {
+  animation: hero-drift 24s linear infinite alternate;
+  will-change: transform;
+  backface-visibility: hidden;
+}
 
-   It never blocks: pointer-events are off for its whole life, and it is removed
-   from the DOM once finished. Shown once per tab session, because the second
-   time you see it in a visit it stops being an arrival and becomes a delay. */
+/* ===== intro ============================================================== */
 @keyframes intro-veil {
   0%   { opacity: 1; }
   62%  { opacity: 1; }
   100% { opacity: 0; }
 }
 @keyframes intro-mark {
-  0%   { opacity: 0; transform: scale(0.94); }
-  22%  { opacity: 1; transform: scale(1); }
-  58%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.02); }
+  0%   { opacity: 0; transform: scale(0.94) translateY(6px); filter: blur(6px); }
+  22%  { opacity: 1; transform: scale(1) translateY(0);     filter: blur(0); }
+  58%  { opacity: 1; transform: scale(1);                    filter: blur(0); }
+  100% { opacity: 0; transform: scale(1.02);                 filter: blur(4px); }
 }
 @keyframes intro-rule {
   0%   { transform: scaleX(0); }
   40%  { transform: scaleX(1); }
   100% { transform: scaleX(1); }
 }
-
 [data-intro] {
   position: fixed;
   inset: 0;
   z-index: 100;
   display: grid;
   place-items: center;
-  background: rgb(var(--rouveraki-sand-rgb));
+  background: rgb(var(--paper-rgb));
   pointer-events: none;
   animation: intro-veil 2000ms var(--ease-out) forwards;
 }
-[data-intro-mark] {
-  animation: intro-mark 2000ms var(--ease-out) forwards;
-}
-[data-intro-rule] {
-  transform-origin: left center;
-  animation: intro-rule 2000ms var(--ease-out) forwards;
-}
+[data-intro-mark] { animation: intro-mark 2000ms var(--ease-out) forwards; }
+[data-intro-rule] { transform-origin: left center; animation: intro-rule 2000ms var(--ease-out) forwards; }
 
-/* ===== reduced motion =====================================================
-   Fewer and gentler, not zero. Opacity and colour transitions still help the
-   user follow what changed; movement and scaling are what cause trouble, so
-   those are what get removed. */
+/* ===== reduced motion ===================================================== */
+/* Gentler, not none: opacity and colour stay, movement and tilt go. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-
-  /* Drop transform-based motion everywhere, keep opacity/colour. */
-  .btn:active,
-  .btn:hover,
-  .card-tappable:active { transform: none; }
-
-  /* Scroll reveals appear immediately, fully. */
-  [data-reveal] { clip-path: none !important; opacity: 1 !important; }
-
-  /* Freeze the hero crossfade on its first frame. */
+  .btn:active, .btn:hover, .card-tappable:active { transform: none; }
+  .tilt { transform: none !important; transition: box-shadow 220ms ease; }
+  .tilt-glint { display: none; }
+  .reveal { animation: none !important; opacity: 1 !important; transform: none !important; }
   [data-hero-slide] { animation: none !important; }
   [data-hero-slide]:not(:first-child) { opacity: 0 !important; }
-
-  /* The intro is pure delight; skip it entirely. */
+  [data-hero-slide] img { animation: none !important; }
   [data-intro] { display: none !important; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: vt-fade 160ms ease both; }
+  @keyframes vt-fade { from { opacity: 0; } }
 }

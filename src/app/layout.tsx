@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Noto_Serif } from "next/font/google";
+import { Manrope, Noto_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { BRAND } from "@/lib/brand";
@@ -10,20 +10,23 @@ import { ToastProvider } from "@/components/Toaster";
 import Intro from "@/components/Intro";
 
 /**
- * Greek is the default language of this site, so both faces must carry the full
- * Greek glyph set. Fraunces (the first choice for the display face) does not
- * ship a Greek subset, so per the brief's own fallback rule the headings use
- * Noto Serif, which does.
+ * Greek is the default language, so both faces must carry the full Greek set.
+ * The design-system generator's picks (Playfair Display SC + Karla) ship no
+ * Greek subset at all, verified against the Google Fonts CSS API. These are
+ * the closest faces that do: Noto Serif Display is the high-contrast display
+ * cut (the Playfair role), Manrope the clean geometric body.
  */
-const display = Noto_Serif({
+const display = Noto_Serif_Display({
   subsets: ["greek", "latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   variable: "--font-display",
   display: "swap",
 });
 
-const sans = Inter({
+const sans = Manrope({
   subsets: ["greek", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
   display: "swap",
 });

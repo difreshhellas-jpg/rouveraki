@@ -8,6 +8,7 @@ import { formatEuro } from "@/lib/money";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/store/cart";
 import ItemThumb from "./ItemThumb";
+import Tilt from "./Tilt";
 import dynamic from "next/dynamic";
 
 // Loaded on first tap, not on first paint. The drawer library is dead weight
@@ -207,9 +208,11 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                 const name = pick(item.name, item.nameEn);
                 const desc = pick(item.description ?? "", item.descriptionEn);
                 return (
-                  <li key={item.id}>
-                    {/* The whole card opens the detail sheet; the add button
-                        inside it stops propagation for a one-tap add. */}
+                  <Tilt as="li" key={item.id} className="rounded-card">
+                    {/* The <li> is the tilting object; the card inside is the
+                        button, so the 3D transform never fights the press
+                        scale. The whole card opens the detail sheet; the add
+                        button inside stops propagation for a one-tap add. */}
                     <div
                       role="button"
                       tabIndex={0}
@@ -222,32 +225,36 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                       }}
                       aria-haspopup="dialog"
                       className={clsx(
-                        "card card-tappable flex h-full cursor-pointer items-stretch gap-4 p-3 text-left hover:shadow-lift",
+                        "card card-tappable flex h-full cursor-pointer items-stretch gap-4 overflow-hidden p-3 text-left",
                         !item.available && "opacity-55",
                       )}
                     >
                       <ItemThumb
                         item={item}
                         alt={name}
-                        className="size-24 shrink-0 sm:size-28"
+                        className="size-28 shrink-0 sm:size-32"
                       />
 
-                      <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex min-w-0 flex-1 flex-col py-0.5">
                         <div className="flex items-start gap-2">
-                          <h3 className="font-semibold leading-snug">{name}</h3>
+                          <h3 className="font-display text-lg font-semibold leading-snug">
+                            {name}
+                          </h3>
                           {item.requiresAgeVerification && (
-                            <span className="mt-0.5 shrink-0 rounded-full bg-rust/10 px-2 py-0.5 text-[0.65rem] font-bold text-rust">
+                            <span className="mt-1 shrink-0 rounded-full bg-accent/12 px-2 py-0.5 text-[0.65rem] font-bold text-accent">
                               {t("menu.ageGated")}
                             </span>
                           )}
                         </div>
 
                         {desc && (
-                          <p className="mt-1 line-clamp-2 text-sm text-char/65">{desc}</p>
+                          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-stone">
+                            {desc}
+                          </p>
                         )}
 
-                        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-                          <span className="font-bold text-rust">
+                        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+                          <span className="font-display text-lg font-semibold tabular-nums text-accent">
                             {money(item.priceCents)}
                           </span>
 
@@ -263,7 +270,7 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                                 "inline-flex size-touch items-center justify-center rounded-full text-lg font-bold transition-colors",
                                 justAdded === item.id
                                   ? "bg-emerald-600 text-white"
-                                  : "bg-rust text-onrust hover:bg-rust/90",
+                                  : "bg-accent text-onaccent shadow-accent hover:bg-accentBright",
                               )}
                             >
                               {justAdded === item.id ? <Check size={18} weight="bold" /> : <Plus size={18} weight="bold" />}
@@ -276,7 +283,7 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                         </div>
                       </div>
                     </div>
-                  </li>
+                  </Tilt>
                 );
               })}
             </ul>

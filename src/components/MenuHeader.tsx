@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { isDeliveryOpen, isShopOpen } from "@/lib/hours";
+import { BRAND } from "@/lib/brand";
 
 /** Page title plus an honest banner when we are closed or delivery is off. */
 export default function MenuHeader() {
@@ -19,11 +20,12 @@ export default function MenuHeader() {
   }, []);
 
   return (
-    <header className="mx-auto max-w-content px-4 pb-2 pt-10 sm:px-6 sm:pt-14">
-      <h1 className="font-display text-[clamp(2.25rem,7vw,3.5rem)] font-bold leading-tight">
+    <header className="mx-auto max-w-content px-4 pb-1 pt-6 sm:px-6 sm:pt-8">
+      <p className="eyebrow">{BRAND.nameEl} · {t("location.hoursValue")}</p>
+      <h1 className="mt-2 font-display text-[clamp(2.25rem,7vw,3.5rem)] font-semibold">
         {t("menu.title")}
       </h1>
-      <p className="mt-2 text-char/70">{t("menu.lead")}</p>
+      <p className="mt-2 text-stone">{t("menu.lead")}</p>
 
       {state && !state.shop && (
         <p
