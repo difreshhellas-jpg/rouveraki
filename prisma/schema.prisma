@@ -1,0 +1,143 @@
+// Rouveraki — data model.
+// Mirrors spec §5 one-to-one. Two additions are deliberate and load-bearing:
+//   * order_code is UNIQUE — it is the public lookup key for /order/[code].
+//   * indexes on orders.status / orders.created_at — the kitchen queue and the
+//     admin list both sort and filter on these on every render.
+// Status stays a VARCHAR as specified; the state machine is enforced in
+// src/lib/order-status.ts, which is also the only thing allowed to write it.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model MenuItem {
+  id                      Int      @id @default(autoincrement())
+  name                    String   @db.VarChar(255)
+  nameEn                  String?  @map("name_en") @db.VarChar(255)
+  description             String?
+  descriptionEn           String?  @map("description_en")
+  price                   Decimal  @db.Decimal(5, 2)
+  category                String   @db.VarChar(100)
+  image                   String?
+  available               Boolean  @default(true)
+  prepTimeMinutes         Int      @default(10) @map("prep_time_minutes")
+  requiresAgeVerification Boolean  @default(false) @map("requires_age_verification")
+  sortOrder               Int      @default(0) @map("sort_order")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@index([category, sortOrder])
+  @@map("menu_items")
+}
+
+model Customer {
+  id              Int      @id @default(autoincrement())
+  phone           String   @unique @db.VarChar(20)
+  name            String?  @db.VarChar(255)
+  marketingOptIn  Boolean  @default(false) @map("marketing_opt_in")
+  loyaltyPoints   Int      @default(0) @map("loyalty_points")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  orders Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id              Int       @id @default(autoincrement())
+  orderCode       String    @unique @map("order_code") @db.VarChar(10)
+  customerId      Int?      @map("customer_id")
+  customerName    String    @map("customer_name") @db.VarChar(255)
+  customerPhone   String    @map("customer_phone") @db.VarChar(20)
+  customerAddress String?   @map("customer_address")
+  deliveryZone    String?   @map("delivery_zone") @db.VarChar(100)
+  fulfillmentType String    @map("fulfillment_type") @db.VarChar(20) // 'delivery' | 'pickup'
+  items           Json      // [{ menu_item_id, name, unit_price, quantity, item_notes }]
+  generalNotes    String?   @map("general_notes")
+  subtotalAmount  Decimal   @default(0) @map("subtotal_amount") @db.Decimal(8, 2)
+  deliveryFee     Decimal   @default(0) @map("delivery_fee") @db.Decimal(8, 2)
+  totalAmount     Decimal   @map("total_amount") @db.Decimal(8, 2)
+  status          String    @db.VarChar(50)
+  paymentMethod   String    @map("payment_method") @db.VarChar(50) // 'iris' | 'card' | 'cash'
+  ageVerified     Boolean   @default(false) @map("age_verified")
+  discountCode    String?   @map("discount_code") @db.VarChar(50)   // reserved, unused in v1
+  discountAmount  Decimal   @default(0) @map("discount_amount") @db.Decimal(8, 2)
+  etaMinutes      Int?      @map("eta_minutes")
+  etaConfirmedAt  DateTime? @map("eta_confirmed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  customer Customer?           @relation(fields: [customerId], references: [id])
+  history  OrderStatusHistory[]
+  payments Payment[]
+  refunds  Refund[]
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderStatusHistory {
+  id         Int      @id @default(autoincrement())
+  orderId    Int      @map("order_id")
+  fromStatus String?  @map("from_status") @db.VarChar(50)
+  toStatus   String   @map("to_status") @db.VarChar(50)
+  changedBy  String   @map("changed_by") @db.VarChar(50) // 'system' | 'customer' | staff email
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+model Payment {
+  id                 Int       @id @default(autoincrement())
+  orderId            Int       @map("order_id")
+  vivaTransactionId  String?   @unique @map("viva_transaction_id") @db.VarChar(255)
+  vivaOrderCode      String?   @map("viva_order_code") @db.VarChar(64)
+  amount             Decimal   @db.Decimal(8, 2)
+  status             String    @db.VarChar(50)
+  method             String    @db.VarChar(50)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  confirmedAt        DateTime? @map("confirmed_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+model Refund {
+  id                   Int      @id @default(autoincrement())
+  orderId              Int      @map("order_id")
+  amount               Decimal  @db.Decimal(8, 2)
+  vivaRefundReference  String?  @map("viva_refund_reference") @db.VarChar(255)
+  status               String   @db.VarChar(50)
+  reason               String?
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("refunds")
+}
+
+// Idempotency ledger for Viva webhooks. Not in the spec, but a webhook that can
+// be replayed is a webhook that can double-refund; Viva retries on non-2xx.
+model WebhookEvent {
+  id          Int      @id @default(autoincrement())
+  eventId     String   @unique @map("event_id") @db.VarChar(255)
+  eventType   String   @map("event_type") @db.VarChar(100)
+  payload     Json
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@map("webhook_events")
+}

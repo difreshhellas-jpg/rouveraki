@@ -1,0 +1,68 @@
+import { BRAND } from "./brand";
+
+/**
+ * Opening-hours maths. Both windows wrap past midnight (shop 06:00–01:00,
+ * delivery 08:00–00:00), so a naive `now >= open && now < close` comparison is
+ * wrong for exactly the late-night drinks orders this site has to handle.
+ *
+ * Everything resolves in Europe/Athens regardless of where the server or the
+ * visitor's device is set, so a customer abroad checking the site sees the
+ * shop's real state, not their own.
+ */
+export const TZ = "Europe/Athens";
+
+/** Minutes since local midnight in Athens. */
+export const athensMinutes = (at: Date = new Date()): number => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(at);
+  const h = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+  const m = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+  // Intl renders midnight as "24" in some ICU builds.
+  return (h % 24) * 60 + m;
+};
+
+const toMinutes = (hhmm: string): number => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+};
+
+/**
+ * True when `minutes` falls inside [opens, closes), handling a window that
+ * wraps midnight. A closes value of "00:00" means midnight at the END of the
+ * day, i.e. 24:00, not the start.
+ */
+const within = (minutes: number, opens: string, closes: string): boolean => {
+  const o = toMinutes(opens);
+  const c = closes === "00:00" ? 24 * 60 : toMinutes(closes);
+  return o < c ? minutes >= o && minutes < c : minutes >= o || minutes < c;
+};
+
+export const isShopOpen = (at?: Date): boolean =>
+  within(athensMinutes(at), BRAND.hours.opens, BRAND.hours.closes);
+
+export const isDeliveryOpen = (at?: Date): boolean =>
+  within(athensMinutes(at), BRAND.deliveryHours.opens, BRAND.deliveryHours.closes);
+
+/**
+ * Municipal alcohol-hour restriction (spec §6, second bullet).
+ *
+ * TODO:OWNER — one phone call to the municipality confirms whether Xylokastro
+ * restricts the hours during which alcohol may be sold or delivered, separately
+ * from the shop's own opening hours. If it does, set ALCOHOL_HOURS below and
+ * flip ALCOHOL_HOURS_RESTRICTED to true; the cart, the menu and the order API
+ * all read this one flag, so nothing else needs to change.
+ */
+export const ALCOHOL_HOURS_RESTRICTED = false;
+export const ALCOHOL_HOURS = { opens: "08:00", closes: "00:00" } as const;
+
+export const isAlcoholSaleAllowed = (at?: Date): boolean =>
+  !ALCOHOL_HOURS_RESTRICTED ||
+  within(athensMinutes(at), ALCOHOL_HOURS.opens, ALCOHOL_HOURS.closes);
+
+/** "06:00 - 01:00" for display. */
+export const formatWindow = (w: { opens: string; closes: string }): string =>
+  `${w.opens}–${w.closes}`;

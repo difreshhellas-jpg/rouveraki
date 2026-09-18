@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   BRAND TOKENS  (spec §2)
+
+   NOTE FOR LAUNCH: --rouveraki-rust / --rouveraki-navy / --rouveraki-gold are
+   currently *sampled placeholders* in the warm-coastal range. Replace them with
+   values sampled from the real Rouveraki logo file before go-live, then re-run
+   `npm run contrast` to re-audit. Keep each hex and its -rgb channel
+   twin in sync — Tailwind reads the -rgb variant so opacity modifiers work.
+   ========================================================================= */
+:root {
+  --rouveraki-rust: #b2502e;       /* warm terracotta / rust — primary accent */
+  --rouveraki-rust-rgb: 178 80 46;
+
+  --rouveraki-navy: #123449;       /* deep sea-blue — text + dark sections     */
+  --rouveraki-navy-rgb: 18 52 73;
+
+  --rouveraki-sand: #f6efe6;       /* warm cream background, not pure white    */
+  --rouveraki-sand-rgb: 246 239 230;
+
+  --rouveraki-char: #2b2622;       /* warm near-black body text, never #000    */
+  --rouveraki-char-rgb: 43 38 34;
+
+  --rouveraki-gold: #b07a1e;       /* amber accent for prices / CTAs           */
+  --rouveraki-gold-rgb: 176 122 30;
+
+  /* Text/icon colour placed ON the rust accent. Split out from plain white
+     because in dark mode the rust lightens, and white on it falls to 3.2:1 —
+     below AA for a button label. Verified by `npm run contrast`.             */
+  --rouveraki-on-rust: #ffffff;
+  --rouveraki-on-rust-rgb: 255 255 255;
+
+  --rouveraki-surface: #fffaf3;    /* card surface, one step above the sand    */
+  --rouveraki-surface-rgb: 255 250 243;
+
+  --rouveraki-line: #e0d3c2;       /* hairline borders                         */
+  --rouveraki-line-rgb: 224 211 194;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --rouveraki-sand: #1b1815;
+    --rouveraki-sand-rgb: 27 24 21;
+    --rouveraki-char: #efe9e2;
+    --rouveraki-char-rgb: 239 233 226;
+    --rouveraki-surface: #262019;
+    --rouveraki-surface-rgb: 38 32 25;
+    --rouveraki-line: #413830;
+    --rouveraki-line-rgb: 65 56 48;
+    --rouveraki-rust: #d9764f;
+    --rouveraki-rust-rgb: 217 118 79;
+    --rouveraki-on-rust: #221c17;
+    --rouveraki-on-rust-rgb: 34 28 23;
+    --rouveraki-gold: #e0ab55;
+    --rouveraki-gold-rgb: 224 171 85;
+    --rouveraki-navy: #8fb6cc;
+    --rouveraki-navy-rgb: 143 182 204;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --rouveraki-sand: #1b1815;
+  --rouveraki-sand-rgb: 27 24 21;
+  --rouveraki-char: #efe9e2;
+  --rouveraki-char-rgb: 239 233 226;
+  --rouveraki-surface: #262019;
+  --rouveraki-surface-rgb: 38 32 25;
+  --rouveraki-line: #413830;
+  --rouveraki-line-rgb: 65 56 48;
+  --rouveraki-rust: #d9764f;
+  --rouveraki-rust-rgb: 217 118 79;
+  --rouveraki-on-rust: #221c17;
+  --rouveraki-on-rust-rgb: 34 28 23;
+  --rouveraki-gold: #e0ab55;
+  --rouveraki-gold-rgb: 224 171 85;
+  --rouveraki-navy: #8fb6cc;
+  --rouveraki-navy-rgb: 143 182 204;
+  color-scheme: dark;
+}
+
+/* ===== base ============================================================== */
+@layer base {
+  * {
+    @apply border-line;
+  }
+  html {
+    scroll-behavior: smooth;
+    /* offset for the sticky header when jumping to #category anchors */
+    scroll-padding-top: 8.5rem;
+  }
+  body {
+    @apply bg-sand text-char font-sans antialiased;
+    font-size: 16px; /* 16px floor, spec §2 */
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-balance;
+  }
+  /* Visible, brand-coloured focus ring everywhere — checkout must be fully
+     keyboard navigable (spec §7). */
+  :focus-visible {
+    outline: 3px solid rgb(var(--rouveraki-rust-rgb));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Hide the horizontal scrollbar on the category pill rail without
+     preventing scroll. */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+/* ===== texture accents (CSS-only, no image payload — spec §1) ============ */
+@layer components {
+  /* Fine linen weave for large cream areas. */
+  .tex-linen {
+    background-image:
+      repeating-linear-gradient(45deg, rgb(var(--rouveraki-char-rgb) / 0.018) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(-45deg, rgb(var(--rouveraki-char-rgb) / 0.018) 0 1px, transparent 1px 4px);
+  }
+  /* Horizontal wood grain for section dividers / dark bands. */
+  .tex-wood {
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgb(var(--rouveraki-char-rgb) / 0.05) 0 1px,
+      transparent 1px 3px,
+      rgb(var(--rouveraki-char-rgb) / 0.03) 3px 4px,
+      transparent 4px 9px
+    );
+  }
+  /* Twisted-rope rule, used as a section separator. */
+  .tex-rope {
+    height: 6px;
+    background-image: repeating-linear-gradient(
+      115deg,
+      rgb(var(--rouveraki-gold-rgb) / 0.55) 0 4px,
+      rgb(var(--rouveraki-gold-rgb) / 0.15) 4px 9px
+    );
+    border-radius: 999px;
+  }
+
+  /* Press feedback: a short, slightly overshooting spring on release rather
+     than a linear ease, so a tap reads as physical. Transform only. */
+  .btn {
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-full px-6
+           text-base font-semibold;
+    transition: transform 220ms cubic-bezier(0.22, 1.2, 0.36, 1),
+                background-color 150ms ease-out,
+                color 150ms ease-out;
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .btn:hover { transform: scale(1.02); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn:active { transform: scale(0.97); transition-duration: 90ms; }
+  }
+  .btn-primary { @apply btn bg-rust text-onrust shadow-card hover:bg-rust/90; }
+  .btn-secondary {
+    @apply btn border-2 border-current bg-transparent text-char hover:bg-char/5;
+  }
+  .btn-ghost { @apply btn px-4 text-char/80 hover:bg-char/5; }
+
+  .card { @apply rounded-card border border-line bg-surface shadow-card; }
+
+  /* A card that is itself a button. Same press language as .btn. */
+  .card-tappable {
+    transition: transform 220ms cubic-bezier(0.22, 1.2, 0.36, 1),
+                box-shadow 180ms ease-out;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .card-tappable:active { transform: scale(0.985); transition-duration: 90ms; }
+  }
+
+  .field {
+    @apply min-h-touch w-full rounded-xl border border-line bg-surface px-4 py-3
+           text-base text-char placeholder:text-char/40;
+  }
+  .label { @apply mb-1.5 block text-sm font-semibold text-char/80; }
+}
+
+/* ===== reduced motion: everything becomes instant (spec §7) ============== */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* The scroll-reveal helper sets opacity:0 until observed — make sure content
+     is visible immediately when motion is reduced. */
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+  /* Freeze the hero crossfade on its first frame. */
+  [data-hero-slide] { animation: none !important; }
+  [data-hero-slide]:not(:first-child) { opacity: 0 !important; }
+}
