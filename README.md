@@ -3,10 +3,13 @@
 Owned online ordering for Rouveraki: café from 06:00, grill house through the
 day, bar until 01:00. Built to replace third-party commission on efood/BOX.gr.
 
-This is **Part 1** of the build plan — every screen, the full backend, the
-database, the admin panel and the mobile behaviour. See
-[Part 2 — still to do](#part-2--still-to-do) for the three things deliberately
-left for a later, careful pass.
+Payments run behind a single switch. `PAYMENT_MODE=mock` (the default) makes no
+network call and auto-confirms with a fake reference, so the whole lifecycle is
+testable with zero API keys. `PAYMENT_MODE=live` uses Viva Smart Checkout and
+Fiscalisation for Online Sales. Both implement one provider interface, so there
+is no second code path. See `src/lib/payments/index.ts`.
+
+To put it on your phone, see **[DEPLOY.md](DEPLOY.md)**.
 
 ---
 
@@ -37,6 +40,7 @@ except `DATABASE_URL` is required to browse the site and place cash orders.
 | `npm run build` | `prisma generate` + production build |
 | `npm run db:up` | local throwaway Postgres on port 55432 (dev only) |
 | `npm run db:reset` | wipe that database and start clean |
+| `npm run db:clear-orders` | empty the order queue, keep the menu (localhost only) |
 | `npm run prisma:push` | apply the schema |
 | `npm run seed` | load the menu |
 | `npm run verify` | business-rule checks, no database needed |
@@ -135,33 +139,63 @@ fiscalisation is still a stub — see below.
 
 ---
 
-## Part 2 — still to do
+## Payments, fiscal receipts and the webhook
 
-Three things were deliberately left out of this build, because a quiet mistake
-in them is expensive and hard to detect:
+All three are built. What remains is confirmation, not code.
 
-1. **Viva Fiscalisation** (`src/lib/viva-fiscalisation.ts`) — the legally
-   required receipt, and the credit note on a refund. The module records intent
-   and logs loudly; it never pretends a receipt was issued.
-   `assertFiscalisationReadyForProduction()` is the guard that stops this
-   shipping by accident.
-2. **The webhook** (`src/app/api/webhooks/viva/route.ts`) — this is built and
-   defensive already: it treats the webhook body purely as a hint, confirms the
-   payment by calling Viva's API directly, matches the amount and the merchant
-   reference against our own order row, and records every event id so a retry
-   cannot double-refund. It still deserves a careful line-by-line read before
-   money moves.
-3. **An adversarial security review** of checkout, the webhook and admin auth
-   together, once the above is done.
+**The switch** is `PAYMENT_MODE`. Mock mode is not a stub: it builds the same
+`fiscalisationData` object as live mode and asserts the VAT lines balance to the
+cent, so a fiscal error shows up on a test order rather than on the first real
+receipt.
+
+**VAT** is the part worth knowing about. Greek food service and alcohol are not
+the same rate, and this menu spans coffee, souvlaki and spirits. Rates are
+per-category in `src/lib/payments/fiscalisation.ts`, currently 13% for served
+food and drink and 24% for alcohol. Four things there are marked
+`TODO:ACCOUNTANT` and must be confirmed before going live: the rates
+themselves, the myDATA classification codes, whether the delivery fee follows
+the food rate, and the credit-note flow for a refund.
+
+**The webhook** (`src/app/api/webhooks/viva/route.ts`) never trusts the request
+body. It checks an HMAC-SHA256 signature over the raw bytes, then re-reads the
+transaction from the provider with our own credentials and takes the amount and
+merchant reference from that response. It also enforces idempotency, amount
+matching and the state machine. The signature function has its own tests in
+`npm run verify`. It still deserves a line-by-line read before money moves.
+
+**Still genuinely outstanding:** an adversarial security review of checkout, the
+webhook and admin auth together, and the real-device pass on 4G.
 
 ## Verification status
 
-- `npm run verify` — 34 business-rule checks pass
+- `npm run verify` — 47 business-rule checks pass, including VAT splitting and
+  webhook signature verification
 - `npm run verify:api` — 23 end-to-end checks pass against a real Postgres,
   covering the age gate, cart tampering, zone minimums, unauthenticated admin
-  access, a forged payment webhook, and concurrent staff transitions
+  access, a forged payment webhook, and concurrent staff transitions.
+  Refuses to run while `DEV_BYPASS` is on, because the admin-auth assertions
+  would be meaningless.
 - `npm run contrast` — passes AA in both light and dark
-- `npm run build` — clean; every customer-facing route is under the 150 kB
-  first-load budget
-- **Not done:** the real-device pass on 4G (spec build order, step 8). It needs
-  a phone, and devtools throttling is not a substitute.
+- `npm run build` — clean
+- **Not done:** the real-device pass on 4G. It needs a phone, and devtools
+  throttling is not a substitute.
+
+### First-load JS
+
+The animation layer costs about 45 kB. Customer routes:
+
+| Route | First load |
+| --- | --- |
+| `/checkout` | 120 kB |
+| `/order/[code]` | 116 kB |
+| `/` | 166 kB |
+| `/menu` | 172 kB |
+
+The home and menu pages are over the 150 kB target set at the start of the
+project. That is the price of Motion, which is what makes the sheets, toasts
+and cart bar feel physical rather than like CSS fades. If the budget matters
+more than the motion, the lever is `src/components/Reveal.tsx` and
+`src/components/Toaster.tsx`: reverting those two to CSS transitions removes
+Motion from the homepage entirely. LazyMotion was tried and made it worse here,
+because the feature chunk still counts as first-load from a root-layout
+provider.
