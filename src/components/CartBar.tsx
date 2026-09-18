@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ShoppingBag } from "@phosphor-icons/react";
-import { SPRING_TAP, SPRING_SHEET, EASE_EXIT } from "@/lib/motion";
+import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { useCart, cartCount, cartSubtotalCents } from "@/store/cart";
 import { formatEuro } from "@/lib/money";
-import CartSheet from "./CartSheet";
+import dynamic from "next/dynamic";
+
+// Loaded when the cart is first opened, not on every page that shows the bar.
+const CartSheet = dynamic(() => import("./CartSheet"), { ssr: false });
 
 /**
  * Persistent floating cart bar. Appears as soon as there is one item, sits
@@ -26,7 +28,6 @@ export default function CartBar() {
   const lines = useCart((s) => s.lines);
   const lastAddedAt = useCart((s) => s.lastAddedAt);
   const [open, setOpen] = useState(false);
-  const reduce = useReducedMotion();
 
   // Zustand's persist middleware rehydrates after mount; rendering the bar
   // before that would flash an empty cart on a reload.
@@ -50,46 +51,46 @@ export default function CartBar() {
 
   return (
     <>
-      <AnimatePresence>
-        {count > 0 && (
-          <motion.div
-            initial={reduce ? { opacity: 0 } : { y: 88, opacity: 0 }}
-            animate={reduce ? { opacity: 1 } : { y: 0, opacity: 1 }}
-            exit={reduce ? { opacity: 0 } : { y: 88, opacity: 0, transition: EASE_EXIT }}
-            transition={SPRING_SHEET}
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4"
-            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
-          >
-            <motion.button
-              type="button"
-              onClick={() => setOpen(true)}
-              // The bar itself pulses when something is added, so the change is
-              // felt at the bottom of the screen where the thumb already is.
-              animate={bump && !reduce ? { scale: [1, 1.045, 1] } : { scale: 1 }}
-              transition={SPRING_TAP}
-              whileTap={reduce ? undefined : { scale: 0.97 }}
-              className="pointer-events-auto flex w-full max-w-md items-center justify-between gap-4 rounded-full bg-rust px-5 py-3.5 text-onrust shadow-lift"
-            >
-              <span className="flex items-center gap-2.5">
-                <ShoppingBag size={20} weight="fill" aria-hidden="true" />
-                <motion.span
-                  key={count}
-                  initial={reduce ? false : { scale: 0.6, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={SPRING_TAP}
-                  className="inline-flex size-7 items-center justify-center rounded-full bg-onrust/20 text-sm font-bold tabular-nums"
-                >
-                  {count}
-                </motion.span>
-                <span className="font-semibold">{t("cart.viewCart")}</span>
-              </span>
-              <span className="font-bold tabular-nums">
-                {formatEuro(subtotal / 100, locale === "en" ? "en-IE" : "el-GR")}
-              </span>
-            </motion.button>
-          </motion.div>
+      {/*
+        translateY(100%) is the element's own height, so the bar hides itself
+        exactly regardless of how tall it renders. A CSS transition rather than
+        a JS animation: it retargets mid-flight if the cart empties while the
+        bar is still sliding in, where a keyframe would restart from zero.
+      */}
+      <div
+        className={clsx(
+          "pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4",
+          "transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]",
+          count > 0 ? "translate-y-0 opacity-100" : "translate-y-full opacity-0",
         )}
-      </AnimatePresence>
+        style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+        aria-hidden={count === 0}
+      >
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          tabIndex={count === 0 ? -1 : 0}
+          className={clsx(
+            "btn pointer-events-auto flex w-full max-w-md items-center justify-between",
+            "gap-4 rounded-full bg-rust px-5 py-3.5 text-onrust shadow-lift",
+            bump && "motion-safe:animate-cart-bump",
+          )}
+        >
+          <span className="flex items-center gap-2.5">
+            <ShoppingBag size={20} weight="fill" aria-hidden="true" />
+            <span
+              key={count}
+              className="inline-flex size-7 items-center justify-center rounded-full bg-onrust/20 text-sm font-bold tabular-nums motion-safe:animate-count-pop"
+            >
+              {count}
+            </span>
+            <span className="font-semibold">{t("cart.viewCart")}</span>
+          </span>
+          <span className="font-bold tabular-nums">
+            {formatEuro(subtotal / 100, locale === "en" ? "en-IE" : "el-GR")}
+          </span>
+        </button>
+      </div>
 
       <CartSheet open={open} onClose={() => setOpen(false)} />
     </>

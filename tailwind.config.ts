@@ -48,6 +48,14 @@ const config: Config = {
           from: { opacity: "0", transform: "translateY(18px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "cart-bump": {
+          "0%, 100%": { transform: "scale(1)" },
+          "45%": { transform: "scale(1.045)" },
+        },
+        "count-pop": {
+          from: { transform: "scale(0.62)", opacity: "0" },
+          to: { transform: "scale(1)", opacity: "1" },
+        },
         "pulse-ring": {
           "0%": { transform: "scale(0.9)", opacity: "0.7" },
           "70%": { transform: "scale(1.6)", opacity: "0" },
@@ -57,6 +65,8 @@ const config: Config = {
       animation: {
         "rise-in": "rise-in 600ms cubic-bezier(0.22,1,0.36,1) both",
         "pulse-ring": "pulse-ring 1.8s ease-out infinite",
+        "cart-bump": "cart-bump 260ms cubic-bezier(0.23,1,0.32,1)",
+        "count-pop": "count-pop 200ms cubic-bezier(0.23,1,0.32,1)",
       },
     },
   },

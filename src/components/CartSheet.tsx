@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { useCart, cartTotals } from "@/store/cart";
 import { formatEuro } from "@/lib/money";
-import { SPRING_SHEET, EASE_EXIT } from "@/lib/motion";
 import QuantityStepper from "./QuantityStepper";
 import Sheet from "./Sheet";
 
@@ -88,18 +86,8 @@ export default function CartSheet({
         </div>
       ) : (
         <ul className="px-5">
-          {/* Removing a line collapses it rather than snapping the list. */}
-          <AnimatePresence initial={false}>
-            {lines.map((l) => (
-              <motion.li
-                key={l.lineId}
-                layout
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0, transition: EASE_EXIT }}
-                transition={SPRING_SHEET}
-                className="overflow-hidden border-b border-line last:border-b-0"
-              >
+          {lines.map((l) => (
+              <li key={l.lineId} className="border-b border-line last:border-b-0">
                 <div className="flex gap-3 py-4">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold leading-snug">
@@ -131,9 +119,8 @@ export default function CartSheet({
                     label={pick(l.name, l.nameEn)}
                   />
                 </div>
-              </motion.li>
+              </li>
             ))}
-          </AnimatePresence>
         </ul>
       )}
     </Sheet>

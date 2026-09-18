@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { motion, useMotionValueEvent, useScroll } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { List, X, Phone } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { useI18n } from "@/i18n/LanguageProvider";
@@ -21,14 +20,25 @@ export default function Header() {
   // the way on a kitchen tablet.
   const isAdmin = pathname?.startsWith("/admin");
 
-  // Motion's scroll value is rAF-batched and lives outside React's render
-  // cycle, so this does not re-render on every scroll frame the way a
-  // window scroll listener would.
-  const { scrollY } = useScroll();
-  useMotionValueEvent(scrollY, "change", (y) => {
-    const next = y > 24;
-    setScrolled((prev) => (prev === next ? prev : next));
-  });
+  /**
+   * A one-pixel sentinel near the top of the document, watched by an
+   * IntersectionObserver. When it scrolls out of view the header is "scrolled".
+   *
+   * No scroll listener: a listener fires on every frame and would re-render
+   * this component continuously. The observer fires twice in total, once each
+   * way past the threshold.
+   */
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setScrolled(!entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
@@ -42,6 +52,9 @@ export default function Header() {
 
   return (
     <>
+      {/* Watched by the observer above to decide the header's scrolled state. */}
+      <div ref={sentinelRef} aria-hidden="true" className="absolute top-6 h-px w-px" />
+
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-rust focus:px-5 focus:py-3 focus:text-onrust"
@@ -108,13 +121,9 @@ export default function Header() {
         </div>
 
         {menuOpen && (
-          <motion.div
+          <div
             id="mobile-nav"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden border-t border-line bg-sand px-4 pb-4 pt-2 md:hidden"
+            className="border-t border-line bg-sand px-4 pb-4 pt-2 md:hidden"
           >
             <nav aria-label="mobile" className="flex flex-col">
               {links.map((l) => (
@@ -139,7 +148,7 @@ export default function Header() {
                 {t("hero.cta")}
               </Link>
             </div>
-          </motion.div>
+          </div>
         )}
       </header>
     </>

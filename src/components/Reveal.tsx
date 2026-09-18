@@ -1,22 +1,23 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
-import type { ElementType, ReactNode } from "react";
-import { EASE_REVEAL } from "@/lib/motion";
+import { useEffect, useRef, useState, type ElementType, type ReactNode } from "react";
+import clsx from "clsx";
 
 /**
- * Fade-and-rise on scroll, for customer-facing pages only.
+ * Scroll reveal for marketing surfaces only. Not used in admin: staff want the
+ * list, not a performance.
  *
- * Uses Motion's `whileInView`, which is an IntersectionObserver under the
- * hood, rather than a scroll listener. `once: true` means it fires one time and
- * stops costing anything.
+ * Pure CSS transition driven by one IntersectionObserver, which disconnects the
+ * moment it fires. No animation library and no scroll listener, so this costs
+ * nothing after the first paint and cannot stutter under load the way a
+ * rAF-driven animation does.
  *
- * Under reduced motion the content renders immediately with no transform.
- * Admin screens deliberately do not use this: staff want the list, not a reveal.
+ * Reduced motion is handled in globals.css, which forces [data-reveal] fully
+ * visible, so there is no branch here that could leave content hidden.
  */
 export default function Reveal({
   children,
-  as = "div",
+  as: Tag = "div",
   delayMs = 0,
   className,
 }: {
@@ -25,21 +26,38 @@ export default function Reveal({
   delayMs?: number;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
-  const Tag = motion[as as keyof typeof motion] as typeof motion.div;
+  const ref = useRef<HTMLElement>(null);
+  const [shown, setShown] = useState(false);
 
-  if (reduce) {
-    const Plain = as as ElementType;
-    return <Plain className={className}>{children}</Plain>;
-  }
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setShown(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShown(true);
+        observer.disconnect(); // fire once; re-animating fights the reader
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <Tag
-      className={className}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15, margin: "0px 0px -8% 0px" }}
-      transition={{ ...EASE_REVEAL, delay: delayMs / 1000 }}
+      ref={ref}
+      data-reveal=""
+      data-visible={shown ? "" : undefined}
+      className={clsx("reveal", className)}
+      style={delayMs ? { transitionDelay: `${delayMs}ms` } : undefined}
     >
       {children}
     </Tag>

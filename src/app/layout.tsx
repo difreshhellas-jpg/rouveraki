@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartBar from "@/components/CartBar";
 import { ToastProvider } from "@/components/Toaster";
+import Intro from "@/components/Intro";
 
 /**
  * Greek is the default language of this site, so both faces must carry the full
@@ -124,12 +125,12 @@ export default function RootLayout({
       </head>
       <body className={`${display.variable} ${sans.variable} tex-linen`}>
         <LanguageProvider>
-          <ToastProvider>
-            <Header />
-            <main id="content">{children}</main>
-            <Footer />
-            <CartBar />
-          </ToastProvider>
+          <Header />
+          <main id="content">{children}</main>
+          <Footer />
+          <CartBar />
+          <ToastProvider />
+          <Intro />
         </LanguageProvider>
       </body>
     </html>

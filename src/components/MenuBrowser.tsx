@@ -8,7 +8,11 @@ import { formatEuro } from "@/lib/money";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/store/cart";
 import ItemThumb from "./ItemThumb";
-import ItemSheet from "./ItemSheet";
+import dynamic from "next/dynamic";
+
+// Loaded on first tap, not on first paint. The drawer library is dead weight
+// for a visitor who only scrolls the menu.
+const ItemSheet = dynamic(() => import("./ItemSheet"), { ssr: false });
 import { useToast } from "./Toaster";
 import { Plus, Check } from "@phosphor-icons/react";
 

@@ -39,6 +39,13 @@
   --rouveraki-line: #e0d3c2;       /* hairline borders                         */
   --rouveraki-line-rgb: 224 211 194;
 
+  /* Motion curves. The built-in CSS easings are too weak for deliberate UI
+     motion, so these are the strong custom curves from the animation
+     standards. Every transition in the app uses one of the three. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* entering + exiting */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* moving on screen   */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* iOS-like drawer    */
+
   color-scheme: light;
 }
 
@@ -143,20 +150,24 @@
     border-radius: 999px;
   }
 
-  /* Press feedback: a short, slightly overshooting spring on release rather
-     than a linear ease, so a tap reads as physical. Transform only. */
+  /* Press feedback. 160ms ease-out, scale 0.97: subtle enough to read as a
+     press rather than a shrink. scale() takes the label and icon with it,
+     which is what makes it feel physical.
+     No hover gating needed on :active — it is a real press on touch. */
   .btn {
     @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-full px-6
            text-base font-semibold;
-    transition: transform 220ms cubic-bezier(0.22, 1.2, 0.36, 1),
-                background-color 150ms ease-out,
-                color 150ms ease-out;
+    transition:
+      transform 160ms var(--ease-out),
+      background-color 150ms ease,
+      color 150ms ease;
   }
-  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .btn:active { transform: scale(0.97); }
+
+  /* Hover motion is gated on a real pointer: touch fires a false hover on tap,
+     which leaves the button stuck in its hover state after the finger lifts. */
+  @media (hover: hover) and (pointer: fine) {
     .btn:hover { transform: scale(1.02); }
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .btn:active { transform: scale(0.97); transition-duration: 90ms; }
   }
   .btn-primary { @apply btn bg-rust text-onrust shadow-card hover:bg-rust/90; }
   .btn-secondary {
@@ -164,16 +175,32 @@
   }
   .btn-ghost { @apply btn px-4 text-char/80 hover:bg-char/5; }
 
+  /* Scroll reveal. clip-path wipes the content in from the bottom edge rather
+     than sliding a box around, which reads as the content arriving rather than
+     the layout moving. 600ms ease-in-out per the recipe: this is a marketing
+     surface, so it is allowed to be slower than the 300ms UI budget. */
+  .reveal {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+    transition:
+      clip-path 600ms var(--ease-in-out),
+      opacity 400ms var(--ease-out);
+  }
+  .reveal[data-visible] {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+
   .card { @apply rounded-card border border-line bg-surface shadow-card; }
 
-  /* A card that is itself a button. Same press language as .btn. */
+  /* A card that is itself a button. Same press language as .btn, scaled down
+     slightly because the surface is larger. */
   .card-tappable {
-    transition: transform 220ms cubic-bezier(0.22, 1.2, 0.36, 1),
-                box-shadow 180ms ease-out;
+    transition:
+      transform 160ms var(--ease-out),
+      box-shadow 180ms ease;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .card-tappable:active { transform: scale(0.985); transition-duration: 90ms; }
-  }
+  .card-tappable:active { transform: scale(0.985); }
 
   .field {
     @apply min-h-touch w-full rounded-xl border border-line bg-surface px-4 py-3
@@ -182,19 +209,67 @@
   .label { @apply mb-1.5 block text-sm font-semibold text-char/80; }
 }
 
-/* ===== reduced motion: everything becomes instant (spec §7) ============== */
+/* ===== intro ==============================================================
+   A two second curtain on first load. This is a rare, first-impression moment,
+   so it gets some of the delight budget that a button press never would.
+
+   It never blocks: pointer-events are off for its whole life, and it is removed
+   from the DOM once finished. Shown once per tab session, because the second
+   time you see it in a visit it stops being an arrival and becomes a delay. */
+@keyframes intro-veil {
+  0%   { opacity: 1; }
+  62%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes intro-mark {
+  0%   { opacity: 0; transform: scale(0.94); }
+  22%  { opacity: 1; transform: scale(1); }
+  58%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+@keyframes intro-rule {
+  0%   { transform: scaleX(0); }
+  40%  { transform: scaleX(1); }
+  100% { transform: scaleX(1); }
+}
+
+[data-intro] {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--rouveraki-sand-rgb));
+  pointer-events: none;
+  animation: intro-veil 2000ms var(--ease-out) forwards;
+}
+[data-intro-mark] {
+  animation: intro-mark 2000ms var(--ease-out) forwards;
+}
+[data-intro-rule] {
+  transform-origin: left center;
+  animation: intro-rule 2000ms var(--ease-out) forwards;
+}
+
+/* ===== reduced motion =====================================================
+   Fewer and gentler, not zero. Opacity and colour transitions still help the
+   user follow what changed; movement and scaling are what cause trouble, so
+   those are what get removed. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-  /* The scroll-reveal helper sets opacity:0 until observed — make sure content
-     is visible immediately when motion is reduced. */
-  [data-reveal] { opacity: 1 !important; transform: none !important; }
+
+  /* Drop transform-based motion everywhere, keep opacity/colour. */
+  .btn:active,
+  .btn:hover,
+  .card-tappable:active { transform: none; }
+
+  /* Scroll reveals appear immediately, fully. */
+  [data-reveal] { clip-path: none !important; opacity: 1 !important; }
+
   /* Freeze the hero crossfade on its first frame. */
   [data-hero-slide] { animation: none !important; }
   [data-hero-slide]:not(:first-child) { opacity: 0 !important; }
+
+  /* The intro is pure delight; skip it entirely. */
+  [data-intro] { display: none !important; }
 }

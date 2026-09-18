@@ -37,7 +37,7 @@ export default function DaypartStrip() {
           const first = CATEGORIES.find((c) => c.daypart === d.id);
           const Icon = d.icon;
           return (
-            <Reveal key={d.id} delayMs={i * 90}>
+            <Reveal key={d.id} delayMs={i * 60}>
               <Link
                 href={`/menu#${first?.slug ?? ""}`}
                 className="group card flex h-full flex-col overflow-hidden transition-shadow duration-200 hover:shadow-lift"

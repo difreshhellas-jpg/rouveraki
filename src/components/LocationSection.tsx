@@ -80,7 +80,7 @@ export default function LocationSection() {
         </Reveal>
 
         {/* --- map ------------------------------------------------------ */}
-        <Reveal delayMs={120}>
+        <Reveal delayMs={80}>
           <div className="h-full min-h-[22rem] overflow-hidden rounded-card border border-line shadow-card">
             <iframe
               title={t("location.mapLabel")}

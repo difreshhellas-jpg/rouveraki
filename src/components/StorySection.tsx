@@ -46,7 +46,7 @@ export default function StorySection() {
           </p>
         </Reveal>
 
-        <Reveal delayMs={120}>
+        <Reveal delayMs={80}>
           <div className="relative aspect-[4/3] overflow-hidden rounded-card shadow-lift">
             <Image
               src={STORY_PHOTO.src}

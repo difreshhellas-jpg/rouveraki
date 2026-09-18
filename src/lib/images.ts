@@ -89,10 +89,13 @@ export const HERO_IMAGES = [
     alt: "Γύρος σε πίτα με πατάτες",
     altEn: "Gyros in pita with fries",
   },
+  // The bar-interior shot is kept for the story section. Under the hero's
+  // legibility scrim it read as a solid black frame, so the middle slide is a
+  // bright food shot instead.
   {
-    src: photo(PHOTOS.barInterior, 2000, 1400),
-    alt: "Ο χώρος του μπαρ το βράδυ",
-    altEn: "The bar at night",
+    src: photo(PHOTOS.mezeSpread, 2000, 1400),
+    alt: "Ορεκτικά και πιάτα για μοίρασμα",
+    altEn: "Starters and sharing plates",
   },
   {
     src: photo(PHOTOS.coffee, 2000, 1400),
