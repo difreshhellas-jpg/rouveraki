@@ -11,6 +11,11 @@ is no second code path. See `src/lib/payments/index.ts`.
 
 To put it on your phone, see **[DEPLOY.md](DEPLOY.md)**.
 
+To build this again for another restaurant without repeating the bugs, the
+whole workflow is a skill: `.claude/skills/restaurant-ordering-site/` (also
+installed globally at `~/.claude/skills/`). Its `TRAPS.md` is every bug this
+build hit and the fix that held.
+
 ---
 
 ## Quick start
