@@ -95,7 +95,7 @@ Everything below is marked `TODO:OWNER` in the code and is a placeholder today.
 
 | what | where | why it is not filled in |
 | --- | --- | --- |
-| Brand colours | `src/app/globals.css` | sampled placeholders; take the real values off the Rouveraki logo, then re-run `npm run contrast` |
+| Brand colours | `src/app/globals.css` | warm black + gold from the ui-ux-pro-max design-system generator; if the real logo dictates otherwise, change the semantic tokens in one pass and re-run `npm run contrast` |
 | Photography | `src/lib/photos.ts` | the site is photo-led by design; gradients stand in until real shots exist, and the layout does not shift when they land |
 | The menu itself | `prisma/seed.ts` | the twelve categories are confirmed; the items and prices are a realistic stand-in and must be replaced |
 | Delivery zones, minimums, fees | `src/lib/brand.ts` | not published anywhere public — ask the owner |
@@ -187,20 +187,20 @@ webhook and admin auth together, and the real-device pass on 4G.
 
 ### First-load JS
 
-The animation layer costs about 45 kB. Customer routes:
+Customer routes, all under the 150 kB target:
 
 | Route | First load |
 | --- | --- |
-| `/checkout` | 120 kB |
-| `/order/[code]` | 116 kB |
-| `/` | 166 kB |
-| `/menu` | 172 kB |
+| `/` | 137 kB |
+| `/menu` | 148 kB |
+| `/checkout` | 132 kB |
+| `/order/[code]` | 129 kB |
 
-The home and menu pages are over the 150 kB target set at the start of the
-project. That is the price of Motion, which is what makes the sheets, toasts
-and cart bar feel physical rather than like CSS fades. If the budget matters
-more than the motion, the lever is `src/components/Reveal.tsx` and
-`src/components/Toaster.tsx`: reverting those two to CSS transitions removes
-Motion from the homepage entirely. LazyMotion was tried and made it worse here,
-because the feature chunk still counts as first-load from a root-layout
-provider.
+There is no animation library. Toasts are Sonner, the sheet is Vaul (both
+loaded on first tap, not first paint), and everything else is CSS: scroll
+reveals are `animation-timeline: view()`, the tilt is `perspective` +
+`rotateX/Y` driven by custom properties, route changes are the View
+Transitions API. Motion was tried and removed: its `x`/`y`/`scale`
+shorthands are not hardware-accelerated, and it cost 45 kB on every page.
+The remaining weight over the earliest build is the second font family and
+its weights, which the type hierarchy needs.

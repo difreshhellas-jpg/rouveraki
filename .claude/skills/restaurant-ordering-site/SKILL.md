@@ -52,9 +52,31 @@ cp -r ~/.claude/skills/{ui-ux-pro-max,taste-skill} "$PROJ/.claude/skills/"
 
 ## 1. Scaffold and tokens
 
+**Run the design-system generator before choosing a single colour:**
+
+```bash
+python ~/.claude/skills/ui-ux-pro-max/scripts/search.py \
+  "<cuisine> <venue type> <city> restaurant ordering premium consumer" \
+  --design-system -p "<Name>" -f markdown --variance 6 --motion 6 --density 4
+```
+
+Take its direction, palette and effects. The first Rouveraki build guessed
+its own palette and the result looked like mud next to the food photography;
+the generator's warm black + gold was right first time. Then verify every
+font it names for a Greek subset (TRAPS.md §Design pass) and substitute the
+closest face that has one. Declare the taste-skill design read and dials in
+one line before writing CSS.
+
 Do not run `create-next-app` interactively; it may be declined. Write
 `package.json`, `tsconfig.json`, `next.config.ts`, `tailwind.config.ts`,
 `postcss.config.mjs` by hand from the reference repo.
+
+Tokens are **semantic** (`paper`, `surface`, `ink`, `stone`, `line`, `band`,
+`accent`, `accent-bright`, `on-accent`) with hex and `-rgb` twins, tinted
+shadows as variables, and the three easing curves. Header is a translucent
+material (`.glass`), buttons are a lit gradient with an inset top edge, cards
+get CSS 3D tilt on fine pointers (`Tilt.tsx`). Route changes use
+`experimental.viewTransition`.
 
 Stack that worked: Next.js 15.5 (App Router), React 19, Tailwind 3.4, Zustand 5,
 Prisma 6, Zod, `@phosphor-icons/react`, `sonner`, `vaul`. **No Motion.** See
