@@ -11,6 +11,7 @@ import { BRAND } from "@/lib/brand";
 import StaggerText from "./motion/StaggerText";
 import ScrollCue from "./motion/ScrollCue";
 import { useRipple } from "./motion/useRipple";
+import WireGlobe from "./cinematic/WireGlobe";
 
 /**
  * Full-bleed hero.
@@ -57,7 +58,8 @@ export default function Hero() {
       <style dangerouslySetInnerHTML={{ __html: keyframes }} />
 
       {/* ---- photo layers ---------------------------------------------- */}
-      <div className="absolute inset-0 -z-20">
+      {/* cine-stack scales 1.14 -> 1 as the hero scrolls away. */}
+      <div className="cine-stack absolute inset-0 -z-20">
         {Array.from({ length: layerCount }).map((_, i) => (
           <div
             key={i}
@@ -90,10 +92,23 @@ export default function Hero() {
       {/* Two layers: a vertical gradient for text legibility at the bottom,
           and a warm tint that ties the photography to the palette instead of
           leaving it looking like a stock image dropped onto a dark page. */}
+      {/* Weighted toward the bottom, where the copy sits, so the headline
+          stays legible over a bright plate without flattening the whole photo. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/45 to-black/25"
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.78) 26%, rgba(0,0,0,0.42) 52%, rgba(0,0,0,0.18) 100%)",
+        }}
       />
+      {/* Darkening half of the pull-back. Plain rgba, never backdrop-filter:
+          a backdrop root here blacks the hero out even at opacity 0. */}
+      <div aria-hidden="true" className="cine-veil absolute inset-0 -z-10 bg-black/55" />
+
+      {/* Wireframe atmosphere, behind the copy and above the photo. */}
+      <WireGlobe className="pointer-events-none absolute inset-0 -z-10 opacity-40" />
+
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 mix-blend-soft-light"
@@ -107,11 +122,11 @@ export default function Hero() {
 
       {/* ---- copy ------------------------------------------------------- */}
       <div
-        className="relative mx-auto w-full max-w-content px-4 pb-16 pt-32 text-white sm:px-6"
+        className="cine-copy relative mx-auto w-full max-w-content px-4 pb-16 pt-32 text-white sm:px-6"
         style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <p
-          className="eyebrow stagger-word flex items-center gap-2.5 !text-white/80"
+          className="eyebrow fade-up flex items-center gap-2.5 !text-white/80"
           style={{ ["--d" as string]: "150ms" }}
         >
           {open !== null && (
@@ -143,19 +158,19 @@ export default function Hero() {
         />
 
         <div
-          className="tex-rope stagger-word mt-6 w-32 origin-left"
+          className="tex-rope fade-up mt-6 w-32 origin-left"
           style={{ ["--d" as string]: "620ms" }}
         />
 
         <p
-          className="stagger-word mt-6 max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl"
+          className="fade-up mt-6 max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl"
           style={{ ["--d" as string]: "900ms" }}
         >
           {t("hero.subtitle")}
         </p>
 
         <div
-          className="stagger-word mt-9 flex flex-wrap items-center gap-3"
+          className="fade-up mt-9 flex flex-wrap items-center gap-3"
           style={{ ["--d" as string]: "1040ms" }}
         >
           {/* Primary CTA: lift + ripple, no magnetic pull. The hero stays calm;

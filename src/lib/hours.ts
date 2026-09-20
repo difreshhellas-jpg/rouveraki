@@ -11,8 +11,27 @@ import { BRAND } from "./brand";
  */
 export const TZ = "Europe/Athens";
 
+/**
+ * Test clock, honoured only outside production.
+ *
+ * The shop is shut between 01:00 and 06:00, so every order check in the API
+ * suite fails with shop_closed if it happens to run overnight — the suite was
+ * silently time-dependent. TEST_CLOCK pins "now" to a fixed instant so the
+ * suite is runnable at any hour.
+ *
+ * Refused outright when NODE_ENV is production, so it can never move a real
+ * customer's clock or hold the shop open past closing.
+ */
+const testClock = (): Date | null => {
+  if (process.env.NODE_ENV === "production") return null;
+  const raw = process.env.TEST_CLOCK;
+  if (!raw) return null;
+  const at = new Date(raw);
+  return Number.isNaN(at.getTime()) ? null : at;
+};
+
 /** Minutes since local midnight in Athens. */
-export const athensMinutes = (at: Date = new Date()): number => {
+export const athensMinutes = (at: Date = testClock() ?? new Date()): number => {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TZ,
     hour: "2-digit",

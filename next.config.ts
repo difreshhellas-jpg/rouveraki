@@ -27,6 +27,12 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // A production build writes into the same .next the dev server is serving
+  // from, which leaves dev throwing "Cannot find module './331.js'" until the
+  // directory is deleted. Setting NEXT_DIST_DIR lets a verification build go
+  // somewhere else while `next dev` keeps running.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+
   // Both packages ship large barrel files. Without this, importing three
   // Phosphor glyphs pulls the whole icon set into the route bundle, which put
   // /menu over the performance budget.

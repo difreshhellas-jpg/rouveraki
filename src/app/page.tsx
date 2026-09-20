@@ -3,6 +3,10 @@ import Marquee from "@/components/motion/Marquee";
 import DaypartStrip from "@/components/DaypartStrip";
 import StorySection from "@/components/StorySection";
 import LocationSection from "@/components/LocationSection";
+import HorizontalStory from "@/components/cinematic/HorizontalStory";
+import ScrollBreak from "@/components/cinematic/ScrollBreak";
+import MenuShowcase from "@/components/cinematic/MenuShowcase";
+import CursorTrail from "@/components/cinematic/CursorTrail";
 
 export default function HomePage() {
   return (
@@ -19,8 +23,18 @@ export default function HomePage() {
         ]}
       />
       <DaypartStrip />
+
+      {/* Pinned pan on desktop, swipeable carousel on touch. */}
+      <HorizontalStory />
+
+      {/* Scene cut into the menu. */}
+      <ScrollBreak />
+
+      <MenuShowcase />
       <StorySection />
       <LocationSection />
+      {/* Desktop pointers only; there is no cursor to trail on touch. */}
+      <CursorTrail />
     </>
   );
 }

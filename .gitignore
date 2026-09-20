@@ -14,3 +14,7 @@ next-env.d.ts
 .devdb/
 .tmp/
 .vercel
+
+# Verification builds write here so `next dev` keeps serving from .next
+.next-verify*/
+*.tsbuildinfo

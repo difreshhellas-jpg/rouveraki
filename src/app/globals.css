@@ -427,6 +427,8 @@
   }
 
   /* ---- stagger ---------------------------------------------------------- */
+  /* One word of a split headline. inline-block is what lets it be
+     transformed, so this class must only ever go on a word span. */
   .stagger-word {
     display: inline-block;
     opacity: 0;
@@ -437,6 +439,16 @@
   }
   @keyframes staggerIn {
     to { opacity: 1; transform: translateY(0) rotate(0); }
+  }
+
+  /* Delayed entrance for a BLOCK element, sequenced against the headline.
+     Separate from .stagger-word on purpose: that one forces inline-block, and
+     putting it on a paragraph or a rule collapses them onto the same line. */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(14px);
+    animation: staggerIn 700ms var(--ease-out) forwards;
+    animation-delay: var(--d, 0ms);
   }
 
   /* ---- scroll cue ------------------------------------------------------- */
@@ -480,6 +492,174 @@
     );
   }
 }
+
+/* ===== cinematic scroll sections ==========================================
+   All of these are CSS scroll-driven animations rather than a scroll library.
+   They run on the compositor, cost no JavaScript per frame, and the site's own
+   CSP (script-src 'self') would block a CDN <script> anyway. Every one sits
+   inside @supports, so where the timeline is unavailable the section renders
+   as a normal, fully readable block instead of an empty scroll void.        */
+
+/* ---- 1. hero pull-back ---------------------------------------------------
+   The photo stack scales down and blurs while a plain dark veil fades in.
+
+   The blur is on the stack, NOT on a backdrop-filter veil. A backdrop-filter
+   element forms its own backdrop root, and inside this section (which carries
+   contain: paint) it blacked the hero out completely even at opacity 0. A
+   plain rgba veil has no such side effect.                                  */
+@supports (animation-timeline: view()) {
+  .cine-stack {
+    animation: cine-pullback linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+    will-change: transform;
+  }
+  .cine-veil {
+    animation: cine-veil linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .cine-copy {
+    animation: cine-copy linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 70%;
+    will-change: transform, opacity;
+  }
+}
+@keyframes cine-pullback {
+  from { transform: scale(1.14); filter: blur(0px); }
+  to   { transform: scale(1);    filter: blur(9px); }
+}
+@keyframes cine-veil {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cine-copy {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-64px); }
+}
+
+/* ---- 2. pinned horizontal story -----------------------------------------
+   Desktop: the rail sticks and the track pans sideways, driven by the outer
+   section's own scroll range.
+   Touch: NOT a stacked fallback. The same panels become a real swipeable
+   scroll-snap carousel, so the horizontal gesture survives on a phone rather
+   than being replaced by a vertical list.                                   */
+/* The rail is NOT a flex container. When it was, the track became a flex item
+   and its width:400% was shrunk straight back to one viewport by the default
+   flex-shrink, so the pan had nothing to travel across. --panels is set inline
+   on the outer section, so the geometry follows the panel count. */
+.hstory-rail { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.hstory-track {
+  display: flex;
+  height: 100%;
+  width: calc(var(--panels, 4) * 100%);
+}
+.hstory-panel { flex: 0 0 calc(100% / var(--panels, 4)); }
+
+@media (min-width: 768px) {
+  @supports (animation-timeline: view()) {
+    /* The timeline has to be NAMED and declared on the tall outer section.
+       An anonymous view() on the track itself is degenerate: the track is
+       exactly one viewport tall, so its own "contain" phase is a single point
+       and the pan never advances past panel one. The outer section is four
+       viewports tall, so its contain phase spans the three we want to pan. */
+    .hstory-outer {
+      view-timeline-name: --hstory;
+      view-timeline-axis: block;
+      /* inset:0, never auto. `auto` adopts the scroller's scroll-padding, and
+         html carries scroll-padding-top:136px so anchor links clear the fixed
+         header. Inherited here it shrinks the scrollport, so `contain 0%` is
+         reached 136px early and the pan starts already 336px along, clipping
+         the first panel before the section has even pinned. */
+      view-timeline-inset: 0;
+    }
+    .hstory-track {
+      animation: hstory-pan linear both;
+      animation-timeline: --hstory;
+      animation-range: contain 0% contain 100%;
+      will-change: transform;
+    }
+  }
+  /* Without a timeline the sticky rail would show panel 1 for the whole
+     section. Release the sticky and let the panels scroll horizontally by
+     hand, which is still usable. */
+  @supports not (animation-timeline: view()) {
+    .hstory-rail { position: static; height: auto; overflow-x: auto; scroll-snap-type: x mandatory; }
+    .hstory-panel { scroll-snap-align: center; }
+  }
+}
+@keyframes hstory-pan {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(-100% + 100vw), 0, 0); }
+}
+/* Phone: swipeable carousel. */
+@media (max-width: 767px) {
+  .hstory-outer { height: auto !important; }
+  .hstory-rail {
+    position: static;
+    height: auto;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .hstory-rail::-webkit-scrollbar { display: none; }
+  /* The rail itself scrolls here, so the track is content-width, not 400%. */
+  .hstory-track { width: auto; }
+  .hstory-panel { flex: 0 0 86%; scroll-snap-align: center; }
+}
+
+/* ---- 3. scroll-break wipe ------------------------------------------------ */
+.wipe-panel { position: sticky; top: 0; height: 100svh; }
+@supports (animation-timeline: view()) {
+  /* Same trap as the horizontal pan: an anonymous view() on the panel is
+     degenerate, because the panel is exactly one viewport tall so its own
+     `contain` phase is a single point and the wipe never advances. The
+     timeline has to be named on the tall outer element. inset:0 because
+     `auto` would inherit html's scroll-padding-top and start the wipe early. */
+  .wipe-outer {
+    view-timeline-name: --wipe;
+    view-timeline-axis: block;
+    view-timeline-inset: 0;
+  }
+  .wipe-panel {
+    animation: wipe-up linear both;
+    animation-timeline: --wipe;
+    animation-range: contain 0% contain 100%;
+  }
+}
+@keyframes wipe-up {
+  from { clip-path: inset(0 0 0 0); }
+  to   { clip-path: inset(0 0 100% 0); }
+}
+@supports not (animation-timeline: view()) {
+  /* No timeline: the break is just a short band, never a blank screen. */
+  .wipe-outer { height: auto !important; }
+  .wipe-panel { position: static; height: 30svh; }
+}
+
+/* ---- 6. interactive menu preview ---------------------------------------- */
+.showcase-row {
+  transition: color 300ms var(--ease-out), padding-left 420ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .showcase-row:hover,
+  .showcase-row[data-active] { color: rgb(var(--accent-rgb)); padding-left: 1.25rem; }
+}
+.showcase-row[data-active] { color: rgb(var(--accent-rgb)); }
+.showcase-preview img {
+  transition: opacity 320ms var(--ease-out), transform 700ms var(--ease-out);
+}
+/* The rule that precedes each row's label, drawn in as it becomes active. */
+.showcase-rule {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 420ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .showcase-row:hover .showcase-rule { transform: scaleX(1); }
+}
+.showcase-row[data-active] .showcase-rule { transform: scaleX(1); }
 
 /* ===== hero ================================================================ */
 /* Each slide drifts slowly while it is showing (Ken Burns). Constant motion,
@@ -544,6 +724,35 @@
   .parallax-media { animation: none !important; transform: none !important; }
   .scroll-cue::after { animation: none !important; transform: translateY(60%); }
   .loader { animation-duration: 1.4s; }
+
+  /* Cinematic sections collapse to plain, fully readable blocks. The hero
+     keeps its photo sharp, the horizontal story becomes a swipeable rail with
+     no pinning, and the wipe becomes a short band rather than a moving mask. */
+  .cine-stack, .cine-veil, .cine-copy { animation: none !important; }
+  .cine-stack { transform: none !important; }
+  .cine-veil { opacity: 0 !important; }
+  .cine-copy { opacity: 1 !important; transform: none !important; }
+
+  .hstory-outer { height: auto !important; }
+  .hstory-rail {
+    position: static !important;
+    height: auto !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+  .hstory-track { animation: none !important; transform: none !important; }
+  .hstory-panel { flex: 0 0 86%; scroll-snap-align: center; }
+
+  .wipe-outer { height: auto !important; }
+  .wipe-panel {
+    position: static !important;
+    height: 24svh !important;
+    animation: none !important;
+    clip-path: none !important;
+  }
+
+  .showcase-row:hover, .showcase-row[data-active] { padding-left: 0; }
+  .showcase-rule { transform: scaleX(1); transition: none; }
   .reveal { animation: none !important; opacity: 1 !important; transform: none !important; }
   [data-hero-slide] { animation: none !important; }
   [data-hero-slide]:not(:first-child) { opacity: 0 !important; }
