@@ -280,6 +280,39 @@
     .tilt[data-active] { box-shadow: var(--shadow-lift); }
   }
 
+  /* Touch: the same 3D effect, driven by the card's own travel through the
+     viewport instead of a cursor. Scroll-driven, so it costs no main-thread
+     work; Tilt.tsx sets data-tilt-scroll only where the timeline exists. */
+  @supports (animation-timeline: view()) {
+    .tilt[data-tilt-scroll] {
+      animation: tilt-rock linear both;
+      animation-timeline: view();
+      animation-range: entry 10% exit 90%;
+    }
+    .tilt[data-tilt-scroll] .tilt-glint {
+      opacity: 0.55;
+      animation: tilt-sweep linear both;
+      animation-timeline: view();
+      animation-range: entry 10% exit 90%;
+    }
+  }
+  @keyframes tilt-rock {
+    from { transform: perspective(900px) rotateX(5deg); }
+    50%  { transform: perspective(900px) rotateX(0deg); }
+    to   { transform: perspective(900px) rotateX(-5deg); }
+  }
+  @keyframes tilt-sweep {
+    from { --gy: 110%; }
+    to   { --gy: -10%; }
+  }
+  /* --gy must be registered for the browser to interpolate it rather than
+     snapping between keyframes. */
+  @property --gy {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 50%;
+  }
+
   /* ---- scroll reveal (customer pages only) ------------------------------- */
   /* Scroll-driven, no JavaScript. Where the browser has no view() timeline the
      rule below never applies and content is simply visible: nothing can ever
@@ -308,6 +341,128 @@
     box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.22);
   }
   .label { @apply mb-1.5 block text-sm font-semibold text-ink/80; }
+
+  /* ---- lift on hover ---------------------------------------------------- */
+  /* For anything pressable that is not a .btn. Gated on a fine pointer: on
+     touch a "hover" fires on tap and sticks after the finger lifts. */
+  .btn-lift { transition: transform 250ms var(--ease-out), box-shadow 250ms var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .btn-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  }
+
+  /* ---- card lift -------------------------------------------------------- */
+  .card-lift { transition: transform 250ms var(--ease-out), box-shadow 250ms var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .card-lift:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); }
+  }
+
+  /* ---- image zoom ------------------------------------------------------- */
+  /* The frame clips; the image inside scales. Scaling the frame would drag the
+     card's border radius and shadow with it. */
+  .img-zoom { overflow: hidden; }
+  .img-zoom img { transition: transform 600ms var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    /* will-change is promoted on hover only. Declaring it permanently gave
+       every one of the 71 menu thumbnails its own compositor layer at once,
+       which exhausted the raster budget and left them all blank. Promote the
+       one image that is about to move, not every image that might. */
+    .img-zoom:hover img,
+    .group:hover .img-zoom img {
+      transform: scale(1.07);
+      will-change: transform;
+    }
+  }
+
+  /* ---- spinner ---------------------------------------------------------- */
+  /* linear, because a progress indicator should not ease. */
+  .loader {
+    width: 1.125em;
+    height: 1.125em;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 700ms linear infinite;
+    display: inline-block;
+    vertical-align: -0.2em;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- ripple ----------------------------------------------------------- */
+  .ripple-host { position: relative; overflow: hidden; }
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.28;
+    transform: scale(0);
+    pointer-events: none;
+    animation: rippleAnim 620ms var(--ease-out) forwards;
+  }
+  @keyframes rippleAnim { to { transform: scale(2.6); opacity: 0; } }
+
+  /* ---- marquee ---------------------------------------------------------- */
+  /* Two identical tracks; the pair translates by exactly one track width, so
+     the seam is invisible and the loop never jumps. Constant motion, so linear. */
+  .marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent); mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent); }
+  .marquee__inner { display: flex; width: max-content; animation: marquee 32s linear infinite; }
+  .marquee:hover .marquee__inner { animation-play-state: paused; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  /* ---- parallax --------------------------------------------------------- */
+  /* Scroll-driven, not background-attachment: fixed. `fixed` is unsupported on
+     iOS Safari, repaints the whole layer on every frame where it is supported,
+     and cannot be tuned. This runs off the main thread and degrades to a plain
+     static image where the timeline is unavailable. */
+  @supports (animation-timeline: view()) {
+    .parallax-media {
+      animation: parallax-rise linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      will-change: transform;
+    }
+  }
+  @keyframes parallax-rise {
+    from { transform: translate3d(0, -8%, 0) scale(1.18); }
+    to   { transform: translate3d(0, 8%, 0) scale(1.18); }
+  }
+
+  /* ---- stagger ---------------------------------------------------------- */
+  .stagger-word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.5em) rotate(1.5deg);
+    animation: staggerIn 760ms var(--ease-out) forwards;
+    animation-delay: var(--d, 0ms);
+    will-change: transform, opacity;
+  }
+  @keyframes staggerIn {
+    to { opacity: 1; transform: translateY(0) rotate(0); }
+  }
+
+  /* ---- scroll cue ------------------------------------------------------- */
+  /* No "Scroll" label: a reader looking at the hero knows what scrolling is.
+     A drawn line with a travelling highlight, which reads as direction without
+     spelling it out. Fades once the reader has gone past the fold. */
+  .scroll-cue {
+    width: 1px;
+    height: 56px;
+    background: rgb(255 255 255 / 0.25);
+    overflow: hidden;
+    transition: opacity 400ms var(--ease-out);
+  }
+  .scroll-cue::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 40%;
+    background: linear-gradient(180deg, transparent, rgb(255 255 255 / 0.9));
+    animation: cue-travel 2s var(--ease-in-out) infinite;
+  }
+  @keyframes cue-travel {
+    0%   { transform: translateY(-100%); }
+    60%  { transform: translateY(250%); }
+    100% { transform: translateY(250%); }
+  }
 
   /* ---- textures (kept, quieter) ---------------------------------------- */
   .tex-linen {
@@ -378,8 +533,17 @@
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .btn:active, .btn:hover, .card-tappable:active { transform: none; }
+  .btn-lift:hover, .card-lift:hover { transform: none; }
   .tilt { transform: none !important; transition: box-shadow 220ms ease; }
   .tilt-glint { display: none; }
+  .img-zoom:hover img, .group:hover .img-zoom img { transform: none; }
+  /* Keep the word reveal as a plain fade: the comprehension cue survives,
+     the movement does not. */
+  .stagger-word { transform: none !important; animation-duration: 300ms; }
+  .marquee__inner { animation: none !important; }
+  .parallax-media { animation: none !important; transform: none !important; }
+  .scroll-cue::after { animation: none !important; transform: translateY(60%); }
+  .loader { animation-duration: 1.4s; }
   .reveal { animation: none !important; opacity: 1 !important; transform: none !important; }
   [data-hero-slide] { animation: none !important; }
   [data-hero-slide]:not(:first-child) { opacity: 0 !important; }

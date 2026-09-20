@@ -9,6 +9,7 @@ import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/store/cart";
 import ItemThumb from "./ItemThumb";
 import Tilt from "./Tilt";
+import { useRipple } from "./motion/useRipple";
 import dynamic from "next/dynamic";
 
 // Loaded on first tap, not on first paint. The drawer library is dead weight
@@ -21,6 +22,7 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
   const { t, pick, locale } = useI18n();
   const addLine = useCart((s) => s.addLine);
   const { toast } = useToast();
+  const ripple = useRipple();
 
   const [active, setActive] = useState<string>(CATEGORIES[0].slug);
   const [query, setQuery] = useState("");
@@ -225,14 +227,14 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                       }}
                       aria-haspopup="dialog"
                       className={clsx(
-                        "card card-tappable flex h-full cursor-pointer items-stretch gap-4 overflow-hidden p-3 text-left",
+                        "card card-tappable group flex h-full cursor-pointer items-stretch gap-4 overflow-hidden p-3 text-left",
                         !item.available && "opacity-55",
                       )}
                     >
                       <ItemThumb
                         item={item}
                         alt={name}
-                        className="size-28 shrink-0 sm:size-32"
+                        className="img-zoom size-28 shrink-0 sm:size-32"
                       />
 
                       <div className="flex min-w-0 flex-1 flex-col py-0.5">
@@ -263,11 +265,12 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                ripple(e);
                                 quickAdd(item);
                               }}
                               aria-label={`${t("menu.add")} ${name}`}
                               className={clsx(
-                                "inline-flex size-touch items-center justify-center rounded-full text-lg font-bold transition-colors",
+                                "ripple-host inline-flex size-touch items-center justify-center rounded-full text-lg font-bold transition-colors",
                                 justAdded === item.id
                                   ? "bg-emerald-600 text-white"
                                   : "bg-accent text-onaccent shadow-accent hover:bg-accentBright",

@@ -53,7 +53,7 @@ export default function StorySection() {
               alt={pick(STORY_PHOTO.alt, STORY_PHOTO.altEn)}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
+              className="parallax-media object-cover"
             />
           </div>
         </Reveal>

@@ -49,13 +49,13 @@ export default function DaypartStrip() {
               >
                 {/* Photo banner with a bottom scrim so the icon stays legible.
                     The image scales slightly on hover; the card itself tilts. */}
-                <div className="relative h-44 overflow-hidden" aria-hidden="true">
+                <div className="img-zoom relative h-44" aria-hidden="true">
                   <Image
                     src={photo(d.photo, 900, 600)}
                     alt=""
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.06]"
+                    className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                   <div className="absolute bottom-4 left-5 text-white drop-shadow">

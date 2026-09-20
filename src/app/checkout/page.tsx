@@ -586,7 +586,7 @@ export default function CheckoutPage() {
               className="btn-primary flex-1 disabled:pointer-events-none disabled:opacity-60"
             >
               {submitting
-                ? t("checkout.submitting")
+                ? <><span className="loader" aria-hidden="true" /> {t("checkout.submitting")}</>
                 : paymentMethod === "cash"
                   ? t("checkout.submitCash")
                   : `${t("checkout.submit")} · ${money(totals.totalCents)}`}

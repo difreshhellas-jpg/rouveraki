@@ -7,6 +7,7 @@ import { List, X, Phone } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { BRAND } from "@/lib/brand";
+import Magnetic from "./motion/Magnetic";
 import LanguageToggle from "./LanguageToggle";
 import ThemeToggle from "./ThemeToggle";
 
@@ -106,9 +107,14 @@ export default function Header() {
             >
               <Phone size={20} weight="regular" />
             </a>
-            <Link href="/menu" className="btn-primary hidden px-5 text-sm lg:inline-flex">
-              {t("hero.cta")}
-            </Link>
+            {/* The one magnetic element on the site. It is persistent
+                chrome the cursor passes constantly, which is exactly where a
+                small pull reads as responsive rather than gimmicky. */}
+            <Magnetic className="hidden lg:inline-block">
+              <Link href="/menu" className="btn-primary px-5 text-sm">
+                {t("hero.cta")}
+              </Link>
+            </Magnetic>
 
             <button
               type="button"
