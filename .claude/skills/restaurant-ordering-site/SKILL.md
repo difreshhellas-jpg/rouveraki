@@ -15,8 +15,10 @@ piece should look, read the file there rather than re-deriving it.
 
 **LAYOUT.md is the finished specification** — exact section order, exact photo
 ids and where each one is used, exact animation parameters and ranges, the
-twelve categories. This file tells you the order to build in; that one tells
-you what to build. Read both before starting.
+twelve categories. It opens with nine screenshots of the shipped site in
+`reference/`; look at those first, because they are what all the numbers are
+supposed to add up to. This file tells you the order to build in; that one
+tells you what to build. Read both before starting.
 
 ## 0. Before writing code
 
@@ -266,8 +268,9 @@ site's own CSP (`script-src 'self'`) would block a CDN script anyway.
 
 **Verify, in this order:**
 
-- Each effect at desktop width, by screenshot. Measuring the DOM is not
-  looking; that mistake is what shipped an invisible page once already.
+- Each effect at desktop width, by screenshot, compared against the matching
+  plate in `reference/`. Measuring the DOM is not looking; that mistake is what
+  shipped an invisible page once already.
 - Each effect at phone width. The pan must become a real swipeable carousel,
   not a vertical list.
 - `prefers-reduced-motion: reduce` degrades every section to a static, fully

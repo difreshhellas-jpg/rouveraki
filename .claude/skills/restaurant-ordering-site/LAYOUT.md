@@ -2,11 +2,41 @@
 
 SKILL.md is the workflow. This file is the **finished specification**: the
 section order, the photo assignments, the animation parameters and the category
-table exactly as they ship in the reference build. Reproduce these verbatim and
-the new site looks like Rouveraki with different words in it. Every number here
-was read out of the shipped code, not remembered.
+table exactly as they ship in the reference build, plus nine screenshots of the
+result in `reference/`. Reproduce these verbatim and the new site looks like
+Rouveraki with different words in it. Every number here was read out of the
+shipped code, not remembered, and every plate is a capture of the running site,
+not a mockup.
 
 Reference: `C:\Users\maggi\rouveraki`.
+
+---
+
+## 0. The reference plates
+
+Nine screenshots of the shipped site, in `reference/`. **Look at these before
+reading anything below.** The tables are the specification; these are what the
+specification is supposed to produce, and a build that matches every number but
+does not look like these has gone wrong somewhere the numbers do not reach.
+
+All captured at 1360x543, which is a wide, short frame. Judge the composition
+and the colour, not the vertical crop.
+
+| Plate | What it is direction for |
+| --- | --- |
+| `01-hero.jpg` | Copy bottom-left, never centred. Wordmark at `clamp(3rem, 11vw, 7.5rem)` filling most of the width. Gold wireframe faintly over the photo. Status pill, gold rule, subhead, two CTAs. |
+| `02-daypart-strip.jpg` | Section heading + one line + gold rule, then three equal photo cards. Icon sits on the photo, bottom-left. This is the calm beat between two loud sections. |
+| `03-pan-panel-01-start.jpg` | The pinned pan at `contain 0%`. Panel one is **fully** in frame. If any of panel two is showing here, the inset bug is back. Counter reads `01 / 04`. |
+| `04-pan-panel-03-mid.jpg` | Mid-pan. The edge of the next panel is visible at the right, which is what makes it read as a pan rather than a slideshow. |
+| `05-scroll-break.jpg` | Full-bleed photograph, weighted scrim, one centred display line. Compare against the black-on-black version this replaced: the photo must be clearly legible. |
+| `06-menu-showcase-hover.jpg` | Active row in one frame: gold text, rule drawn in from the left, arrow at the right, indented. Preview swapped to the matching photo. The soft glow near the cursor is the trail. |
+| `07-story-parallax.jpg` | Text left, photo right, gold rule under the heading, the accent-coloured pull quote. The photo is the parallax subject. |
+| `08-menu-pill-rail.jpg` | The working screen. Eyebrow with hours, page title, one line, then the sticky category rail. Active pill is solid accent. |
+| `09-menu-item-grid.jpg` | Two-column item cards: square photo left, name, description, gold price, round accent add button. The rail stays stuck under the header. |
+
+Two things in these plates are environment, not design: the scrollbar on the
+right, and the fact that the pan and wipe are caught mid-animation. Nothing
+else in them is accidental.
 
 ---
 
@@ -370,6 +400,11 @@ Change these and nothing else:
 
 Do not change the effect parameters, the z-order of the hero, the timeline
 names or the ranges. They are the part that took the longest to get right.
+
+**Then put your build next to the plates in `reference/` and compare them
+side by side.** Not a description of your build against the plate: the two
+images. Measuring the DOM and declaring it correct is how an entirely invisible
+page shipped once already.
 
 **Checks that must pass after adapting:** `npx tsc --noEmit`, `npm run verify`
 (47), `npm run verify:api` (23, needs `tsx --conditions react-server` and a
