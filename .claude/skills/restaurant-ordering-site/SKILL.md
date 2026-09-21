@@ -1,6 +1,6 @@
 ---
 name: restaurant-ordering-site
-description: Build an owned online-ordering site for a restaurant, cafe or grill house (Greek market, Viva.com payments) from brand facts to a phone-testable deployment, without repeating the bugs found the first time. Use when asked to build, clone or adapt a food-ordering site, a kitchen/admin panel, or a mock-to-live payment switch. Reference build: Rouveraki, Xylokastro (C:\Users\maggi\rouveraki).
+description: Build an owned online-ordering site for a restaurant, cafe or grill house (Greek market, Viva.com payments) from brand facts to a phone-testable deployment, without repeating the bugs found the first time. Carries the exact layout, photography, twelve-category structure and cinematic scroll animations of the reference build in LAYOUT.md, so a new site can be an exact reproduction with different words in it. Use when asked to build, clone or adapt a food-ordering site, a kitchen/admin panel, a mock-to-live payment switch, or CSS scroll-driven animation (pinned horizontal pan, scroll-break wipe, hero pull-back). Reference build: Rouveraki, Xylokastro (C:\Users\maggi\rouveraki).
 ---
 
 # Restaurant ordering site
@@ -12,6 +12,11 @@ begins; skipping a verification is how the first build lost a day.
 
 Reference implementation: `C:\Users\maggi\rouveraki`. When in doubt about how a
 piece should look, read the file there rather than re-deriving it.
+
+**LAYOUT.md is the finished specification** — exact section order, exact photo
+ids and where each one is used, exact animation parameters and ranges, the
+twelve categories. This file tells you the order to build in; that one tells
+you what to build. Read both before starting.
 
 ## 0. Before writing code
 
@@ -70,6 +75,12 @@ one line before writing CSS.
 Do not run `create-next-app` interactively; it may be declined. Write
 `package.json`, `tsconfig.json`, `next.config.ts`, `tailwind.config.ts`,
 `postcss.config.mjs` by hand from the reference repo.
+
+Give `next.config.ts` `distDir: process.env.NEXT_DIST_DIR || ".next"` now
+rather than later. Without it, every verification build overwrites the `.next`
+the dev server is reading from and dev starts throwing
+`Cannot find module './331.js'`. It also rewrites `tsconfig.json` to reference
+the temporary output directory, so check that file before committing.
 
 Tokens are **semantic** (`paper`, `surface`, `ink`, `stone`, `line`, `band`,
 `accent`, `accent-bright`, `on-accent`) with hex and `-rgb` twins, tinted
@@ -151,6 +162,25 @@ refuse to run while `DEV_BYPASS` is set, or its admin-auth assertions are
 meaningless. Use a random IP block and phone range per run, or the limiter
 from the previous run fails the suite.
 
+Two things about running it that are not obvious:
+
+- `tsx --conditions react-server`. Without it the script dies on `server-only`
+  with "This module cannot be imported from a Client Component module".
+- The suite is **silently time-dependent**. The shop is shut 01:00-06:00, so
+  overnight every order check returns `409 shop_closed`, and because that guard
+  runs before the age check the failure names the wrong assertion
+  (`409 !== 400`). Give `hours.ts` a `TEST_CLOCK` override, refused when
+  `NODE_ENV === "production"`, and pin the test server to mid-service.
+
+Run it on its own port with its own dist dir so the person's preview survives:
+
+```bash
+TEST_CLOCK="2026-09-21T14:00:00Z" DEV_BYPASS="" NEXT_PUBLIC_DEV_BYPASS="" \
+  NEXT_DIST_DIR=.next-verify-dev npx next dev -p 3111
+BASE=http://localhost:3111 DEV_BYPASS="" NEXT_PUBLIC_DEV_BYPASS="" \
+  npx tsx --conditions react-server scripts/verify-api.ts
+```
+
 ## 5. Payments
 
 One interface, two providers, one switch: `PAYMENT_MODE=mock|live`. Mock is
@@ -195,8 +225,54 @@ Load the emilkowalski skills now, not earlier. Then:
 Then run AUDIT.md's eight categories against your own code and grep for
 `transition: all`, `ease-in`, animated layout properties, and delays over 80ms.
 
-**Verify:** `next build`; every customer route under 150 kB first-load. The
-reference lands at / 124, /menu 136, /checkout 120, /order 116.
+**Verify:** every customer route under 150 kB first-load. After the cinematic
+pass the reference lands at / 142, /menu 149, /checkout 132, /order 129.
+
+Run the build as `NEXT_DIST_DIR=.next-verify npx next build`. A build into the
+same `.next` that `next dev` is serving from leaves dev throwing
+`Cannot find module './331.js'` until the directory is deleted, so give the
+config `distDir: process.env.NEXT_DIST_DIR || ".next"` back in phase 1.
+
+## 6b. The cinematic pass
+
+Do this **after** phase 6 passes, never instead of it. The base motion is what
+makes the site feel built; this is what stops it looking templated. Build the
+sections in LAYOUT.md §4, in this order, verifying each before the next.
+
+All of it is CSS scroll-driven animation. No GSAP, no ScrollTrigger, no
+Lenis. The whole pass cost 3 kB in the reference because of that, and the
+site's own CSP (`script-src 'self'`) would block a CDN script anyway.
+
+1. **Hero pull-back.** Photo stack scales down and blurs on `exit`; a plain
+   rgba veil fades in; the copy lifts and fades. The blur goes on the stack —
+   a `backdrop-filter` veil forms its own backdrop root and, inside a section
+   carrying `contain: paint`, blacks the hero out even at `opacity: 0`.
+2. **Pinned horizontal story.** Named timeline on the tall outer section,
+   `view-timeline-inset: 0`, rail not a flex container, geometry from
+   `--panels`. All three are covered in TRAPS.md; each one alone freezes the
+   pan at panel one.
+3. **Scroll-break wipe.** Same named-timeline rules. It must carry a
+   photograph and a display line, or it is an invisible animation that still
+   costs scroll distance.
+4. **Wireframe accent.** Hand-rolled 2D canvas, ~2 kB. Three.js is roughly
+   150 kB gzipped to draw thirty lines on a 150 kB budget. Reach for a real 3D
+   library only when the geometry needs lighting, materials or a loaded model.
+   Pause on IntersectionObserver and `visibilitychange`.
+5. **Cursor trail.** Capped point buffer, self-stopping loop, fine pointers
+   only. There is no touch equivalent and nothing to substitute.
+6. **Interactive menu preview.** Every preview image rendered and stacked,
+   switching on opacity, so a swap never waits on a request. Rows are real
+   links into `/menu#<slug>`; hover, focus and touch set the same state.
+
+**Verify, in this order:**
+
+- Each effect at desktop width, by screenshot. Measuring the DOM is not
+  looking; that mistake is what shipped an invisible page once already.
+- Each effect at phone width. The pan must become a real swipeable carousel,
+  not a vertical list.
+- `prefers-reduced-motion: reduce` degrades every section to a static, fully
+  readable page.
+- `NEXT_DIST_DIR=.next-verify npx next build`, still under 150 kB.
 
 ## 7. Admin
 
@@ -214,12 +290,39 @@ revokes that and authorises the private staff channel.
 
 ## 8. Verify in a browser, correctly
 
-Chrome tabs opened by the automation are usually **hidden**, so
-`requestAnimationFrame` never fires and every animation reads as frozen at its
-initial frame. Before blaming code, check `document.visibilityState`. Use
-`computer` clicks and screenshots (which foreground the tab), and for anything
-shorter than the screenshot round-trip (a 3.6s toast, a 2s intro), temporarily
-lengthen it, screenshot, revert.
+Chrome tabs opened by the automation render **offscreen**:
+`document.visibilityState` is `"hidden"` and `outerWidth`/`outerHeight` are 0,
+even when the tab is the group's `selectedTabId`. Foregrounding the window does
+not change it. This is the single biggest time-waster in the whole build, so
+check it in one call before touching any code:
+
+```js
+document.visibilityState   // "hidden" => stop, your CSS is probably fine
+anim.pending               // true with a live timeline => same thing
+```
+
+What it breaks:
+
+- **Scroll-driven animations never start.** The timeline reports a real
+  `currentTime`, but every animation attached to it sits at `pending: true`,
+  `startTime: null`, `currentTime: null` forever. A time-based animation works
+  fine, which makes it look like a CSS bug.
+- **`await requestAnimationFrame` hangs**, and the evaluate call dies with
+  "the renderer may be frozen".  Use `setTimeout` only.
+- **`scrollTo()` silently does nothing** when the page sets
+  `scroll-behavior: smooth`. Set
+  `document.documentElement.style.scrollBehavior = 'auto'` first.
+- **The viewport cannot be resized.** `resize_window` moves the window, not the
+  page. To test a breakpoint, rewrite the condition in the live CSSOM
+  (`rule.media.mediaText = '(min-width: 0px)'`) to force the block on. That
+  exercises the rule bodies, which is where the bugs are, but not the
+  breakpoint value, so say so rather than claiming a phone test.
+
+A screenshot forces a frame and unsticks pending animations, so the working
+pattern is **set scroll, screenshot, then measure** — never measure straight
+after scrolling. Repeated screenshots in quick succession wedge the renderer; a
+reload recovers it. For anything shorter than the screenshot round-trip (a 3.6s
+toast, a 2s intro), temporarily lengthen it, screenshot, revert.
 
 `curl` on a Greek Windows locale sends Greek as mojibake. Seed test data from a
 Node script with `Content-Type: application/json; charset=utf-8`.
@@ -240,6 +343,11 @@ Then run CHECKLIST.md with the owner.
 `scripts/dev-db.ts`, `scripts/clear-orders.ts`, `src/lib/payments/*`,
 `src/lib/order-service.ts`, `src/lib/order-status.ts`, `src/lib/sanitize.ts`,
 `src/lib/hours.ts`, `src/app/api/webhooks/viva/route.ts`, `src/instrumentation.ts`,
-`supabase/policies.sql`, `DEPLOY.md`. Adapt names and categories; keep the shape.
+`supabase/policies.sql`, `DEPLOY.md`, and the whole of
+`src/components/cinematic/` and `src/components/motion/`. Adapt names and
+categories; keep the shape. For the cinematic CSS, copy the
+`cinematic scroll sections` block of `globals.css` wholesale rather than
+retyping ranges.
 
-See TRAPS.md for every bug hit and CHECKLIST.md for what the owner must confirm.
+See LAYOUT.md for the exact build, TRAPS.md for every bug hit, and
+CHECKLIST.md for what the owner must confirm.
