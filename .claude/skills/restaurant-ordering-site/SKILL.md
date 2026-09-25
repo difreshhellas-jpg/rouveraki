@@ -338,6 +338,28 @@ with a bill attached (Supabase free, Neon free, Railway credit); do not
 provision it unasked. `vercel login` needs the person's browser; hand them the
 command.
 
+For a **QA deploy** the order that worked, all non-interactive once `vercel`
+and `gh` are signed in:
+
+1. Scan history for secrets, then `gh repo create <owner>/<name> --private
+   --source=. --push`.
+2. `vercel link --yes --project <name>`, then fix the `.env*` line it adds
+   to `.gitignore`.
+3. `vercel integration add supabase ... --plan free --no-env-pull`.
+4. Map the two database URLs; set `PAYMENT_MODE=mock`, `SMS_PROVIDER=log`,
+   `VIVA_ENVIRONMENT=demo`. Never `DEV_BYPASS`; the startup guard refuses it
+   in a production build, correctly.
+5. `prisma db push`, apply `supabase/policies.sql`, seed, then prove the
+   lockdown with the anon key.
+6. Create a QA staff user through the Auth admin API with
+   `app_metadata.role = "staff"`, not the owner's personal email.
+7. Push to deploy, then QA the live URL end to end: guards, an order, the
+   tracking payload's privacy, staff sign-in, the full kitchen path, a
+   rejection, and realtime delivery to both channels. Read the runtime logs;
+   the realtime bug only showed up there.
+
+Every trap on that path is in TRAPS.md §Deploying the QA site.
+
 Then run CHECKLIST.md with the owner.
 
 ## Files to copy verbatim from the reference
