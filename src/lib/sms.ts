@@ -1,6 +1,7 @@
 import "server-only";
 import { BRAND } from "./brand";
 import type { OrderStatus } from "./order-status";
+import { siteUrl } from "./site-mode";
 
 /**
  * Order-status SMS (spec §8, step 7).
@@ -19,7 +20,7 @@ type Provider = "log" | "twilio" | "yuboto";
 const provider = (process.env.SMS_PROVIDER ?? "log") as Provider;
 
 const trackingUrl = (orderCode: string) =>
-  `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://rouveraki.gr"}/order/${orderCode}`;
+  `${siteUrl()}/order/${orderCode}`;
 
 /**
  * Which transitions are worth a text. Deliberately not every one: a customer

@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import CartBar from "@/components/CartBar";
 import { ToastProvider } from "@/components/Toaster";
 import Intro from "@/components/Intro";
+import QaBanner from "@/components/QaBanner";
+import { IS_TEST_DEPLOY, siteUrl as resolveSiteUrl } from "@/lib/site-mode";
 
 /**
  * Greek is the default language, so both faces must carry the full Greek set.
@@ -31,7 +33,7 @@ const sans = Manrope({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rouveraki.gr";
+const siteUrl = resolveSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -50,7 +52,11 @@ export const metadata: Metadata = {
     url: siteUrl,
   },
   alternates: { canonical: siteUrl },
-  robots: { index: true, follow: true },
+  // A test deploy carries the real name and address; keep it out of search so
+  // it never outranks or impersonates the live shop. See lib/site-mode.ts.
+  robots: IS_TEST_DEPLOY
+    ? { index: false, follow: false }
+    : { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
@@ -128,6 +134,7 @@ export default function RootLayout({
       </head>
       <body className={`${display.variable} ${sans.variable} tex-linen`}>
         <LanguageProvider>
+          <QaBanner />
           <Header />
           <main id="content">{children}</main>
           <Footer />

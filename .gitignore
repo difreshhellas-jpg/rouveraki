@@ -18,3 +18,5 @@ next-env.d.ts
 # Verification builds write here so `next dev` keeps serving from .next
 .next-verify*/
 *.tsbuildinfo
+.env*
+!.env.example

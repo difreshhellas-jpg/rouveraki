@@ -112,4 +112,9 @@ begin
 end;
 $$;
 
+-- Supabase exposes every function in `public` over its REST API as /rpc/<name>,
+-- and this one is SECURITY DEFINER, so without this anyone holding the public
+-- anon key could invoke it. Only the database owner and the scheduler may.
+revoke execute on function public.anonymise_old_orders() from public, anon, authenticated;
+
 -- select cron.schedule('anonymise-orders', '0 4 1 * *', $$select public.anonymise_old_orders()$$);
