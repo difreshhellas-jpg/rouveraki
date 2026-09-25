@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 import { getSupabaseAdmin } from "./supabase/admin";
 import type { OrderStatus } from "./order-status";
 
@@ -38,6 +39,16 @@ export type StaffOrderEventPayload = {
   createdAt: string;
 };
 
+/**
+ * Publish one broadcast.
+ *
+ * Over HTTP, never a WebSocket. The first deployment subscribed a socket and
+ * waited up to 5s for SUBSCRIBED before sending; on Vercel that failed every
+ * time with "subscribe timeout", so the kitchen screen and the tracking page
+ * silently fell back to their slow poll. A serverless function is not a
+ * long-lived client, and Supabase's REST broadcast (httpSend) is the path it
+ * provides for exactly this: one request, no handshake, ~250ms measured.
+ */
 async function send(
   channelName: string,
   event: string,
@@ -53,23 +64,16 @@ async function send(
   }
 
   const channel = supabase.channel(channelName, {
-    config: { broadcast: { ack: true }, private: isPrivate },
+    config: { private: isPrivate },
   });
 
   try {
-    await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("subscribe timeout")), 5000);
-      channel.subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          clearTimeout(timer);
-          resolve();
-        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          clearTimeout(timer);
-          reject(new Error(`subscribe failed: ${status}`));
-        }
-      });
-    });
-    await channel.send({ type: "broadcast", event, payload });
+    const res = await channel.httpSend(event, payload, { timeout: 5000 });
+    if (!res.success) {
+      console.error(
+        `[realtime] failed to publish ${event} on ${channelName}: ${res.status} ${res.error}`,
+      );
+    }
   } catch (e) {
     // A realtime hiccup must never roll back an order that is already committed.
     console.error(`[realtime] failed to publish ${event} on ${channelName}`, e);
@@ -78,8 +82,28 @@ async function send(
   }
 }
 
-export const publishOrderUpdate = (payload: OrderUpdatePayload) =>
-  send(orderChannel(payload.orderCode), "order_update", payload, false);
+/**
+ * Run a publish without making the caller wait, and without losing it.
+ *
+ * Callers fire and forget, which is right: the customer's order must not wait
+ * on a broadcast. But on serverless a fire-and-forget promise is frozen the
+ * moment the response is sent. `after()` tells the platform to keep the
+ * function alive until the promise settles.
+ *
+ * Outside a request (the verification scripts call the order service
+ * directly) `after()` throws; the promise then simply runs to completion in
+ * the long-lived process, which is what it did before.
+ */
+function inBackground(task: Promise<void>): void {
+  try {
+    after(task);
+  } catch {
+    void task;
+  }
+}
 
-export const publishStaffEvent = (payload: StaffOrderEventPayload) =>
-  send(STAFF_CHANNEL, "staff_order_event", payload, true);
+export const publishOrderUpdate = (payload: OrderUpdatePayload): void =>
+  inBackground(send(orderChannel(payload.orderCode), "order_update", payload, false));
+
+export const publishStaffEvent = (payload: StaffOrderEventPayload): void =>
+  inBackground(send(STAFF_CHANNEL, "staff_order_event", payload, true));
