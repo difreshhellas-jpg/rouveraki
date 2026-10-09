@@ -1,0 +1,76 @@
+/* cursor.css — styles for cursor.js effects */
+
+/* ---------- Custom cursor ---------- */
+.fx-cursor { position: fixed; inset: 0; pointer-events: none; z-index: 9995; opacity: 0; }
+.fx-cursor__dot, .fx-cursor__ring { position: fixed; top: 0; left: 0; border-radius: 50%; will-change: transform; }
+.fx-cursor__dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--fx-fg); }
+.fx-cursor__ring {
+  width: 38px; height: 38px; margin: -19px 0 0 -19px;
+  border: 1px solid color-mix(in srgb, var(--fx-fg) 55%, transparent);
+  display: grid; place-items: center;
+  transition: width 0.45s var(--fx-ease-out), height 0.45s var(--fx-ease-out), margin 0.45s var(--fx-ease-out),
+              background-color 0.45s var(--fx-ease-out), border-color 0.45s var(--fx-ease-out);
+}
+.fx-cursor__label {
+  font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fx-bg);
+  opacity: 0; transform: scale(0.6); transition: opacity 0.3s, transform 0.45s var(--fx-ease-out);
+}
+.fx-cursor.is-link .fx-cursor__ring { width: 64px; height: 64px; margin: -32px 0 0 -32px; border-color: var(--fx-fg); }
+.fx-cursor.is-link .fx-cursor__dot { transform: scale(0); }
+.fx-cursor.is-label .fx-cursor__ring { width: 96px; height: 96px; margin: -48px 0 0 -48px; background: var(--fx-fg); border-color: transparent; }
+.fx-cursor.is-label .fx-cursor__label { opacity: 1; transform: scale(1); }
+.fx-cursor.is-label .fx-cursor__dot, .fx-cursor.is-hidden .fx-cursor__dot, .fx-cursor.is-hidden .fx-cursor__ring { opacity: 0; }
+.fx-cursor--difference { mix-blend-mode: difference; --fx-fg: #fff; }
+html.has-fx-cursor, html.has-fx-cursor a, html.has-fx-cursor button, html.has-fx-cursor [data-cursor] { cursor: none; }
+html.has-fx-cursor input, html.has-fx-cursor textarea { cursor: text; }
+
+/* ---------- Ribbon trail ---------- */
+[data-fx="ribbon-trail"] { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9994; }
+.fx-trail--blend { mix-blend-mode: difference; }
+
+/* ---------- Image trail ---------- */
+.fx-itrail { position: relative; overflow: hidden; }
+.fx-itrail__img {
+  position: absolute; top: 0; left: 0; width: clamp(140px, 16vw, 240px); aspect-ratio: 4 / 5;
+  object-fit: cover; border-radius: 10px; pointer-events: none; opacity: 0; will-change: transform, opacity;
+}
+
+/* ---------- Magnetic ---------- */
+[data-fx="magnetic"] { display: inline-flex; will-change: transform; }
+.fx-magnetic__label { display: inline-block; will-change: transform; }
+
+/* ---------- Spotlight reveal ---------- */
+.fx-spot { position: relative; overflow: hidden; border-radius: var(--fx-radius); }
+.fx-spot > * { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fx-spot__top {
+  --x: 50%; --y: 50%; --r: 0px;
+  position: absolute; inset: 0;
+  -webkit-mask-image: radial-gradient(circle at var(--x) var(--y), transparent calc(var(--r) - 1px), #000 calc(var(--r) + 40px));
+          mask-image: radial-gradient(circle at var(--x) var(--y), transparent calc(var(--r) - 1px), #000 calc(var(--r) + 40px));
+}
+
+/* ---------- Tilt ---------- */
+[data-fx="tilt"] { position: relative; border-radius: var(--fx-radius); overflow: hidden; will-change: transform; }
+.fx-tilt__glare {
+  --gx: 50%; --gy: 50%;
+  position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.4s;
+  background: radial-gradient(circle at var(--gx) var(--gy), rgba(255,255,255,0.28), transparent 55%);
+  mix-blend-mode: overlay;
+}
+
+/* ---------- Fill button ---------- */
+[data-fx="fill-button"] {
+  --fx: 50%; --fy: 50%;
+  position: relative; overflow: hidden; isolation: isolate;
+  display: inline-flex; align-items: center; gap: 0.6em;
+  padding: 1.1em 2em; border-radius: 999px; border: 1px solid currentColor;
+  color: var(--fx-fg); background: transparent; text-decoration: none;
+  transition: color 0.5s var(--fx-ease-out);
+}
+[data-fx="fill-button"]::before {
+  content: ""; position: absolute; z-index: -1; left: var(--fx); top: var(--fy);
+  width: 250%; aspect-ratio: 1; border-radius: 50%; background: var(--fx-fg);
+  transform: translate(-50%, -50%) scale(0); transition: transform 0.65s var(--fx-ease-in-out);
+}
+[data-fx="fill-button"]:hover, [data-fx="fill-button"]:focus-visible { color: var(--fx-bg); }
+[data-fx="fill-button"]:hover::before, [data-fx="fill-button"]:focus-visible::before { transform: translate(-50%, -50%) scale(1); }

@@ -6,11 +6,13 @@ import LocationSection from "@/components/LocationSection";
 import HorizontalStory from "@/components/cinematic/HorizontalStory";
 import ScrollBreak from "@/components/cinematic/ScrollBreak";
 import MenuShowcase from "@/components/cinematic/MenuShowcase";
-import CursorTrail from "@/components/cinematic/CursorTrail";
+import MotionEngine from "@/components/MotionEngine";
 
 export default function HomePage() {
   return (
     <>
+      {/* Must precede the hero: everything after .fx-hero is restyled to slide over it. */}
+      <MotionEngine />
       <Hero />
       {/* Reinforces the all-day proposition without another photo. */}
       <Marquee
@@ -33,8 +35,6 @@ export default function HomePage() {
       <MenuShowcase />
       <StorySection />
       <LocationSection />
-      {/* Desktop pointers only; there is no cursor to trail on touch. */}
-      <CursorTrail />
     </>
   );
 }

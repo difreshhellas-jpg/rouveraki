@@ -1,0 +1,141 @@
+/* navigation.css — styles for navigation.js effects */
+
+/* ---------- Burger ---------- */
+.fx-burger {
+  position: relative; z-index: 1001; width: 52px; height: 52px; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--fx-fg) 30%, transparent); background: transparent; color: var(--fx-fg);
+  display: grid; place-items: center; cursor: pointer;
+}
+.fx-burger span:not(.fx-sr-only) {
+  position: absolute; width: 18px; height: 1.5px; background: currentColor;
+  transition: transform 0.6s var(--fx-ease-in-out);
+}
+.fx-burger span:nth-child(1) { transform: translateY(-3.5px); }
+.fx-burger span:nth-child(2) { transform: translateY(3.5px); }
+.fx-burger[aria-expanded="true"] span:nth-child(1) { transform: rotate(45deg); }
+.fx-burger[aria-expanded="true"] span:nth-child(2) { transform: rotate(-45deg); }
+
+/* ---------- Overlay nav ---------- */
+.fx-nav {
+  position: fixed; inset: 0; z-index: 1000; visibility: hidden;
+  display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; gap: 4vw; padding: 12vh 6vw 6vh;
+  color: var(--fx-nav-fg, var(--fx-bg));
+}
+.fx-nav__bg { position: absolute; inset: 0; background: var(--fx-nav-bg, var(--fx-fg)); z-index: -1; }
+.fx-nav__links { list-style: none; margin: 0; padding: 0; }
+.fx-nav__link { overflow: hidden; line-height: 1; padding: 0.08em 0; }
+.fx-nav__link > a {
+  display: inline-block; color: inherit; text-decoration: none;
+  font-size: clamp(2.6rem, 7vw, 6.5rem); letter-spacing: -0.035em;
+  transition: opacity 0.4s, transform 0.6s var(--fx-ease-out);
+}
+.fx-nav__links:hover .fx-nav__link > a { opacity: 0.3; }
+.fx-nav__links .fx-nav__link > a:hover, .fx-nav__links .fx-nav__link > a:focus-visible { opacity: 1; transform: translateX(0.15em); }
+.fx-nav__preview { position: relative; aspect-ratio: 4 / 5; max-height: 70vh; border-radius: var(--fx-radius); overflow: hidden; }
+.fx-nav__preview > * { position: absolute; inset: 0; }
+.fx-nav__preview img { width: 100%; height: 100%; object-fit: cover; }
+.fx-nav__meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 2rem 4rem; font-size: 0.9rem; opacity: 0.8; }
+@media (max-width: 767px) {
+  .fx-nav { grid-template-columns: 1fr; align-content: center; }
+  .fx-nav__preview { display: none; }
+}
+
+/* ---------- Smart header ---------- */
+[data-fx="smart-header"] {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+  display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 4vw;
+  transition: background-color 0.5s, backdrop-filter 0.5s, padding 0.5s var(--fx-ease-out);
+}
+[data-fx="smart-header"].is-scrolled {
+  background: color-mix(in srgb, var(--fx-bg) 70%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  padding-block: 0.8rem;
+}
+
+/* ---------- Hover follow (menu rows) ---------- */
+.fx-follow-list { position: relative; list-style: none; margin: 0; padding: 0; }
+.fx-follow-list > li {
+  position: relative; display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 1rem;
+  padding: 1.6rem 0; border-top: 1px solid color-mix(in srgb, var(--fx-fg) 15%, transparent);
+  transition: padding 0.6s var(--fx-ease-out), color 0.4s;
+}
+.fx-follow-list > li:last-of-type { border-bottom: 1px solid color-mix(in srgb, var(--fx-fg) 15%, transparent); }
+.fx-follow-list:hover > li { color: var(--fx-muted); }
+.fx-follow-list > li:hover { color: var(--fx-fg); padding-left: 1.5rem; }
+.fx-follow-list .fx-row__name { font-size: clamp(1.6rem, 3.5vw, 3rem); letter-spacing: -0.02em; }
+.fx-follow-list .fx-row__desc { grid-column: 1; font-size: 0.95rem; opacity: 0.6; }
+.fx-follow-list .fx-row__price { font-variant-numeric: tabular-nums; }
+.fx-follow {
+  position: absolute; top: 0; left: 0; width: clamp(200px, 20vw, 300px); aspect-ratio: 4 / 5;
+  pointer-events: none; z-index: 5; border-radius: 14px; overflow: hidden; will-change: transform;
+}
+.fx-follow__frame, .fx-follow__frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fx-row__thumb { display: none; }
+@media (hover: none), (pointer: coarse) {
+  .fx-follow { display: none; }
+  .fx-row__thumb { display: block; grid-row: span 2; width: 72px; aspect-ratio: 1; border-radius: 10px; object-fit: cover; }
+  .fx-follow-list > li { grid-template-columns: auto 1fr auto; }
+}
+
+/* ---------- Menu showcase ---------- */
+.fx-show { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 5vw; align-items: start; }
+.fx-show__tabs { display: flex; flex-direction: column; gap: 0.2rem; }
+.fx-show__tab {
+  position: relative; text-align: left; background: none; border: 0; color: var(--fx-muted); cursor: pointer;
+  font: inherit; font-size: clamp(2rem, 4.5vw, 4.2rem); letter-spacing: -0.03em; padding: 0.15em 0 0.15em 1.2em;
+  transition: color 0.4s;
+}
+.fx-show__tab.is-active, .fx-show__tab:hover { color: var(--fx-fg); }
+.fx-show__indicator {
+  position: absolute; left: 0; top: 50%; width: 0.55em; height: 1.5px; background: var(--fx-accent); transform: translateY(-50%);
+}
+.fx-show__stage { position: sticky; top: 12vh; aspect-ratio: 4 / 5; border-radius: var(--fx-radius); overflow: hidden; }
+.fx-show__stage > * { position: absolute; inset: 0; clip-path: inset(0 0 100% 0); }
+.fx-show__stage img, .fx-show__stage video { width: 100%; height: 100%; object-fit: cover; }
+.fx-show__panel { margin-top: 2rem; display: grid; gap: 0.9rem; }
+@media (max-width: 767px) {
+  .fx-show { grid-template-columns: 1fr; }
+  .fx-show__tabs { flex-direction: row; overflow-x: auto; gap: 1.2rem; scrollbar-width: none; }
+  .fx-show__tab { font-size: 1.6rem; padding: 0 0 0.4em; white-space: nowrap; }
+  .fx-show__indicator { top: auto; bottom: 0; width: 100%; transform: none; }
+  .fx-show__stage { position: relative; top: 0; aspect-ratio: 4 / 3; }
+}
+
+/* ---------- Flip filter ---------- */
+.fx-chips { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2rem; }
+.fx-chips [data-filter] {
+  font: inherit; padding: 0.6em 1.3em; border-radius: 999px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--fx-fg) 30%, transparent); background: transparent; color: var(--fx-fg);
+  transition: background-color 0.4s, color 0.4s;
+}
+.fx-chips [aria-pressed="true"] { background: var(--fx-fg); color: var(--fx-bg); }
+.fx-fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+
+/* ---------- Roll link ---------- */
+[data-fx="roll-link"] { position: relative; display: inline-block; overflow: hidden; line-height: 1.15; vertical-align: top; color: inherit; text-decoration: none; }
+.fx-roll__a, .fx-roll__b { display: block; }
+.fx-roll__b { position: absolute; left: 0; top: 100%; }
+.fx-roll__char {
+  display: inline-block;
+  transition: transform 0.55s var(--fx-ease-in-out);
+  transition-delay: calc(var(--char, 1) * 18ms);
+}
+[data-fx="roll-link"]:hover .fx-roll__char, [data-fx="roll-link"]:focus-visible .fx-roll__char { transform: translateY(-100%); }
+
+/* ---------- Dish modal ---------- */
+.fx-dish { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 4vw; }
+.fx-dish[hidden] { display: none; }
+.fx-dish__backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--fx-bg) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.fx-dish__content {
+  position: relative; display: grid; grid-template-columns: 1.1fr 1fr; gap: 3vw; align-items: center;
+  width: min(1200px, 100%); max-height: 90vh;
+}
+.fx-dish__media { aspect-ratio: 4 / 5; border-radius: var(--fx-radius); overflow: hidden; }
+.fx-dish__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fx-dish__close {
+  position: absolute; top: 0; right: 0; width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid currentColor; background: transparent; color: var(--fx-fg); cursor: pointer; font-size: 1.2rem;
+}
+[data-dish] { cursor: pointer; }
+[data-dish] img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--fx-radius); }
+@media (max-width: 767px) { .fx-dish__content { grid-template-columns: 1fr; overflow-y: auto; } }

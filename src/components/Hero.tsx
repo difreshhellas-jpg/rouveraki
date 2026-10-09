@@ -8,10 +8,8 @@ import { useI18n } from "@/i18n/LanguageProvider";
 import { HERO_PHOTOS, HERO_FALLBACK_GRADIENTS } from "@/lib/photos";
 import { isShopOpen } from "@/lib/hours";
 import { BRAND } from "@/lib/brand";
-import StaggerText from "./motion/StaggerText";
 import ScrollCue from "./motion/ScrollCue";
 import { useRipple } from "./motion/useRipple";
-import WireGlobe from "./cinematic/WireGlobe";
 
 /**
  * Full-bleed hero.
@@ -54,12 +52,12 @@ export default function Hero() {
   }`;
 
   return (
-    <section className="relative isolate flex min-h-[100svh] items-end overflow-hidden [contain:paint]">
+    // zoom-blur-hero (luxury-web-animations): the media zooms out, blurs and
+    // darkens as you leave while the next section slides over the pinned hero.
+    <section data-fx="zoom-blur-hero" data-blur="12" className="fx-hero isolate">
       <style dangerouslySetInnerHTML={{ __html: keyframes }} />
 
-      {/* ---- photo layers ---------------------------------------------- */}
-      {/* cine-stack scales 1.14 -> 1 as the hero scrolls away. */}
-      <div className="cine-stack absolute inset-0 -z-20">
+      <div className="fx-hero__media">
         {Array.from({ length: layerCount }).map((_, i) => (
           <div
             key={i}
@@ -86,43 +84,29 @@ export default function Hero() {
             )}
           </div>
         ))}
+        {/* Legibility scrim travels with the photo, so the copy stays readable at every frame. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.78) 26%, rgba(0,0,0,0.42) 52%, rgba(0,0,0,0.18) 100%)",
+          }}
+        />
       </div>
+      <div className="fx-hero__shade" aria-hidden="true" />
 
-      {/* ---- scrim ------------------------------------------------------ */}
-      {/* Two layers: a vertical gradient for text legibility at the bottom,
-          and a warm tint that ties the photography to the palette instead of
-          leaving it looking like a stock image dropped onto a dark page. */}
-      {/* Weighted toward the bottom, where the copy sits, so the headline
-          stays legible over a bright plate without flattening the whole photo. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10"
-        style={{
-          background:
-            "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.78) 26%, rgba(0,0,0,0.42) 52%, rgba(0,0,0,0.18) 100%)",
-        }}
-      />
-      {/* Darkening half of the pull-back. Plain rgba, never backdrop-filter:
-          a backdrop root here blacks the hero out even at opacity 0. */}
-      <div aria-hidden="true" className="cine-veil absolute inset-0 -z-10 bg-black/55" />
-
-      {/* Wireframe atmosphere, behind the copy and above the photo. */}
-      <WireGlobe className="pointer-events-none absolute inset-0 -z-10 opacity-40" />
-
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 mix-blend-soft-light"
-        style={{
-          background:
-            "radial-gradient(120% 90% at 20% 100%, rgb(var(--accent-rgb) / 0.55), transparent 60%)",
-        }}
-      />
+      {/* wire-3d (Three.js): line-art icosahedron reacting to pointer and scroll. */}
+      <div data-fx="wire-3d" data-color="#e0b458" data-shape="ico" className="fx-wire" aria-hidden="true">
+        <canvas className="fx-webgl" />
+      </div>
 
       <ScrollCue />
 
       {/* ---- copy ------------------------------------------------------- */}
+      <div className="fx-hero__content">
       <div
-        className="cine-copy relative mx-auto w-full max-w-content px-4 pb-16 pt-32 text-white sm:px-6"
+        className="relative mx-auto w-full max-w-content px-4 pb-16 pt-32 text-white sm:px-6"
         style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <p
@@ -150,12 +134,14 @@ export default function Hero() {
         {/* The wordmark is the headline. Word-by-word on a two-word Greek name
             reads as deliberate; on the English it is one word, so it gets the
             same treatment and simply resolves faster. */}
-        <StaggerText
-          as="h1"
-          text={locale === "en" ? BRAND.nameEn : BRAND.nameEl}
-          delayMs={260}
+        <h1
+          data-fx="masked-headline"
+          data-split="chars"
+          data-delay="0.25"
           className="mt-5 font-display text-[clamp(3rem,11vw,7.5rem)] font-semibold leading-[0.92] tracking-[-0.03em] drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)]"
-        />
+        >
+          {locale === "en" ? BRAND.nameEn : BRAND.nameEl}
+        </h1>
 
         <div
           className="tex-rope fade-up mt-6 w-32 origin-left"
@@ -177,6 +163,8 @@ export default function Hero() {
               the magnetic treatment lives on the persistent header button. */}
           <Link
             href="/menu"
+            data-fx="magnetic"
+            data-strength="0.3"
             onClick={ripple}
             className="btn-primary ripple-host btn-lift group px-8 text-base"
           >
@@ -191,6 +179,7 @@ export default function Hero() {
             {t("hero.secondaryCta")}
           </a>
         </div>
+      </div>
       </div>
     </section>
   );

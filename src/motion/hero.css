@@ -1,0 +1,84 @@
+/* hero.css — styles for hero.js effects */
+
+/* ---------- Preloader ---------- */
+.fx-preloader {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center; pointer-events: all;
+}
+.fx-preloader__panels { position: absolute; inset: 0; display: flex; }
+.fx-preloader__panel { flex: 1; height: 100%; background: var(--fx-bg); margin-right: -1px; }
+.fx-preloader__inner {
+  position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  color: var(--fx-fg); overflow: hidden;
+}
+.fx-preloader__brand { font-size: 0.85rem; letter-spacing: 0.35em; text-transform: uppercase; opacity: 0.7; }
+.fx-preloader__count {
+  font-size: clamp(4rem, 14vw, 11rem); line-height: 1; font-variant-numeric: tabular-nums;
+  font-weight: 300; letter-spacing: -0.04em;
+}
+.fx-preloader__count::after { content: "%"; font-size: 0.25em; vertical-align: top; margin-left: 0.1em; opacity: 0.6; }
+html:not(.js) .fx-preloader, html.reduced-motion .fx-preloader { display: none; }
+
+/* ---------- Zoom-blur hero ---------- */
+.fx-hero {
+  position: relative; height: 100vh; height: 100svh; overflow: hidden;
+  background: var(--fx-bg); z-index: 0;
+}
+.fx-hero__media { position: absolute; inset: 0; overflow: hidden; will-change: transform, filter; }
+.fx-hero__media img, .fx-hero__media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fx-hero__shade {
+  position: absolute; inset: 0; opacity: 0.35; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.7) 100%);
+}
+.fx-hero__content {
+  position: relative; z-index: 2; height: 100%;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: clamp(1.5rem, 5vw, 5rem); color: #fff;
+}
+/* Everything AFTER a zoom-blur hero must sit above it and be opaque (it slides over the pinned hero). */
+/* Rouveraki: zero specificity, so a section's own Tailwind bg-* utility still wins. */
+:where(.fx-hero) ~ :where(*) { position: relative; z-index: 1; background-color: var(--fx-bg); }
+
+/* ---------- Headline typography that suits masked reveals ---------- */
+.fx-display {
+  font-size: clamp(3rem, 9vw, 9.5rem); line-height: 0.92; letter-spacing: -0.035em; font-weight: 400;
+  margin: 0;
+}
+
+/* ---------- Expand media ---------- */
+.fx-expand { position: relative; height: 100vh; height: 100svh; overflow: hidden; display: grid; place-items: center; }
+.fx-expand__frame { position: absolute; inset: 0; overflow: hidden; will-change: clip-path; }
+.fx-expand__frame > img, .fx-expand__frame > video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fx-expand__title {
+  position: relative; z-index: 2; display: flex; justify-content: space-between; width: 100%;
+  padding: 0 4vw; pointer-events: none; color: var(--fx-fg); mix-blend-mode: difference;
+  font-size: clamp(2.4rem, 7vw, 7rem); letter-spacing: -0.03em;
+}
+
+/* ---------- Video scrub / image sequence ---------- */
+.fx-vscrub, .fx-seq { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: #000; }
+.fx-vscrub video, .fx-seq canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ---------- Mouse parallax ---------- */
+.fx-parallax-scene { position: relative; overflow: hidden; }
+.fx-parallax-scene [data-depth] { will-change: transform; }
+
+/* ---------- Text-mask zoom ----------
+   Mask layer = solid page colour with the word "punched out" via blend mode.
+   Light pages: bg white, text black, mix-blend-mode: screen.
+   Dark pages:  bg black, text white, mix-blend-mode: multiply.        */
+.fx-tmask { position: relative; height: 100vh; height: 100svh; overflow: hidden; }
+.fx-tmask__media { position: absolute; inset: 0; }
+.fx-tmask__media img, .fx-tmask__media video { width: 100%; height: 100%; object-fit: cover; }
+.fx-tmask__mask {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: #000; color: #fff; mix-blend-mode: multiply; will-change: transform;
+}
+.fx-tmask__mask--light { background: #fff; color: #000; mix-blend-mode: screen; }
+.fx-tmask__word {
+  font-size: clamp(5rem, 24vw, 26rem); font-weight: 900; line-height: 0.8; letter-spacing: -0.05em;
+  text-transform: uppercase; margin: 0;
+}
+.fx-tmask__after {
+  position: absolute; inset: auto 0 10vh; text-align: center; color: #fff; z-index: 2;
+}
