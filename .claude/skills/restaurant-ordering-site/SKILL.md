@@ -237,27 +237,6 @@ config `distDir: process.env.NEXT_DIST_DIR || ".next"` back in phase 1.
 
 ## 6b. The cinematic pass
 
-**Since 2026-10-09 the homepage motion runs on the `luxury-web-animations`
-skill's engine,** vendored into `src/motion/` and booted by
-`components/MotionEngine.tsx`. Copy both from the reference rather than
-rebuilding the CSS-only versions described below (kept for the traps they
-document). The integration rules that matter:
-
-- The site CSP forbids CDN scripts: install `gsap lenis three` from npm,
-  assign them to `window`, then dynamically import the engine files. All of
-  it is lazy, so first-load JS does not grow (homepage 141 kB).
-- Append `export {};` to each engine IIFE file and change three-hero's
-  import to `'three'`; ESLint-ignore `src/motion/*.js`.
-- Make `.fx-hero ~ *` zero-specificity (`:where`), or it overrides every
-  section's own Tailwind background.
-- Render `<MotionEngine />` before the hero, or the ribbon-trail canvas
-  becomes a sibling the hero rule restyles.
-- The patched core has `teardown()`/`boot()`: smooth scroll must not
-  survive client navigation to `/menu`, where Vaul sheets need native scroll.
-- Cap horizontal panel width by `95svh`, or captions fall below the fold on
-  short laptop screens.
-
-
 Do this **after** phase 6 passes, never instead of it. The base motion is what
 makes the site feel built; this is what stops it looking templated. Build the
 sections in LAYOUT.md §4, in this order, verifying each before the next.
