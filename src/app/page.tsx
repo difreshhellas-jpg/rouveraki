@@ -14,7 +14,7 @@ export default function HomePage() {
     <>
       <Hero />
 
-      {/* Scroll-scrubbed Blender film of the pork gyros pita folding open. */}
+      {/* Scroll-scrubbed gyros sequence (shared with the Kyknos site) coming apart. */}
       <ProductScrollHero />
 
       {/* Reinforces the all-day proposition without another photo. */}

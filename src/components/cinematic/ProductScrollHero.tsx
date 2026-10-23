@@ -6,13 +6,12 @@ import { ArrowRight } from "@phosphor-icons/react";
 import { useI18n } from "@/i18n/LanguageProvider";
 
 /**
- * Scroll-driven product film: a folded pork-gyros pita turns on its axis, then
- * unfolds while its fillings lift off and hang in the air around it.
+ * Scroll-driven product film: a wrapped gyros pita comes apart while its
+ * fillings lift off and hang in the air around it.
  *
- * The frames are not stock and not generated video: they are rendered in
- * Blender from a procedural model (scripts/hero3d/build_gyros.py), so frame N
- * is identical on every build and the product is the real menu item, with
- * exactly its menu ingredients and nothing else.
+ * The frames are the same 100-frame sequence the Kyknos site uses
+ * (public/hero/webp). They sit on a flat off-white ground, so this stage is
+ * painted in that ground and the frames are drawn "contain" on it.
  *
  * Mechanics, in order of what goes wrong if you get them wrong:
  *  - Canvas, not <img> swapping, drawn from a rAF loop. Scroll only writes a
@@ -23,22 +22,20 @@ import { useI18n } from "@/i18n/LanguageProvider";
  *  - Frame 1 is requested first and painted alone; the rest stream in behind
  *    it. Scroll is never blocked: until a frame arrives the nearest loaded one
  *    is shown.
- *  - Portrait phones get the portrait render and every second frame (half the
- *    decoded memory); the cross-fade hides the difference.
+ *  - Phones load every second frame (half the decoded memory); the cross-fade
+ *    hides the difference.
  *  - Sticky inside a tall wrapper rather than position: fixed, because it needs
  *    no scroll-position bookkeeping and cannot overlap the next section.
  *  - prefers-reduced-motion (or no JS): the wrapper collapses to one screen
  *    showing the unfolded composition, with all of the copy visible.
  */
 
-const FRAMES = 121;
-const BASE = "/hero-seq";
-const POSTER_INDEX = 108; // an "all ingredients in the air" frame for static fallbacks
+const FRAMES = 100;
+const POSTER_INDEX = FRAMES - 1; // "all ingredients in the air", for static fallbacks
+/** The frames' own background, sampled from their corners. */
+const GROUND = "#fbfbf8";
 
-type Mode = "portrait" | "landscape";
-
-const pad = (n: number) => String(n + 1).padStart(4, "0");
-const src = (mode: Mode, i: number) => `${BASE}/${mode}/f_${pad(i)}.webp`;
+const src = (i: number) => `/hero/webp/frame-${String(i + 1).padStart(3, "0")}.webp`;
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const seg = (p: number, a: number, b: number) => clamp01((p - a) / (b - a));
 
@@ -54,7 +51,6 @@ export default function ProductScrollHero() {
   const cueRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(0); // 0..1 preload progress, for the loader
   const [still, setStill] = useState(false); // reduced motion: no pin, no scrub
-  const [mode, setMode] = useState<Mode>("landscape");
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -68,12 +64,9 @@ export default function ProductScrollHero() {
     const wrap = wrapRef.current;
     const canvas = canvasRef.current;
     if (!wrap || !canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: true });
+    const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
 
-    const portrait = window.innerHeight > window.innerWidth * 1.05;
-    const m: Mode = portrait ? "portrait" : "landscape";
-    setMode(m);
     const small = window.innerWidth < 760;
     const stride = small ? 2 : 1;
     const indices: number[] = [];
@@ -95,7 +88,7 @@ export default function ProductScrollHero() {
           resolve();
         };
         img.onerror = () => resolve();
-        img.src = src(m, i);
+        img.src = src(i);
       });
 
     // Frame 1 first, the poster frame second, then the rest in coarse-to-fine
@@ -146,13 +139,14 @@ export default function ProductScrollHero() {
     // when the ingredient list takes the right side, and re-centres for the
     // call to action. On phones it eases back a touch as the pieces spread, so
     // nothing leaves the screen. Frames are transparent, so shifting is free.
-    const wide = m === "landscape" && window.innerWidth >= 900;
+    const portrait = window.innerHeight > window.innerWidth * 1.05;
+    const wide = !portrait && window.innerWidth >= 900;
     let zoom = 1;
     let dx = 0;
     let dy = 0;
     const compose = (p: number) => {
       if (wide) {
-        dx = 0.115 * (1 - seg(p, 0.3, 0.46)) - 0.09 * seg(p, 0.46, 0.56) * (1 - seg(p, 0.82, 0.94));
+        dx = 0.16 * (1 - seg(p, 0.3, 0.46)) - 0.09 * seg(p, 0.46, 0.56) * (1 - seg(p, 0.82, 0.94));
         dy = 0.045 * seg(p, 0.38, 0.55);
         zoom = 1 - 0.05 * seg(p, 0.38, 0.55);
       } else {
@@ -163,11 +157,17 @@ export default function ProductScrollHero() {
     };
 
     const paint = (img: HTMLImageElement, alpha: number) => {
-      const s = Math.max(cw / img.naturalWidth, ch / img.naturalHeight) * zoom; // cover
+      // Wide: fit the whole frame (a little under, for air). Phone: size by
+      // height and park the subject in the top of the stage, copy below it;
+      // the frame runs wider than the screen and only its blank margin crops.
+      const s = wide
+        ? Math.min(cw / img.naturalWidth, ch / img.naturalHeight) * 0.84 * zoom
+        : ((ch * 0.46) / img.naturalHeight) * zoom;
       const w = img.naturalWidth * s;
       const h = img.naturalHeight * s;
+      const cy = wide ? 0.58 : 0.35;
       ctx.globalAlpha = alpha;
-      ctx.drawImage(img, (cw - w) / 2 + dx * cw, (ch - h) / 2 + dy * ch, w, h);
+      ctx.drawImage(img, (cw - w) / 2 + dx * cw, ch * cy - h / 2 + dy * ch, w, h);
     };
 
     let lastKey = "";
@@ -183,7 +183,8 @@ export default function ProductScrollHero() {
       const key = `${A.idx}|${B?.idx}|${Math.round(f * 24)}|${cw}x${ch}|${Math.round(dx * 400)}|${Math.round(dy * 400)}|${Math.round(zoom * 400)}`;
       if (key === lastKey) return; // same pixels as last time
       lastKey = key;
-      ctx!.clearRect(0, 0, cw, ch);
+      ctx!.fillStyle = GROUND;
+      ctx!.fillRect(0, 0, cw, ch);
       paint(A.img, 1);
       if (B && B.idx !== A.idx && f > 0.02) paint(B.img, f);
       ctx!.globalAlpha = 1;
@@ -281,7 +282,8 @@ export default function ProductScrollHero() {
   return (
     <section
       aria-label={pick("Η πίτα γύρο του Ρουβεράκι", "The Rouveraki gyros pita")}
-      className="relative bg-[#0c0a09] text-white"
+      className="relative text-[#1c1917]"
+      style={{ background: GROUND }}
     >
       <div
         ref={wrapRef}
@@ -291,26 +293,16 @@ export default function ProductScrollHero() {
       >
         <div className="psh-stage sticky top-0 h-[100svh] w-full overflow-hidden">
           <div className="psh-media absolute inset-0">
-          {/* warm stage light behind the product; the frames carry no background */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(52% 44% at 50% 52%, rgb(224 150 70 / 0.20), transparent 70%), radial-gradient(90% 60% at 50% 110%, rgb(224 180 88 / 0.12), transparent 70%), #0c0a09",
-            }}
-          />
-
           {/* static fallback = the same renders, no script needed */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={src(mode, still ? POSTER_INDEX : 0)}
+            src={src(still ? POSTER_INDEX : 0)}
             alt={pick(
               "Πίτα γύρο με πατάτες, τζατζίκι, ντομάτα και κρεμμύδι",
               "Gyros pita with fries, tzatziki, tomato and onion",
             )}
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ opacity: still || ready < 0.02 ? 1 : 0 }}
+            className="absolute inset-0 h-full w-full object-contain"
+            style={{ opacity: still || ready < 0.02 ? 1 : 0, background: GROUND }}
           />
           <canvas
             ref={canvasRef}
@@ -325,7 +317,7 @@ export default function ProductScrollHero() {
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, rgba(12,10,9,0.85) 0%, transparent 22%, transparent 58%, rgba(12,10,9,0.9) 100%)",
+                "linear-gradient(to bottom, rgba(251,251,248,0.9) 0%, transparent 18%, transparent 62%, rgba(251,251,248,0.92) 100%)",
             }}
           />
           </div>
@@ -335,11 +327,11 @@ export default function ProductScrollHero() {
             ref={beatARef}
             className="psh-beat absolute inset-x-0 bottom-0 px-5 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:px-10 md:bottom-auto md:top-1/2 md:max-w-xl md:-translate-y-1/2 md:pb-0 lg:left-[6vw]"
           >
-            <p className="eyebrow !text-[#e0b458]">{pick("Πίτα γύρο", "Gyros pita")}</p>
+            <p className="eyebrow !text-[#8a5a12]">{pick("Πίτα γύρο", "Gyros pita")}</p>
             <h2 className="mt-3 font-display text-[clamp(2.1rem,6.4vw,4.4rem)] font-semibold leading-[1.02] tracking-[-0.025em]">
               {pick("Ό,τι αγαπάς, τυλιγμένο.", "Everything you love, wrapped.")}
             </h2>
-            <p className="mt-4 max-w-sm text-base leading-relaxed text-white/75 sm:text-lg">
+            <p className="mt-4 max-w-sm text-base leading-relaxed text-black/70 sm:text-lg">
               {pick(
                 "Ζεστή πίτα, γύρος στα κάρβουνα, φρέσκα υλικά. Δες τη να ανοίγει.",
                 "Warm pita, charcoal gyros, fresh fillings. Scroll to watch it open.",
@@ -353,7 +345,7 @@ export default function ProductScrollHero() {
             className="psh-beat absolute inset-x-0 bottom-0 px-5 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:px-10 md:bottom-auto md:left-auto md:right-[5vw] md:top-1/2 md:w-[22rem] md:-translate-y-1/2 md:pb-0"
             style={{ opacity: 0, visibility: "hidden" }}
           >
-            <p className="eyebrow !text-[#e0b458]">{pick("Τίποτα παραπάνω", "Nothing extra")}</p>
+            <p className="eyebrow !text-[#8a5a12]">{pick("Τίποτα παραπάνω", "Nothing extra")}</p>
             <h2 className="mt-3 font-display text-[clamp(1.8rem,5vw,3rem)] font-semibold leading-[1.05] tracking-[-0.02em]">
               {pick("Πέντε υλικά. Όλα στη θέση τους.", "Five fillings. Each in its place.")}
             </h2>
@@ -364,7 +356,7 @@ export default function ProductScrollHero() {
                   ref={(el) => {
                     chipRefs.current[i] = el;
                   }}
-                  className="rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white/90 backdrop-blur-[2px]"
+                  className="rounded-full border border-black/15 bg-black/[0.04] px-4 py-2 text-sm font-medium text-black/80"
                   style={{ opacity: still ? 1 : 0 }}
                 >
                   {c}
@@ -391,7 +383,7 @@ export default function ProductScrollHero() {
                   className="transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] motion-safe:group-hover:translate-x-1"
                 />
               </Link>
-              <Link href="/menu" className="btn-glass px-7 text-base">
+              <Link href="/menu" className="btn-secondary px-7 text-base">
                 {pick("Δες το μενού", "See the menu")}
               </Link>
             </div>
@@ -399,17 +391,17 @@ export default function ProductScrollHero() {
 
           {/* ---- chrome ------------------------------------------------- */}
           <div ref={cueRef} className="pointer-events-none absolute left-1/2 top-[5.5rem] -translate-x-1/2 text-center">
-            <p className="eyebrow !text-white/60">{pick("Κύλισε", "Scroll")}</p>
+            <p className="eyebrow !text-black/50">{pick("Κύλισε", "Scroll")}</p>
           </div>
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] bg-white/10">
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] bg-black/10">
             <span
               ref={barRef}
-              className="block h-full origin-left bg-[#e0b458]"
+              className="block h-full origin-left bg-[#8a5a12]"
               style={{ transform: "scaleX(0)" }}
             />
           </div>
           {!still && ready < 1 && (
-            <div aria-hidden="true" className="absolute right-4 top-24 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
+            <div aria-hidden="true" className="absolute right-4 top-24 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/45">
               {locale === "en" ? "Loading" : "Φόρτωση"} {Math.round(ready * 100)}%
             </div>
           )}
