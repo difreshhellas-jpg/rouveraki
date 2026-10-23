@@ -679,34 +679,177 @@
 }
 
 /* ===== intro ============================================================== */
-@keyframes intro-veil {
-  0%   { opacity: 1; }
-  62%  { opacity: 1; }
-  100% { opacity: 0; }
+/* 3000ms film. Beats: 0-700 horizon draws, 250-1500 letters rise, 300-2300
+   embers, 1300-1700 sub-line, 2050-2400 wordmark leaves, 2300-3000 the screen
+   splits along the horizon. Always dark, whatever the theme: it is a curtain. */
+@keyframes intro-line-draw {
+  0%   { transform: scaleX(0); opacity: 1; }
+  24%  { transform: scaleX(1); opacity: 1; }
+  74%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
 }
-@keyframes intro-mark {
-  0%   { opacity: 0; transform: scale(0.94) translateY(6px); filter: blur(6px); }
-  22%  { opacity: 1; transform: scale(1) translateY(0);     filter: blur(0); }
-  58%  { opacity: 1; transform: scale(1);                    filter: blur(0); }
-  100% { opacity: 0; transform: scale(1.02);                 filter: blur(4px); }
+@keyframes intro-ch {
+  0%   { transform: translateY(112%) rotate(4deg); filter: blur(6px); }
+  100% { transform: translateY(0) rotate(0); filter: blur(0); }
 }
-@keyframes intro-rule {
-  0%   { transform: scaleX(0); }
-  40%  { transform: scaleX(1); }
-  100% { transform: scaleX(1); }
+@keyframes intro-glow {
+  0%, 100% { text-shadow: 0 0 0 rgb(224 180 88 / 0); }
+  45%      { text-shadow: 0 0 38px rgb(224 180 88 / 0.55); }
+}
+@keyframes intro-sub {
+  0%   { opacity: 0; letter-spacing: 0.7em; }
+  100% { opacity: 1; letter-spacing: 0.34em; }
+}
+@keyframes intro-stage {
+  0%, 68%  { opacity: 1; transform: scale(1); }
+  100%     { opacity: 0; transform: scale(1.08); }
+}
+@keyframes intro-ember {
+  0%   { opacity: 0; transform: translate3d(0, 0, 0) scale(1); }
+  14%  { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(calc(var(--x) * 0.18), calc(var(--h) * -1.6), 0) scale(0.3); }
+}
+@keyframes intro-top {
+  0%, 76%  { transform: translateY(0); }
+  100%     { transform: translateY(-101%); }
+}
+@keyframes intro-bottom {
+  0%, 76%  { transform: translateY(0); }
+  100%     { transform: translateY(101%); }
+}
+@keyframes intro-root {
+  0%, 99% { visibility: visible; }
+  100%    { visibility: hidden; }
 }
 [data-intro] {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: grid;
-  place-items: center;
-  background: rgb(var(--paper-rgb));
   pointer-events: none;
-  animation: intro-veil 2000ms var(--ease-out) forwards;
+  overflow: hidden;
+  animation: intro-root 3000ms linear forwards;
 }
-[data-intro-mark] { animation: intro-mark 2000ms var(--ease-out) forwards; }
-[data-intro-rule] { transform-origin: left center; animation: intro-rule 2000ms var(--ease-out) forwards; }
+[data-intro-panel] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50.2%;
+  background:
+    radial-gradient(60% 90% at 50% 100%, rgb(224 180 88 / 0.14), transparent 70%),
+    #0c0a09;
+  will-change: transform;
+}
+[data-intro-panel="top"] {
+  top: 0;
+  background:
+    radial-gradient(60% 90% at 50% 100%, rgb(224 180 88 / 0.14), transparent 70%),
+    #0c0a09;
+  animation: intro-top 3000ms var(--ease-in-out) forwards;
+}
+[data-intro-panel="bottom"] {
+  bottom: 0;
+  background:
+    radial-gradient(60% 90% at 50% 0%, rgb(224 180 88 / 0.10), transparent 70%),
+    #0c0a09;
+  animation: intro-bottom 3000ms var(--ease-in-out) forwards;
+}
+[data-intro-line] {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e0b458 18%, #f0c86e 50%, #e0b458 82%, transparent);
+  box-shadow: 0 0 18px rgb(224 180 88 / 0.55);
+  transform-origin: center;
+  animation: intro-line-draw 3000ms var(--ease-out) forwards;
+}
+[data-intro-stage] {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: intro-stage 3000ms var(--ease-out) forwards;
+}
+[data-intro-word] {
+  display: flex;
+  margin-bottom: 2.4rem;
+  font-size: clamp(2.6rem, 11.5vw, 6.8rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  color: #faf9f6;
+  padding: 0 1rem;
+}
+[data-intro-ch] {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0.06em 0.01em 0.14em;
+}
+[data-intro-ch] > span {
+  display: inline-block;
+  transform: translateY(112%);
+  animation:
+    intro-ch 900ms var(--ease-out) calc(250ms + var(--i) * 70ms) forwards,
+    intro-glow 1800ms ease-in-out 500ms 1;
+}
+[data-intro-sub] {
+  position: absolute;
+  top: calc(50% + 1.5rem);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #e0b458;
+  opacity: 0;
+  animation: intro-sub 800ms var(--ease-out) 1300ms forwards;
+}
+[data-intro-sub] i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e0b458;
+}
+[data-intro-ember] {
+  position: absolute;
+  left: calc(50% + var(--x));
+  top: 50%;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #f0c86e;
+  box-shadow: 0 0 10px 2px rgb(240 160 70 / 0.8);
+  opacity: 0;
+  animation: intro-ember 1900ms ease-out var(--d) forwards;
+}
+/* Returning visitors: set by the head script before first paint. */
+html[data-intro-seen] [data-intro] { display: none; }
+
+/* ===== product scroll hero ================================================ */
+.psh-beat { will-change: transform, opacity; }
+/* Reduced motion: no pin, no scrub. One composed screen, copy stacked below. */
+.psh-wrap[data-still] .psh-stage { position: relative; height: auto; overflow: visible; }
+.psh-wrap[data-still] .psh-media { position: relative; inset: auto; height: 78svh; }
+.psh-wrap[data-still] .psh-beat {
+  position: relative !important;
+  inset: auto !important;
+  width: auto !important;
+  max-width: 40rem !important;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 0 !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-align: left;
+}
+.psh-wrap[data-still] .psh-stage { padding-bottom: 3rem; }
 
 /* ===== reduced motion ===================================================== */
 /* Gentler, not none: opacity and colour stay, movement and tilt go. */

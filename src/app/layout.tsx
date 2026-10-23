@@ -78,6 +78,9 @@ try {
   var t = localStorage.getItem('rouveraki.theme');
   if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
 } catch (e) {}
+try {
+  if (sessionStorage.getItem('rouveraki.intro.seen') === '1') document.documentElement.setAttribute('data-intro-seen', '');
+} catch (e) {}
 `;
 
 /** Structured data — a restaurant's hours and address are what search reads. */

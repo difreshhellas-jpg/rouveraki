@@ -3,6 +3,7 @@ import Marquee from "@/components/motion/Marquee";
 import DaypartStrip from "@/components/DaypartStrip";
 import StorySection from "@/components/StorySection";
 import LocationSection from "@/components/LocationSection";
+import ProductScrollHero from "@/components/cinematic/ProductScrollHero";
 import HorizontalStory from "@/components/cinematic/HorizontalStory";
 import ScrollBreak from "@/components/cinematic/ScrollBreak";
 import MenuShowcase from "@/components/cinematic/MenuShowcase";
@@ -12,6 +13,10 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+
+      {/* Scroll-scrubbed Blender film of the pork gyros pita folding open. */}
+      <ProductScrollHero />
+
       {/* Reinforces the all-day proposition without another photo. */}
       <Marquee
         items={[

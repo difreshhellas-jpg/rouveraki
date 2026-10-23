@@ -4,61 +4,85 @@ import { useEffect, useState } from "react";
 import { BRAND } from "@/lib/brand";
 
 const SESSION_KEY = "rouveraki.intro.seen";
-const DURATION_MS = 2000;
+/** Keep in sync with the last keyframe end in globals.css (intro section). */
+const DURATION_MS = 3000;
+
+/** Deterministic embers: no Math.random, so server and client markup match. */
+const EMBERS = Array.from({ length: 18 }, (_, i) => ({
+  x: ((i * 37) % 100) - 50,
+  d: 260 + ((i * 131) % 900),
+  s: 2 + ((i * 7) % 4),
+  h: 140 + ((i * 53) % 190),
+}));
 
 /**
- * Two second wordmark on first load.
+ * First-arrival film: a gold horizon draws across the dark, the wordmark rises
+ * out of it letter by letter under a rain of embers from the grill, then the
+ * horizon is the seam the screen splits along to reveal the page.
  *
- * Rare, first-impression moments are the one place the frequency table allows
- * real delight, so this exists. Three rules keep it from becoming an obstacle:
+ *  - It is server-rendered and starts on CSS time, so it covers the hero from
+ *    the very first paint instead of popping in after hydration.
+ *  - A tiny head script (layout.tsx) marks returning visitors before paint, so
+ *    they never see it. Plays once per tab session.
+ *  - It never takes input: pointer-events are off for its whole life and it is
+ *    removed when finished, so it cannot trap focus or catch clicks.
+ *  - prefers-reduced-motion hides it entirely (globals.css).
  *
- *  - it never blocks input (pointer-events: none for its whole life)
- *  - it unmounts when finished, so it cannot trap focus or catch clicks
- *  - it plays once per tab session, because an arrival you have already seen
- *    is just a wait
- *
- * Pure CSS keyframes rather than JS: this is predetermined motion on the
- * busiest frame of the page load, and CSS animations run off the main thread
- * while React is still hydrating.
- *
- * prefers-reduced-motion hides it entirely (globals.css) — it is decoration,
- * and the reduced-motion rule is "gentler", which for pure decoration is none.
+ * Pure CSS keyframes: predetermined motion on the busiest frame of the load,
+ * running off the main thread while React hydrates.
  */
 export default function Intro() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
 
   useEffect(() => {
-    let seen = true;
+    let seen = false;
     try {
       seen = sessionStorage.getItem(SESSION_KEY) === "1";
+      if (!seen) sessionStorage.setItem(SESSION_KEY, "1");
     } catch {
-      // Private mode or blocked storage: skip rather than replay every render.
+      // Blocked storage: play it once for this mount rather than replaying.
     }
-    if (seen) return;
-
-    try {
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      /* non-fatal */
+    if (seen) {
+      setShow(false);
+      return;
     }
-
-    setShow(true);
-    const id = window.setTimeout(() => setShow(false), DURATION_MS);
+    const id = window.setTimeout(() => setShow(false), DURATION_MS + 80);
     return () => window.clearTimeout(id);
   }, []);
 
   if (!show) return null;
 
+  const letters = Array.from(BRAND.nameEl);
+
   return (
     <div data-intro="" aria-hidden="true">
-      <div className="flex flex-col items-center px-6">
-        <span
-          data-intro-mark=""
-          className="font-display text-[clamp(2rem,9vw,3.5rem)] font-bold tracking-tight text-char"
-        >
-          {BRAND.nameEl}
-        </span>
-        <span data-intro-rule="" className="tex-rope mt-4 w-24" />
+      <div data-intro-panel="top" />
+      <div data-intro-panel="bottom" />
+      <div data-intro-line="" />
+
+      <div data-intro-stage="">
+        <div data-intro-word="" className="font-display">
+          {letters.map((ch, i) => (
+            <span key={i} data-intro-ch="" style={{ ["--i" as string]: i }}>
+              <span>{ch}</span>
+            </span>
+          ))}
+        </div>
+        <p data-intro-sub="">
+          {BRAND.address.city} <i /> Μαρίνα
+        </p>
+        {EMBERS.map((e, i) => (
+          <span
+            key={i}
+            data-intro-ember=""
+            style={{
+              ["--x" as string]: `${e.x}%`,
+              ["--d" as string]: `${e.d}ms`,
+              ["--s" as string]: `${e.s}px`,
+              ["--h" as string]: `${e.h}px`,
+            }}
+          />
+        ))}
       </div>
     </div>
   );
