@@ -1,4 +1,5 @@
 import { BRAND } from "./brand";
+import { DEMO_MODE } from "./demo/config";
 
 /**
  * Opening-hours maths. Both windows wrap past midnight (shop 06:00–01:00,
@@ -61,10 +62,10 @@ const within = (minutes: number, opens: string, closes: string): boolean => {
 };
 
 export const isShopOpen = (at?: Date): boolean =>
-  within(athensMinutes(at), BRAND.hours.opens, BRAND.hours.closes);
+  DEMO_MODE || within(athensMinutes(at), BRAND.hours.opens, BRAND.hours.closes);
 
 export const isDeliveryOpen = (at?: Date): boolean =>
-  within(athensMinutes(at), BRAND.deliveryHours.opens, BRAND.deliveryHours.closes);
+  DEMO_MODE || within(athensMinutes(at), BRAND.deliveryHours.opens, BRAND.deliveryHours.closes);
 
 /**
  * Municipal alcohol-hour restriction (spec §6, second bullet).

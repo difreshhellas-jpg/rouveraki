@@ -14,6 +14,8 @@ import {
 import { supabaseConfigured } from "@/lib/supabase/config";
 import { loadSupabaseBrowser } from "@/lib/supabase/lazy";
 import { DEV_BYPASS, DEV_POLL_MS } from "@/lib/dev-mode";
+import { apiFetch } from "@/lib/api";
+import { DEMO_MODE, DEMO_POLL_MS } from "@/lib/demo/config";
 
 export type TrackedOrder = {
   orderCode: string;
@@ -53,7 +55,7 @@ export default function OrderTracker({ initial }: { initial: TrackedOrder }) {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch(`/api/orders/${order.orderCode}`, {
+      const res = await apiFetch(`/api/orders/${order.orderCode}`, {
         cache: "no-store",
       });
       if (!res.ok) return;
@@ -82,7 +84,7 @@ export default function OrderTracker({ initial }: { initial: TrackedOrder }) {
         // the page honest on a deployment without Supabase configured yet.
         pollRef.current = window.setInterval(
           refresh,
-          DEV_BYPASS ? DEV_POLL_MS : 15_000,
+          DEMO_MODE ? DEMO_POLL_MS : DEV_BYPASS ? DEV_POLL_MS : 15_000,
         );
         cleanup = () => {
           if (pollRef.current) window.clearInterval(pollRef.current);
@@ -132,7 +134,7 @@ export default function OrderTracker({ initial }: { initial: TrackedOrder }) {
   const cancel = async () => {
     setCancelling(true);
     try {
-      const res = await fetch(`/api/orders/${order.orderCode}/cancel`, {
+      const res = await apiFetch(`/api/orders/${order.orderCode}/cancel`, {
         method: "POST",
       });
       if (res.ok) await refresh();
@@ -308,7 +310,7 @@ export default function OrderTracker({ initial }: { initial: TrackedOrder }) {
         </dl>
       </section>
 
-      {!supabaseConfigured && (
+      {!supabaseConfigured && !DEMO_MODE && (
         <p className="mt-4 text-center text-xs text-char/50">
           {/* Visible only on a deployment without Supabase configured. */}
           {DEV_BYPASS

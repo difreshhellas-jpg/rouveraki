@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { AdminAuthProvider, useAdminAuth } from "@/components/admin/AdminAuth";
 import { supabaseConfigured } from "@/lib/supabase/browser";
 import { DEV_BYPASS } from "@/lib/dev-mode";
+import { DEMO_MODE } from "@/lib/demo/config";
 
 /**
  * Admin shell.
@@ -39,7 +40,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     if (ready && !session && !isLogin) router.replace("/admin/login");
   }, [ready, session, isLogin, router]);
 
-  if (!supabaseConfigured && !DEV_BYPASS) {
+  if (!supabaseConfigured && !DEV_BYPASS && !DEMO_MODE) {
     return (
       <div className="mx-auto max-w-lg px-4 py-24 text-center">
         <h1 className="font-display text-2xl font-bold">Το admin δεν είναι ρυθμισμένο</h1>
@@ -60,6 +61,11 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-svh bg-sand">
+      {DEMO_MODE && (
+        <p className="bg-rust px-4 py-2 text-center text-sm font-bold text-onrust">
+          DEMO - χωρίς σύνδεση, οι παραγγελίες είναι μόνο σε αυτόν τον browser
+        </p>
+      )}
       {DEV_BYPASS && (
         <p className="bg-rust px-4 py-2 text-center text-sm font-bold text-onrust">
           ΔΟΚΙΜΑΣΤΙΚΗ ΛΕΙΤΟΥΡΓΙΑ - χωρίς σύνδεση, οι πληρωμές είναι εικονικές
@@ -75,7 +81,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="flex flex-1 gap-1" aria-label="admin">
-            {NAV.map((n) => (
+            {NAV.filter((n) => !(DEMO_MODE && n.href === "/admin/menu")).map((n) => (
               <Link
                 key={n.href}
                 href={n.href}

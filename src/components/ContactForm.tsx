@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 import { useI18n } from "@/i18n/LanguageProvider";
 
 type State = "idle" | "sending" | "sent" | "error";
@@ -17,7 +18,7 @@ export default function ContactForm() {
     setState("sending");
 
     try {
-      const res = await fetch("/api/contact", {
+      const res = await apiFetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

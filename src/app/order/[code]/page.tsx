@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { DEMO_MODE } from "@/lib/demo/config";
+import DemoOrder from "@/components/DemoOrder";
 import { isOrderCodeShape } from "@/lib/order-code";
 import { CUSTOMER_CANCEL_GRACE_SECONDS } from "@/lib/brand";
 import { publicOrderShape } from "@/lib/order-shape";
@@ -23,6 +24,11 @@ export default async function OrderPage({
 }) {
   const { code } = await params;
   const normalized = decodeURIComponent(code).toUpperCase();
+
+  // Demo orders only exist in the visitor's browser, so the page is rendered there.
+  if (DEMO_MODE) return <DemoOrder code={normalized} />;
+
+  const { prisma } = await import("@/lib/prisma");
 
   const order = isOrderCodeShape(normalized)
     ? await prisma.order.findUnique({

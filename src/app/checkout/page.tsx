@@ -16,6 +16,8 @@ import { formatEuro } from "@/lib/money";
 import { isDeliveryOpen, isShopOpen, isAlcoholSaleAllowed } from "@/lib/hours";
 import { normalizeGreekPhone } from "@/lib/sanitize";
 import QuantityStepper from "@/components/QuantityStepper";
+import { apiFetch } from "@/lib/api";
+import { DEMO_MODE } from "@/lib/demo/config";
 
 type Step = 0 | 1 | 2;
 type PaymentMethod = "iris" | "card" | "cash";
@@ -128,7 +130,7 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/orders", {
+      const res = await apiFetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -451,6 +453,16 @@ export default function CheckoutPage() {
       {/* ---- STEP 2 — payment ------------------------------------------- */}
       {step === 2 && (
         <section className="mt-8 space-y-6" aria-label={t("checkout.step.payment")}>
+          {DEMO_MODE && (
+            <p
+              role="note"
+              className="rounded-card border border-gold/50 bg-gold/10 p-4 text-sm font-semibold"
+            >
+              {locale === "en"
+                ? "Demo payment: pick any method, it succeeds instantly. Nothing is charged and no card or bank details are asked for."
+                : "Δοκιμαστική πληρωμή: διάλεξε οποιαδήποτε μέθοδο, θα πετύχει αμέσως. Δεν γίνεται χρέωση και δεν ζητάμε στοιχεία κάρτας ή τράπεζας."}
+            </p>
+          )}
           <fieldset className="card p-5">
             <legend className="label px-1">{t("checkout.paymentMethod")}</legend>
             <div className="space-y-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { DEMO_MODE } from "@/lib/demo/config";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseConfigured } from "./config";
 
 let pending: Promise<SupabaseClient | null> | null = null;
@@ -16,7 +17,7 @@ let pending: Promise<SupabaseClient | null> | null = null;
  * Resolves to null when Supabase is not configured.
  */
 export function loadSupabaseBrowser(): Promise<SupabaseClient | null> {
-  if (!supabaseConfigured) return Promise.resolve(null);
+  if (!supabaseConfigured || DEMO_MODE) return Promise.resolve(null);
 
   pending ??= import("@supabase/supabase-js").then(({ createClient }) =>
     createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

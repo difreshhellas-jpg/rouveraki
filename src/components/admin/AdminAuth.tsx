@@ -12,6 +12,12 @@ import {
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseBrowser, supabaseConfigured } from "@/lib/supabase/browser";
 import { DEV_BYPASS, DEV_STAFF } from "@/lib/dev-mode";
+import { DEMO_MODE } from "@/lib/demo/config";
+import { apiFetch } from "@/lib/api";
+
+// Demo mode opens the owner screens like the local test bypass does, but is
+// deliberately a separate flag: it has no server behind it to protect.
+const OPEN = DEV_BYPASS || DEMO_MODE;
 
 type AdminAuthValue = {
   ready: boolean;
@@ -28,11 +34,11 @@ const Ctx = createContext<AdminAuthValue | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(
-    () => (DEV_BYPASS ? null : getSupabaseBrowser()),
+    () => (OPEN ? null : getSupabaseBrowser()),
     [],
   );
   const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(DEV_BYPASS || !supabaseConfigured);
+  const [ready, setReady] = useState(OPEN || !supabaseConfigured);
 
   useEffect(() => {
     if (!supabase) return;
@@ -79,7 +85,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         ? (await supabase.auth.getSession()).data.session?.access_token
         : undefined;
 
-      return fetch(input, {
+      return apiFetch(input, {
         ...init,
         headers: {
           ...(init.headers ?? {}),
@@ -96,8 +102,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       ready,
       // In test mode there is no real session; a truthy placeholder keeps the
       // shell's "signed in?" checks working without special-casing each one.
-      session: DEV_BYPASS ? ({ user: DEV_STAFF } as unknown as Session) : session,
-      email: DEV_BYPASS ? DEV_STAFF.email : (session?.user.email ?? null),
+      session: OPEN ? ({ user: DEV_STAFF } as unknown as Session) : session,
+      email: OPEN ? DEV_STAFF.email : (session?.user.email ?? null),
       supabase,
       signIn,
       signOut,

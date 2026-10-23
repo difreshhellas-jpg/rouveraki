@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAdminAuth } from "./AdminAuth";
 import { DEV_BYPASS, DEV_POLL_MS } from "@/lib/dev-mode";
+import { DEMO_MODE, DEMO_POLL_MS } from "@/lib/demo/config";
+import { onDemoChange } from "@/lib/demo/store";
 import type { OrderStatus } from "@/lib/order-status";
 
 export type AdminOrderItem = {
@@ -113,9 +115,15 @@ export function useOrders(view: "live" | "all" = "live") {
    * orders appear and runs much faster.
    */
   useEffect(() => {
-    const every = DEV_BYPASS ? DEV_POLL_MS : 30_000;
+    const every = DEMO_MODE ? DEMO_POLL_MS : DEV_BYPASS ? DEV_POLL_MS : 30_000;
     const id = window.setInterval(() => void refresh(), every);
     return () => window.clearInterval(id);
+  }, [refresh]);
+
+  // Demo: another tab (the customer's phone view) placed or changed an order.
+  useEffect(() => {
+    if (!DEMO_MODE) return;
+    return onDemoChange(() => void refresh());
   }, [refresh]);
 
   return {

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { DEMO_MODE } from "@/lib/demo/config";
 import { BRAND } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +26,10 @@ export default async function CheckoutReturnPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // Demo payments never leave the site, so there is nothing to return from.
+  if (DEMO_MODE) redirect("/menu");
+
+  const { prisma } = await import("@/lib/prisma");
   const sp = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
