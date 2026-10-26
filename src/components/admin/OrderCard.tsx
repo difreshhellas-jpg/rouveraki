@@ -20,70 +20,6 @@ const PRIMARY_NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
   DISPATCHED: "DELIVERED",
 };
 
-const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
-  );
-
-/** Prints a clean, plain receipt of one order through a hidden iframe. */
-function printOrder(order: AdminOrder, money: (c: number) => string) {
-  const items = order.items
-    .map(
-      (it) =>
-        `<tr><td class="q">${it.quantity}×</td><td>${esc(it.name)}${
-          it.item_notes ? `<div class="n">${esc(it.item_notes)}</div>` : ""
-        }</td></tr>`,
-    )
-    .join("");
-  const zone = order.deliveryZone
-    ? ` · ${esc(zoneById(order.deliveryZone)?.el ?? order.deliveryZone)}`
-    : "";
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(order.orderCode)}</title>
-<style>
-  @page { margin: 6mm; }
-  body { font: 14px/1.35 Arial, sans-serif; color: #000; margin: 0; max-width: 72mm; }
-  h1 { font-size: 22px; margin: 0 0 2px; }
-  .m { margin: 0 0 6px; }
-  hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
-  table { width: 100%; border-collapse: collapse; }
-  td { padding: 3px 0; vertical-align: top; }
-  td.q { width: 28px; font-weight: bold; }
-  .n { font-size: 12px; font-style: italic; }
-  .t { font-size: 16px; font-weight: bold; text-align: right; }
-</style></head><body>
-<h1>${esc(order.orderCode)}</h1>
-<p class="m">${order.fulfillmentType === "delivery" ? "Διανομή" : "Παραλαβή"}${
-    order.etaMinutes ? ` · ETA ${order.etaMinutes}′` : ""
-  }</p>
-<hr><table>${items}</table>
-${order.generalNotes ? `<hr><p class="m">Σημείωση: ${esc(order.generalNotes)}</p>` : ""}
-<hr>
-<p class="m"><b>${esc(order.customerName)}</b><br>${esc(order.customerPhone)}${
-    order.customerAddress ? `<br>${esc(order.customerAddress)}${zone}` : ""
-  }</p>
-<p class="m">Πληρωμή: ${esc(order.paymentMethod.toUpperCase())}</p>
-<hr><p class="t">${esc(money(order.totalCents))}</p>
-</body></html>`;
-
-  const frame = document.createElement("iframe");
-  frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
-  document.body.appendChild(frame);
-  const doc = frame.contentDocument;
-  const win = frame.contentWindow;
-  if (!doc || !win) {
-    frame.remove();
-    return;
-  }
-  doc.open();
-  doc.write(html);
-  doc.close();
-  win.onafterprint = () => frame.remove();
-  setTimeout(() => {
-    win.focus();
-    win.print();
-  }, 100);
-}
-
 export default function OrderCard({
   order,
   onChanged,
@@ -190,31 +126,6 @@ export default function OrderCard({
             {waitedMinutes}′
           </span>
           <span className="font-bold tabular-nums">{money(order.totalCents)}</span>
-          <button
-            type="button"
-            onClick={() => printOrder(order, money)}
-            aria-label="Εκτύπωση"
-            title="Εκτύπωση"
-            className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full",
-              isNew ? "bg-onrust/20" : "bg-char/10",
-            )}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2" />
-              <rect x="6" y="14" width="12" height="7" />
-            </svg>
-          </button>
         </div>
       </header>
 
