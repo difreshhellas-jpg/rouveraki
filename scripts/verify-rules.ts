@@ -297,9 +297,9 @@ check("category slugs are unique", () => {
   assert.equal(new Set(slugs).size, slugs.length);
 });
 
-check("all twelve confirmed categories are present", () => {
-  assert.equal(CATEGORIES.length, 12);
-  for (const expected of ["pites", "souvlakia", "gyros", "kalamakia", "zymarika", "orektika", "salates", "kafedes", "rofimata", "chymoi", "anapsyktika", "pota"]) {
+check("every printed-menu category is present", () => {
+  assert.equal(CATEGORIES.length, 16);
+  for (const expected of ["pites", "kalamakia", "merides", "poikilies", "burger", "santouits", "orektika", "salates", "zymarika", "psari", "kafedes", "rofimata", "chymoi", "anapsyktika", "mpyres", "pota"]) {
     assert.ok(CATEGORIES.some((c) => c.slug === expected), `missing ${expected}`);
   }
 });
@@ -310,9 +310,9 @@ check("every category belongs to a daypart card", () => {
   }
 });
 
-check("the drinks category is the age-gated one", () => {
-  assert.deepEqual([...AGE_GATED_CATEGORIES], ["pota"]);
-  assert.ok(CATEGORIES.some((c) => c.slug === "pota"));
+check("beer and wine/spirits are the age-gated categories", () => {
+  assert.deepEqual([...AGE_GATED_CATEGORIES], ["mpyres", "pota"]);
+  for (const c of AGE_GATED_CATEGORIES) assert.ok(CATEGORIES.some((k) => k.slug === c), c);
 });
 
 check("delivery zone ids are unique and fees are sane", () => {
@@ -330,7 +330,8 @@ console.log("\n-- fiscal / VAT ---------------------------------------------");
 check("alcohol is 24% and food service is 13%", () => {
   assert.equal(vatCategoryForCategory("pota"), VAT_CATEGORY.RATE_24);
   assert.equal(vatRateForCategory("pota"), 0.24);
-  for (const c of ["pites", "souvlakia", "kafedes", "salates", "zymarika"]) {
+  assert.equal(vatRateForCategory("mpyres"), 0.24);
+  for (const c of ["pites", "merides", "burger", "psari", "kafedes", "salates", "zymarika"]) {
     assert.equal(vatCategoryForCategory(c), VAT_CATEGORY.RATE_13, c);
     assert.equal(vatRateForCategory(c), 0.13, c);
   }

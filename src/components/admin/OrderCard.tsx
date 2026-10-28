@@ -3,6 +3,7 @@
 import { useState } from "react";
 import clsx from "clsx";
 import { useAdminAuth } from "./AdminAuth";
+import { usePrintOrder } from "./PrintTicket";
 import type { AdminOrder } from "./useOrders";
 import { formatEuro } from "@/lib/money";
 import { REJECTION_REASONS, DEFAULT_ETA_MINUTES, zoneById } from "@/lib/brand";
@@ -38,6 +39,7 @@ export default function OrderCard({
     order.etaMinutes ?? DEFAULT_ETA_MINUTES[order.fulfillmentType],
   );
   const [error, setError] = useState<string | null>(null);
+  const { print, ticket } = usePrintOrder();
 
   const money = (c: number) => formatEuro(c / 100, "el-GR");
   const waitedMinutes = Math.floor(
@@ -126,6 +128,20 @@ export default function OrderCard({
             {waitedMinutes}′
           </span>
           <span className="font-bold tabular-nums">{money(order.totalCents)}</span>
+          <button
+            type="button"
+            onClick={() => print(order)}
+            className={clsx(
+              "inline-flex min-h-touch items-center gap-1.5 rounded-lg px-3 text-xs font-bold uppercase tracking-wide",
+              isNew ? "bg-onrust/20 hover:bg-onrust/30" : "bg-char/10 hover:bg-char/15",
+            )}
+            title="Εκτύπωση δελτίου παραγγελίας"
+          >
+            <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z" />
+            </svg>
+            Εκτύπωση
+          </button>
         </div>
       </header>
 
@@ -318,6 +334,7 @@ export default function OrderCard({
           <p className="mt-3 text-sm text-char/65">Λόγος: {order.lastReason}</p>
         )}
       </div>
+      {ticket}
     </article>
   );
 }

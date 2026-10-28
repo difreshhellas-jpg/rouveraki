@@ -42,9 +42,13 @@ export const PHOTOS = {
  */
 const CATEGORY_PHOTO: Record<string, string> = {
   pites: PHOTOS.gyrosPita,
-  souvlakia: PHOTOS.gyrosPita,
-  gyros: PHOTOS.gyrosPita,
   kalamakia: PHOTOS.gyrosPita,
+  merides: PHOTOS.gyrosPita,
+  poikilies: PHOTOS.mezeSpread,
+  burger: PHOTOS.patty,
+  santouits: PHOTOS.patty,
+  psari: PHOTOS.mezeSpread,
+  mpyres: PHOTOS.barInterior,
   zymarika: PHOTOS.pasta,
   orektika: PHOTOS.mezeSpread,
   salates: PHOTOS.salad,
