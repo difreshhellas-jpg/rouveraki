@@ -761,3 +761,30 @@
   ::view-transition-old(root), ::view-transition-new(root) { animation: vt-fade 160ms ease both; }
   @keyframes vt-fade { from { opacity: 0; } }
 }
+
+/* ---- order ticket printing (admin, see components/admin/PrintTicket.tsx) -- */
+.print-ticket { display: none; }
+
+@media print {
+  body.printing-ticket > :not(.print-ticket) { display: none !important; }
+  body.printing-ticket { background: #fff !important; margin: 0; }
+  @page { size: 80mm auto; margin: 4mm; }
+
+  .print-ticket {
+    display: block;
+    width: 72mm;
+    color: #000;
+    font: 12px/1.35 ui-monospace, "Courier New", monospace;
+  }
+  .print-ticket p { margin: 0 0 1mm; }
+  .print-ticket hr { border: 0; border-top: 1px dashed #000; margin: 2mm 0; }
+  .print-ticket table { width: 100%; border-collapse: collapse; }
+  .print-ticket td { padding: 0.5mm 0; vertical-align: top; }
+  .print-ticket td:first-child { padding-right: 2mm; white-space: nowrap; }
+  .print-ticket .pt-center { text-align: center; }
+  .print-ticket .pt-right { text-align: right; white-space: nowrap; padding-left: 2mm; }
+  .print-ticket .pt-bold { font-weight: 700; }
+  .print-ticket .pt-lg { font-size: 15px; }
+  .print-ticket .pt-xl { font-size: 24px; letter-spacing: 0.08em; }
+  .print-ticket .pt-small { font-size: 10px; margin-top: 3mm; }
+}

@@ -32,24 +32,28 @@ export const BRAND = {
  * `slug` is the anchor id; `daypart` drives the three homepage daypart cards.
  */
 export const CATEGORIES = [
-  { slug: "pites",       el: "Πίτες",       en: "Pites",         daypart: "grill"    },
-  { slug: "souvlakia",   el: "Σουβλάκια",   en: "Souvlaki",      daypart: "grill"    },
-  { slug: "gyros",       el: "Γύρος",       en: "Gyros",         daypart: "grill"    },
-  { slug: "kalamakia",   el: "Καλαμάκια",   en: "Kalamaki",      daypart: "grill"    },
-  { slug: "zymarika",    el: "Ζυμαρικά",    en: "Pasta",         daypart: "grill"    },
+  { slug: "pites",       el: "Πίτες τυλιχτές", en: "Wraps",         daypart: "grill"    },
+  { slug: "kalamakia",   el: "Καλαμάκια",   en: "Skewers",       daypart: "grill"    },
+  { slug: "merides",     el: "Μερίδες",     en: "Grill plates",  daypart: "grill"    },
+  { slug: "poikilies",   el: "Ποικιλίες",   en: "Sharing platters", daypart: "grill" },
+  { slug: "burger",      el: "Club & Burger", en: "Club & Burger", daypart: "grill"  },
+  { slug: "santouits",   el: "Σάντουιτς",   en: "Sandwiches",    daypart: "grill"    },
   { slug: "orektika",    el: "Ορεκτικά",    en: "Starters",      daypart: "grill"    },
   { slug: "salates",     el: "Σαλάτες",     en: "Salads",        daypart: "grill"    },
+  { slug: "zymarika",    el: "Ζυμαρικά",    en: "Pasta",         daypart: "grill"    },
+  { slug: "psari",       el: "Ψάρι",        en: "Fish",          daypart: "grill"    },
   { slug: "kafedes",     el: "Καφέδες",     en: "Coffee",        daypart: "morning"  },
   { slug: "rofimata",    el: "Ροφήματα",    en: "Hot drinks",    daypart: "morning"  },
   { slug: "chymoi",      el: "Χυμοί",       en: "Juices",        daypart: "morning"  },
   { slug: "anapsyktika", el: "Αναψυκτικά",  en: "Soft drinks",   daypart: "evening"  },
-  { slug: "pota",        el: "Ποτά",        en: "Drinks",        daypart: "evening"  },
+  { slug: "mpyres",      el: "Μπύρες",      en: "Beer",          daypart: "evening"  },
+  { slug: "pota",        el: "Κρασιά - Ποτά", en: "Wine & spirits", daypart: "evening" },
 ] as const;
 
 export type CategorySlug = (typeof CATEGORIES)[number]["slug"];
 
-/** Every item filed under Ποτά is age-gated. Enforced server-side, not just in the seed. */
-export const AGE_GATED_CATEGORIES: readonly string[] = ["pota"];
+/** Every item filed under Μπύρες or Κρασιά - Ποτά is age-gated. Enforced server-side, not just in the seed. */
+export const AGE_GATED_CATEGORIES: readonly string[] = ["mpyres", "pota"];
 
 export const categoryBySlug = (slug: string) =>
   CATEGORIES.find((c) => c.slug === slug);
