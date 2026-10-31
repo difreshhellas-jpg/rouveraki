@@ -18,12 +18,12 @@ export default function CartSheet({
 
   const lines = useCart((s) => s.lines);
   const fulfillmentType = useCart((s) => s.fulfillmentType);
-  const zoneId = useCart((s) => s.zoneId);
   const setQuantity = useCart((s) => s.setQuantity);
   const removeLine = useCart((s) => s.removeLine);
   const clear = useCart((s) => s.clear);
 
-  const totals = cartTotals(lines, fulfillmentType, zoneId);
+  // Delivery zones are off for now: no zone fee.
+  const totals = cartTotals(lines, fulfillmentType, null);
   const money = (cents: number) =>
     formatEuro(cents / 100, locale === "en" ? "en-IE" : "el-GR");
 
@@ -35,16 +35,6 @@ export default function CartSheet({
             <dt className="text-char/70">{t("cart.subtotal")}</dt>
             <dd className="font-semibold tabular-nums">{money(totals.subtotalCents)}</dd>
           </div>
-          {fulfillmentType === "delivery" && zoneId && (
-            <div className="flex justify-between">
-              <dt className="text-char/70">{t("cart.deliveryFee")}</dt>
-              <dd className="font-semibold tabular-nums">
-                {totals.deliveryFeeCents === 0
-                  ? t("location.zoneFree")
-                  : money(totals.deliveryFeeCents)}
-              </dd>
-            </div>
-          )}
           <div className="flex justify-between border-t border-line pt-2 text-base">
             <dt className="font-bold">{t("cart.total")}</dt>
             <dd className="font-bold tabular-nums text-rust">
@@ -52,13 +42,6 @@ export default function CartSheet({
             </dd>
           </div>
         </dl>
-
-        {!totals.meetsMinimum && (
-          <p role="status" className="mt-3 rounded-xl bg-rust/10 p-3 text-sm text-rust">
-            {t("cart.minimumNotMet")} {money(totals.minimumCents)}. {t("cart.addMore")}{" "}
-            {money(totals.shortfallCents)}
-          </p>
-        )}
 
         <Link href="/checkout" onClick={onClose} className="btn-primary mt-4 w-full">
           {t("cart.checkout")}

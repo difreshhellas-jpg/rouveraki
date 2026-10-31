@@ -9,6 +9,13 @@ import { formatEuro } from "@/lib/money";
 import { REJECTION_REASONS, DEFAULT_ETA_MINUTES, zoneById } from "@/lib/brand";
 import { requiresReason, type OrderStatus } from "@/lib/order-status";
 import { dict } from "@/i18n/dictionaries";
+import { DEMO_MODE } from "@/lib/demo/config";
+
+/** Demo orders are paid at the door, so "card" tells the driver to take the POS. */
+const PAY_LABEL: Record<string, string> = {
+  cash: "ΜΕΤΡΗΤΑ",
+  card: DEMO_MODE ? "ΚΑΡΤΑ (POS)" : "ΚΑΡΤΑ",
+};
 
 const STATUS_LABEL = (s: OrderStatus) =>
   (dict.el as Record<string, string>)[`status.${s}`] ?? s;
@@ -107,17 +114,6 @@ export default function OrderCard({
           >
             {order.fulfillmentType === "delivery" ? "Διανομή" : "Παραλαβή"}
           </span>
-          {order.ageVerified && (
-            <span
-              className={clsx(
-                "rounded-full px-2.5 py-0.5 text-xs font-bold",
-                isNew ? "bg-onrust/20" : "bg-char/10",
-              )}
-              title="Το καλάθι περιείχε αλκοόλ - ο πελάτης δήλωσε 18+"
-            >
-              18+
-            </span>
-          )}
         </div>
 
         <div className="flex items-center gap-3 text-sm">
@@ -192,7 +188,7 @@ export default function OrderCard({
             </p>
           )}
           <p className="mt-1 text-char/55">
-            Πληρωμή: {order.paymentMethod.toUpperCase()}
+            Πληρωμή: {PAY_LABEL[order.paymentMethod] ?? order.paymentMethod.toUpperCase()}
             {order.paymentStatus ? ` (${order.paymentStatus})` : ""}
             {order.etaMinutes ? ` · ETA ${order.etaMinutes}′` : ""}
           </p>
@@ -234,7 +230,9 @@ export default function OrderCard({
               className="field"
             />
             <p className="text-sm text-char/65">
-              Ο πελάτης ενημερώνεται με SMS και το ποσό επιστρέφεται αυτόματα.
+              {DEMO_MODE
+                ? "Ο πελάτης το βλέπει στη σελίδα της παραγγελίας. Δεν έχει χρεωθεί τίποτα (πληρωμή στην πόρτα)."
+                : "Ο πελάτης ενημερώνεται με SMS και το ποσό επιστρέφεται αυτόματα."}
             </p>
             <div className="flex gap-2">
               <button

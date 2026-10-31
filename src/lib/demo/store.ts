@@ -7,10 +7,8 @@
  *
  * Shapes mirror the real API responses so the existing screens run unchanged.
  */
-import menu from "@/data/menu.json";
 import { generateOrderCode } from "@/lib/order-code";
 import {
-  zoneById,
   DEFAULT_ETA_MINUTES,
   CUSTOMER_CANCEL_GRACE_SECONDS,
 } from "@/lib/brand";
@@ -28,7 +26,6 @@ const CHANNEL = "rouveraki-demo";
 
 type Stored = Omit<AdminOrder, "allowedNext">;
 
-export const demoMenu = (): MenuItemDTO[] => menu.items as MenuItemDTO[];
 
 /* ---- storage ------------------------------------------------------------ */
 
@@ -113,31 +110,39 @@ const toTracked = (o: Stored): TrackedOrder => {
 /* ---- operations --------------------------------------------------------- */
 
 export type PlaceInput = {
-  lines: { menuItemId: number; quantity: number; itemNotes?: string }[];
+  /** `unitPriceCents` is the price the customer saw; a mismatch is refused. */
+  lines: { menuItemId: number; quantity: number; itemNotes?: string; unitPriceCents?: number }[];
   fulfillmentType: "delivery" | "pickup";
   customerName: string;
   customerPhone: string;
   customerAddress: string | null;
-  deliveryZone: string | null;
   generalNotes: string | null;
-  paymentMethod: "iris" | "card" | "cash";
-  ageVerified: boolean;
+  /** Both are settled at the door: cash, or card on the delivery POS. */
+  paymentMethod: "card" | "cash";
 };
 
 type Result<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; extra?: Record<string, unknown> };
 
+/** `menu` is the live menu, so prices and sold-out items are the owner's current ones. */
 export function placeOrder(
   input: PlaceInput,
+  menu: MenuItemDTO[],
 ): Result<{ orderCode: string; trackingUrl: string }> {
-  const byId = new Map(demoMenu().map((m) => [m.id, m]));
+  const byId = new Map(menu.map((m) => [m.id, m]));
   let subtotalCents = 0;
   let maxPrep = 0;
   const items: AdminOrderItem[] = [];
   for (const l of input.lines) {
     const m = byId.get(l.menuItemId);
     if (!m) return { ok: false, error: "unknown_menu_item" };
+    if (!m.available) return { ok: false, error: "item_unavailable", extra: { name: m.name } };
+    // The owner can change a price while it sits in someone's cart; never
+    // charge at the door a different amount from the one shown at checkout.
+    if (l.unitPriceCents !== undefined && l.unitPriceCents !== m.priceCents) {
+      return { ok: false, error: "price_changed", extra: { name: m.name } };
+    }
     subtotalCents += m.priceCents * l.quantity;
     maxPrep = Math.max(maxPrep, m.prepTimeMinutes);
     items.push({
@@ -151,18 +156,11 @@ export function placeOrder(
     });
   }
 
-  const zone =
-    input.fulfillmentType === "delivery"
-      ? zoneById(input.deliveryZone ?? "")
-      : undefined;
-  if (input.fulfillmentType === "delivery" && !zone) {
-    return { ok: false, error: "invalid_zone" };
+  if (input.fulfillmentType === "delivery" && !input.customerAddress?.trim()) {
+    return { ok: false, error: "address_required" };
   }
-  const deliveryFeeCents = zone ? Math.round(zone.deliveryFee * 100) : 0;
-  const minimumCents = zone ? Math.round(zone.minimumOrder * 100) : 0;
-  if (subtotalCents < minimumCents) {
-    return { ok: false, error: "below_minimum", extra: { minimumCents } };
-  }
+  // Delivery zones are switched off for now: no zone, no minimum, no fee.
+  const deliveryFeeCents = 0;
 
   const now = new Date().toISOString();
   const orders = read();
@@ -171,8 +169,8 @@ export function placeOrder(
     orderCode = generateOrderCode();
   }
 
-  // The demo payment step always succeeds, so every order goes straight into
-  // the shop's queue (the real flow starts card/IRIS at PENDING_PAYMENT).
+  // Payment happens at the door, so every order goes straight into the
+  // shop's queue.
   orders.push({
     id: Math.max(0, ...orders.map((o) => o.id)) + 1,
     orderCode,
@@ -181,15 +179,15 @@ export function placeOrder(
     customerName: input.customerName,
     customerPhone: input.customerPhone,
     customerAddress: input.customerAddress,
-    deliveryZone: zone?.id ?? null,
+    deliveryZone: null,
     items,
     generalNotes: input.generalNotes,
     subtotalCents,
     deliveryFeeCents,
     totalCents: subtotalCents + deliveryFeeCents,
     paymentMethod: input.paymentMethod,
-    paymentStatus: input.paymentMethod === "cash" ? null : "demo",
-    ageVerified: input.ageVerified,
+    paymentStatus: null,
+    ageVerified: false,
     etaMinutes:
       DEFAULT_ETA_MINUTES[input.fulfillmentType] + Math.max(0, maxPrep - 10),
     // Shown on the confirmation screen straight away so it reads as a real ETA.

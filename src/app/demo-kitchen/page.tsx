@@ -36,6 +36,9 @@ export default function DemoKitchenPage() {
             Ρουβεράκι <span className="text-char/50">οθόνη καταστήματος</span>
           </h1>
           <div className="ml-auto flex gap-2">
+            <Link href="/demo-kitchen/menu" className="btn-primary text-sm">
+              Διαχείριση μενού
+            </Link>
             <Link href="/menu" className="btn-secondary text-sm">
               Πίσω στο site
             </Link>

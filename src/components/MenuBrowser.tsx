@@ -242,11 +242,6 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                           <h3 className="font-display text-lg font-semibold leading-snug">
                             {name}
                           </h3>
-                          {item.requiresAgeVerification && (
-                            <span className="mt-1 shrink-0 rounded-full bg-accent/12 px-2 py-0.5 text-[0.65rem] font-bold text-accent">
-                              {t("menu.ageGated")}
-                            </span>
-                          )}
                         </div>
 
                         {desc && (

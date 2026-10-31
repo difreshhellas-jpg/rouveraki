@@ -69,8 +69,9 @@ export default function DaypartStrip() {
                   <p className="mt-2 flex-1 text-char/70">
                     {t(`daypart.${d.id}.body` as never)}
                   </p>
-                  <span className="mt-5 inline-flex items-center gap-2 font-semibold text-rust">
-                    {t("daypart.cta")}
+                  {/* A real button look, so each card reads as something to tap. */}
+                  <span className="btn-primary mt-5 w-full gap-2">
+                    {t(`daypart.${d.id}.cta` as never)}
                     <span
                       aria-hidden="true"
                       className="transition-transform duration-150 motion-safe:group-hover:translate-x-1"

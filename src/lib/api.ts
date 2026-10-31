@@ -11,6 +11,7 @@
 import { DEMO_MODE } from "@/lib/demo/config";
 import * as demo from "@/lib/demo/store";
 import type { OrderStatus } from "@/lib/order-status";
+import type { MenuItemDTO } from "@/lib/menu-types";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -36,7 +37,12 @@ async function demoFetch(url: string, init: RequestInit = {}): Promise<Response>
   };
 
   if (path === "/api/orders" && method === "POST") {
-    const r = demo.placeOrder(body() as unknown as demo.PlaceInput);
+    // Priced against the live menu, so the owner's latest prices and sold-out
+    // switches apply even if this tab loaded the menu a while ago.
+    const menuRes = await fetch("/api/live-menu", { cache: "no-store" });
+    if (!menuRes.ok) return json({ error: "menu_unavailable" }, 503);
+    const { items } = (await menuRes.json()) as { items: MenuItemDTO[] };
+    const r = demo.placeOrder(body() as unknown as demo.PlaceInput, items);
     return r.ok ? json(r.data) : fail(r);
   }
 

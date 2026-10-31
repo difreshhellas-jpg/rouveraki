@@ -52,8 +52,11 @@ export const CATEGORIES = [
 
 export type CategorySlug = (typeof CATEGORIES)[number]["slug"];
 
-/** Every item filed under Μπύρες or Κρασιά - Ποτά is age-gated. Enforced server-side, not just in the seed. */
-export const AGE_GATED_CATEGORIES: readonly string[] = ["mpyres", "pota"];
+/**
+ * Categories that need an 18+ confirmation at checkout. Empty: the owner chose
+ * not to ask (2026-10-31). Add slugs back here to switch the check on again.
+ */
+export const AGE_GATED_CATEGORIES: readonly string[] = [];
 
 export const categoryBySlug = (slug: string) =>
   CATEGORIES.find((c) => c.slug === slug);

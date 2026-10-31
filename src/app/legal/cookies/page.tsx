@@ -38,10 +38,6 @@ export default function CookiesPage() {
           <strong>Χάρτης Google</strong> - η ενσωματωμένη προβολή χάρτη φορτώνεται
           από τη Google και ενδέχεται να θέτει δικά της cookies όταν εμφανίζεται.
         </li>
-        <li>
-          <strong>Viva.com</strong> - η σελίδα πληρωμής βρίσκεται σε ιστότοπο της
-          Viva.com και διέπεται από τη δική της πολιτική.
-        </li>
       </ul>
 
       <p>

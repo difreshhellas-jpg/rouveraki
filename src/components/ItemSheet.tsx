@@ -79,13 +79,6 @@ export default function ItemSheet({
                 </p>
               </div>
 
-              {item.requiresAgeVerification && (
-                <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-rust/10 px-3 py-1 text-xs font-semibold text-rust">
-                  <span>{t("menu.ageGated")}</span>
-                  <span className="font-normal">{t("menu.ageGatedHint")}</span>
-                </p>
-              )}
-
               {pick(item.description ?? "", item.descriptionEn) && (
                 <p className="mt-3 leading-relaxed text-char/75">
                   {pick(item.description ?? "", item.descriptionEn)}

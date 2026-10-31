@@ -310,8 +310,8 @@ check("every category belongs to a daypart card", () => {
   }
 });
 
-check("beer and wine/spirits are the age-gated categories", () => {
-  assert.deepEqual([...AGE_GATED_CATEGORIES], ["mpyres", "pota"]);
+check("age gating is off by the owner's choice; any gated slug must exist", () => {
+  assert.deepEqual([...AGE_GATED_CATEGORIES], []);
   for (const c of AGE_GATED_CATEGORIES) assert.ok(CATEGORIES.some((k) => k.slug === c), c);
 });
 

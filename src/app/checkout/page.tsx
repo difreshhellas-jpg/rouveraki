@@ -1,26 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { useI18n } from "@/i18n/LanguageProvider";
-import {
-  useCart,
-  cartTotals,
-  cartHasAgeGated,
-  ALL_ZONES,
-  type FulfillmentType,
-} from "@/store/cart";
+import { useCart, cartTotals, type FulfillmentType } from "@/store/cart";
 import { formatEuro } from "@/lib/money";
-import { isDeliveryOpen, isShopOpen, isAlcoholSaleAllowed } from "@/lib/hours";
+import { isDeliveryOpen, isShopOpen } from "@/lib/hours";
 import { normalizeGreekPhone } from "@/lib/sanitize";
 import QuantityStepper from "@/components/QuantityStepper";
 import { apiFetch } from "@/lib/api";
-import { DEMO_MODE } from "@/lib/demo/config";
 
-type Step = 0 | 1 | 2;
-type PaymentMethod = "iris" | "card" | "cash";
+/** Both are paid at the door: cash, or card on the delivery driver's POS. */
+type PaymentMethod = "cash" | "card";
 
 export default function CheckoutPage() {
   const { t, pick, locale } = useI18n();
@@ -28,9 +21,7 @@ export default function CheckoutPage() {
 
   const lines = useCart((s) => s.lines);
   const fulfillmentType = useCart((s) => s.fulfillmentType);
-  const zoneId = useCart((s) => s.zoneId);
   const setFulfillment = useCart((s) => s.setFulfillment);
-  const setZone = useCart((s) => s.setZone);
   const setQuantity = useCart((s) => s.setQuantity);
   const removeLine = useCart((s) => s.removeLine);
   const clear = useCart((s) => s.clear);
@@ -38,36 +29,25 @@ export default function CheckoutPage() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const [step, setStep] = useState<Step>(0);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [generalNotes, setGeneralNotes] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("iris");
-  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const [clock, setClock] = useState<{
-    shop: boolean;
-    delivery: boolean;
-    alcohol: boolean;
-  } | null>(null);
+  const [clock, setClock] = useState<{ shop: boolean; delivery: boolean } | null>(null);
   useEffect(() => {
-    const read = () =>
-      setClock({
-        shop: isShopOpen(),
-        delivery: isDeliveryOpen(),
-        alcohol: isAlcoholSaleAllowed(),
-      });
+    const read = () => setClock({ shop: isShopOpen(), delivery: isDeliveryOpen() });
     read();
     const id = setInterval(read, 30_000);
     return () => clearInterval(id);
   }, []);
 
-  const totals = cartTotals(lines, fulfillmentType, zoneId);
-  const hasAgeGated = cartHasAgeGated(lines);
+  // Delivery zones are off for now, so there is no zone fee or minimum.
+  const totals = cartTotals(lines, fulfillmentType, null);
   const money = (cents: number) =>
     formatEuro(cents / 100, locale === "en" ? "en-IE" : "el-GR");
 
@@ -79,54 +59,27 @@ export default function CheckoutPage() {
     }
   }, [clock, fulfillmentType, setFulfillment]);
 
-  const steps = useMemo(
-    () => [t("checkout.step.cart"), t("checkout.step.details"), t("checkout.step.payment")],
-    [t],
-  );
-
   /* ---- validation ------------------------------------------------------ */
 
-  const validateDetails = (): string[] => {
+  const validate = (): string[] => {
     const e: string[] = [];
     if (!name.trim()) e.push(t("checkout.error.name"));
     if (!normalizeGreekPhone(phone)) e.push(t("checkout.error.phone"));
-    if (fulfillmentType === "delivery") {
-      if (!address.trim()) e.push(t("checkout.error.address"));
-      if (!zoneId) e.push(t("checkout.error.zone"));
-      if (zoneId && !totals.meetsMinimum) e.push(t("checkout.error.minimum"));
+    if (fulfillmentType === "delivery" && !address.trim()) {
+      e.push(t("checkout.error.address"));
     }
     return e;
-  };
-
-  const validatePayment = (): string[] => {
-    const e: string[] = [];
-    if (hasAgeGated && !ageConfirmed) e.push(t("checkout.error.age"));
-    if (hasAgeGated && clock && !clock.alcohol) {
-      e.push(t("checkout.alcoholHoursBlocked"));
-    }
-    return e;
-  };
-
-  const goNext = () => {
-    const e = step === 1 ? validateDetails() : [];
-    setErrors(e);
-    if (e.length) return;
-    setStep((s) => (s === 2 ? 2 : ((s + 1) as Step)));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const goBack = () => {
-    setErrors([]);
-    setStep((s) => (s === 0 ? 0 : ((s - 1) as Step)));
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   /* ---- submit ---------------------------------------------------------- */
 
   const submit = async () => {
-    const e = [...validateDetails(), ...validatePayment()];
+    const e = validate();
     setErrors(e);
-    if (e.length) return;
+    if (e.length) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -138,15 +91,15 @@ export default function CheckoutPage() {
             menuItemId: l.menuItemId,
             quantity: l.quantity,
             itemNotes: l.itemNotes,
+            // Lets the demo backend refuse an order whose price changed meanwhile.
+            unitPriceCents: l.unitPriceCents,
           })),
           fulfillmentType,
           customerName: name.trim(),
           customerPhone: phone.trim(),
           customerAddress: fulfillmentType === "delivery" ? address.trim() : null,
-          deliveryZone: fulfillmentType === "delivery" ? zoneId : null,
           generalNotes: generalNotes.trim() || null,
           paymentMethod,
-          ageVerified: hasAgeGated ? ageConfirmed : false,
           marketingOptIn,
         }),
       });
@@ -156,12 +109,16 @@ export default function CheckoutPage() {
         redirectUrl?: string | null;
         trackingUrl?: string;
         orderCode?: string;
-        minimumCents?: number;
+        /** The sold-out or re-priced item, when the error is about one. */
+        name?: string;
       };
 
       if (!res.ok) {
-        setErrors([serverErrorMessage(data.error, t, money, data)]);
+        const msg = serverErrorMessage(data.error, t);
+        setErrors([data.name ? `${msg} (${data.name})` : msg]);
         setSubmitting(false);
+        // The message sits at the top; the button is in the bottom bar.
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
 
@@ -177,6 +134,7 @@ export default function CheckoutPage() {
     } catch {
       setErrors([t("checkout.error.generic")]);
       setSubmitting(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -202,45 +160,11 @@ export default function CheckoutPage() {
     );
   }
 
-  const zone = ALL_ZONES.find((z) => z.id === zoneId);
-
   return (
     <div className="mx-auto max-w-2xl px-4 pb-32 pt-10 sm:px-6 sm:pt-14">
       <h1 className="font-display text-[clamp(1.9rem,6vw,2.75rem)] font-bold">
         {t("checkout.title")}
       </h1>
-
-      {/* ---- progress ---------------------------------------------------- */}
-      <ol className="mt-6 flex items-center gap-2" aria-label={t("checkout.title")}>
-        {steps.map((label, i) => (
-          <li key={label} className="flex flex-1 items-center gap-2">
-            <span
-              aria-current={i === step ? "step" : undefined}
-              className={clsx(
-                "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                i < step
-                  ? "bg-rust text-onrust"
-                  : i === step
-                    ? "bg-rust text-onrust ring-4 ring-rust/20"
-                    : "border border-line bg-surface text-char/50",
-              )}
-            >
-              {i < step ? "✓" : i + 1}
-            </span>
-            <span
-              className={clsx(
-                "hidden text-sm font-semibold sm:block",
-                i === step ? "text-char" : "text-char/50",
-              )}
-            >
-              {label}
-            </span>
-            {i < steps.length - 1 && (
-              <span aria-hidden="true" className="h-px flex-1 bg-line" />
-            )}
-          </li>
-        ))}
-      </ol>
 
       {clock && !clock.shop && (
         <p role="alert" className="mt-6 rounded-card border border-rust/30 bg-rust/10 p-4 text-sm font-semibold text-rust">
@@ -261,9 +185,8 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      {/* ---- STEP 0 — cart review --------------------------------------- */}
-      {step === 0 && (
-        <section className="mt-8 space-y-4" aria-label={t("checkout.step.cart")}>
+      {/* ---- order ------------------------------------------------------- */}
+      <section className="mt-8 space-y-4" aria-label={t("checkout.step.cart")}>
           <ul className="card divide-y divide-line">
             {lines.map((l) => (
               <li key={l.lineId} className="flex gap-3 p-4">
@@ -301,12 +224,10 @@ export default function CheckoutPage() {
           <Link href="/menu" className="btn-secondary w-full">
             {t("cart.addMore")}
           </Link>
-        </section>
-      )}
+      </section>
 
-      {/* ---- STEP 1 — details ------------------------------------------- */}
-      {step === 1 && (
-        <section className="mt-8 space-y-6" aria-label={t("checkout.step.details")}>
+      {/* ---- details ----------------------------------------------------- */}
+      <section className="mt-8 space-y-6" aria-label={t("checkout.step.details")}>
           <fieldset className="card p-5">
             <legend className="label px-1">{t("checkout.fulfillment")}</legend>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -384,36 +305,6 @@ export default function CheckoutPage() {
             {fulfillmentType === "delivery" && (
               <>
                 <div>
-                  <label className="label" htmlFor="co-zone">
-                    {t("checkout.zone")}
-                  </label>
-                  <select
-                    id="co-zone"
-                    value={zoneId ?? ""}
-                    onChange={(e) => setZone(e.target.value || null)}
-                    required
-                    className="field"
-                  >
-                    <option value="">{t("checkout.zoneSelect")}</option>
-                    {ALL_ZONES.map((z) => (
-                      <option key={z.id} value={z.id}>
-                        {pick(z.el, z.en)} — {t("location.zoneMinimum")}{" "}
-                        {money(z.minimumOrder * 100)}
-                      </option>
-                    ))}
-                  </select>
-                  {zone && (
-                    <p className="mt-1.5 text-xs text-char/55">
-                      {t("location.zoneFee")}:{" "}
-                      {zone.deliveryFee === 0
-                        ? t("location.zoneFree")
-                        : money(zone.deliveryFee * 100)}{" "}
-                      · ~{zone.etaMinutes} {t("menu.minutes")}
-                    </p>
-                  )}
-                </div>
-
-                <div>
                   <label className="label" htmlFor="co-address">
                     {t("checkout.address")}
                   </label>
@@ -447,30 +338,26 @@ export default function CheckoutPage() {
               />
             </div>
           </div>
-        </section>
-      )}
+      </section>
 
-      {/* ---- STEP 2 — payment ------------------------------------------- */}
-      {step === 2 && (
-        <section className="mt-8 space-y-6" aria-label={t("checkout.step.payment")}>
-          {DEMO_MODE && (
-            <p
-              role="note"
-              className="rounded-card border border-gold/50 bg-gold/10 p-4 text-sm font-semibold"
-            >
-              {locale === "en"
-                ? "Demo payment: pick any method, it succeeds instantly. Nothing is charged and no card or bank details are asked for."
-                : "Δοκιμαστική πληρωμή: διάλεξε οποιαδήποτε μέθοδο, θα πετύχει αμέσως. Δεν γίνεται χρέωση και δεν ζητάμε στοιχεία κάρτας ή τράπεζας."}
-            </p>
-          )}
+      {/* ---- payment ----------------------------------------------------- */}
+      <section className="mt-8 space-y-6" aria-label={t("checkout.step.payment")}>
           <fieldset className="card p-5">
             <legend className="label px-1">{t("checkout.paymentMethod")}</legend>
             <div className="space-y-2">
               {(
                 [
-                  { id: "iris", label: t("checkout.payIris"), help: t("checkout.payIrisHelp"), recommended: true },
-                  { id: "card", label: t("checkout.payCard"), help: t("checkout.payCardHelp") },
                   { id: "cash", label: t("checkout.payCash"), help: t("checkout.payCashHelp") },
+                  {
+                    id: "card",
+                    // Card is taken on a POS: the driver's for delivery, the shop's for pickup.
+                    label: fulfillmentType === "delivery"
+                      ? t("checkout.payCard")
+                      : t("checkout.payCardPickup"),
+                    help: fulfillmentType === "delivery"
+                      ? t("checkout.payCardHelp")
+                      : t("checkout.payCardPickupHelp"),
+                  },
                 ] as const
               ).map((m) => (
                 <label
@@ -491,41 +378,13 @@ export default function CheckoutPage() {
                     className="mt-0.5 size-5 accent-[rgb(var(--rouveraki-rust-rgb))]"
                   />
                   <span className="flex-1">
-                    <span className="flex items-center gap-2 font-semibold">
-                      {m.label}
-                      {"recommended" in m && m.recommended && (
-                        <span className="rounded-full bg-rust/10 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-rust">
-                          {t("checkout.recommended")}
-                        </span>
-                      )}
-                    </span>
+                    <span className="font-semibold">{m.label}</span>
                     <span className="mt-0.5 block text-sm text-char/60">{m.help}</span>
                   </span>
                 </label>
               ))}
             </div>
           </fieldset>
-
-          {/* Age gate — only rendered when the cart actually contains alcohol. */}
-          {hasAgeGated && (
-            <fieldset className="card border-rust/40 p-5">
-              <legend className="label px-1 text-rust">{t("checkout.ageTitle")}</legend>
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={ageConfirmed}
-                  onChange={(e) => setAgeConfirmed(e.target.checked)}
-                  className="mt-0.5 size-5 shrink-0 accent-[rgb(var(--rouveraki-rust-rgb))]"
-                />
-                <span>
-                  <span className="font-semibold">{t("checkout.ageCheckbox")}</span>
-                  <span className="mt-1 block text-sm text-char/65">
-                    {t("checkout.ageHelp")}
-                  </span>
-                </span>
-              </label>
-            </fieldset>
-          )}
 
           <label className="flex cursor-pointer items-start gap-3 px-1 text-sm">
             <input
@@ -543,16 +402,6 @@ export default function CheckoutPage() {
               <dt className="text-char/70">{t("cart.subtotal")}</dt>
               <dd className="font-semibold">{money(totals.subtotalCents)}</dd>
             </div>
-            {fulfillmentType === "delivery" && (
-              <div className="flex justify-between">
-                <dt className="text-char/70">{t("cart.deliveryFee")}</dt>
-                <dd className="font-semibold">
-                  {totals.deliveryFeeCents === 0
-                    ? t("location.zoneFree")
-                    : money(totals.deliveryFeeCents)}
-                </dd>
-              </div>
-            )}
             <div className="flex justify-between border-t border-line pt-2 text-lg">
               <dt className="font-bold">{t("cart.total")}</dt>
               <dd className="font-bold text-rust">{money(totals.totalCents)}</dd>
@@ -569,8 +418,7 @@ export default function CheckoutPage() {
               {t("legal.privacy")}
             </Link>
           </p>
-        </section>
-      )}
+      </section>
 
       {/* ---- sticky action bar ------------------------------------------ */}
       <div
@@ -580,30 +428,21 @@ export default function CheckoutPage() {
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 sm:px-6">
           <button
             type="button"
-            onClick={step === 0 ? () => router.push("/menu") : goBack}
+            onClick={() => router.push("/menu")}
             className="btn-secondary px-5"
           >
             {t("checkout.back")}
           </button>
-
-          {step < 2 ? (
-            <button type="button" onClick={goNext} className="btn-primary flex-1">
-              {t("checkout.continue")} · {money(totals.totalCents)}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={submit}
-              disabled={submitting || (clock !== null && !clock.shop)}
-              className="btn-primary flex-1 disabled:pointer-events-none disabled:opacity-60"
-            >
-              {submitting
-                ? <><span className="loader" aria-hidden="true" /> {t("checkout.submitting")}</>
-                : paymentMethod === "cash"
-                  ? t("checkout.submitCash")
-                  : `${t("checkout.submit")} · ${money(totals.totalCents)}`}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={submit}
+            disabled={submitting || (clock !== null && !clock.shop)}
+            className="btn-primary flex-1 disabled:pointer-events-none disabled:opacity-60"
+          >
+            {submitting
+              ? <><span className="loader" aria-hidden="true" /> {t("checkout.submitting")}</>
+              : `${t("checkout.submitCash")} · ${money(totals.totalCents)}`}
+          </button>
         </div>
       </div>
     </div>
@@ -614,19 +453,18 @@ export default function CheckoutPage() {
 function serverErrorMessage(
   code: string | undefined,
   t: (k: never) => string,
-  money: (c: number) => string,
-  data: { minimumCents?: number },
 ): string {
   const tr = t as unknown as (k: string) => string;
   switch (code) {
     case "rate_limited":
       return tr("checkout.error.rateLimited");
-    case "age_verification_required":
-      return tr("checkout.error.age");
-    case "alcohol_hours_blocked":
-      return tr("checkout.alcoholHoursBlocked");
-    case "below_minimum":
-      return `${tr("checkout.error.minimum")} ${data.minimumCents ? money(data.minimumCents) : ""}`.trim();
+    case "item_unavailable":
+    case "unknown_menu_item":
+      return tr("checkout.error.itemUnavailable");
+    case "price_changed":
+      return tr("checkout.error.priceChanged");
+    case "menu_unavailable":
+      return tr("checkout.error.menuUnavailable");
     case "delivery_closed":
       return tr("checkout.deliveryClosed");
     case "shop_closed":
@@ -634,7 +472,6 @@ function serverErrorMessage(
     case "invalid_phone":
       return tr("checkout.error.phone");
     case "address_required":
-    case "invalid_zone":
       return tr("checkout.error.address");
     default:
       return tr("checkout.error.generic");

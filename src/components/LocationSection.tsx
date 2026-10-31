@@ -1,12 +1,11 @@
 "use client";
 
 import { useI18n } from "@/i18n/LanguageProvider";
-import { BRAND, DELIVERY_ZONES } from "@/lib/brand";
-import { formatEuro } from "@/lib/money";
+import { BRAND } from "@/lib/brand";
 import Reveal from "./Reveal";
 
 export default function LocationSection() {
-  const { t, locale, pick } = useI18n();
+  const { t, locale } = useI18n();
 
   const fullAddress = `${BRAND.address.street}, ${BRAND.address.city} ${BRAND.address.postalCode}`;
   const mapsQuery = encodeURIComponent(`${fullAddress}, Greece`);
@@ -60,23 +59,6 @@ export default function LocationSection() {
             </Fact>
           </div>
 
-          <Fact title={t("location.zonesTitle")}>
-            <ul className="divide-y divide-line">
-              {DELIVERY_ZONES.map((z) => (
-                <li key={z.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3">
-                  <span className="font-semibold">{pick(z.el, z.en)}</span>
-                  <span className="text-sm text-char/70">
-                    {t("location.zoneMinimum")} {formatEuro(z.minimumOrder, locale === "en" ? "en-IE" : "el-GR")}
-                    {" · "}
-                    {t("location.zoneFee")}{" "}
-                    {z.deliveryFee === 0
-                      ? t("location.zoneFree")
-                      : formatEuro(z.deliveryFee, locale === "en" ? "en-IE" : "el-GR")}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Fact>
         </Reveal>
 
         {/* --- map ------------------------------------------------------ */}

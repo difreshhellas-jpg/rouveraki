@@ -181,7 +181,8 @@ export default function OrderTracker({ initial }: { initial: TrackedOrder }) {
               {order.reason}
             </p>
           )}
-          {order.paymentMethod !== "cash" && (
+          {/* Demo mode takes payment at the door (cash or POS), so nothing was charged to refund. */}
+          {!DEMO_MODE && order.paymentMethod !== "cash" && (
             <p className="mt-3 text-sm text-char/70">{t("order.refundNote")}</p>
           )}
           <div className="mt-5 flex flex-wrap gap-3">

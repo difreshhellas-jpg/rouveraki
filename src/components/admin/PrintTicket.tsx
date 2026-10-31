@@ -5,6 +5,13 @@ import { createPortal } from "react-dom";
 import type { AdminOrder } from "./useOrders";
 import { formatEuro } from "@/lib/money";
 import { BRAND, zoneById } from "@/lib/brand";
+import { DEMO_MODE } from "@/lib/demo/config";
+
+/** Demo orders are paid at the door, so "card" tells the driver to take the POS. */
+const PAY_LABEL: Record<string, string> = {
+  cash: "ΜΕΤΡΗΤΑ",
+  card: DEMO_MODE ? "ΚΑΡΤΑ (POS)" : "ΚΑΡΤΑ",
+};
 
 /**
  * One order as an 80 mm receipt-printer ticket.
@@ -53,7 +60,6 @@ function Ticket({ order }: { order: AdminOrder }) {
       <p className="pt-center pt-bold pt-xl">{order.orderCode}</p>
       <p className="pt-center pt-bold">
         {order.fulfillmentType === "delivery" ? "ΔΙΑΝΟΜΗ" : "ΠΑΡΑΛΑΒΗ"}
-        {order.ageVerified ? " · 18+" : ""}
       </p>
       <p className="pt-center">
         {created}
@@ -100,7 +106,7 @@ function Ticket({ order }: { order: AdminOrder }) {
         </tbody>
       </table>
       <p>
-        Πληρωμή: {order.paymentMethod.toUpperCase()}
+        Πληρωμή: {PAY_LABEL[order.paymentMethod] ?? order.paymentMethod.toUpperCase()}
         {order.paymentStatus ? ` (${order.paymentStatus})` : ""}
       </p>
       <hr />

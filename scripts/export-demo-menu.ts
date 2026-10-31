@@ -5,6 +5,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { AGE_GATED_CATEGORIES, CATEGORIES } from "../src/lib/brand";
 import { photoForItem } from "../src/lib/images";
+// One checked Unsplash photo per dish (by Greek name); category default otherwise.
+import itemPhotos from "../src/data/item-photos.json";
 
 const src = readFileSync("prisma/seed.ts", "utf8");
 const start = src.indexOf("const items: SeedItem[] = [");
@@ -28,7 +30,7 @@ const items = seed.map((it, i) => {
     descriptionEn: it.descriptionEn,
     priceCents: Math.round(it.price * 100),
     category: it.category,
-    image: photoForItem(it.name, it.category),
+    image: (itemPhotos as Record<string, string>)[it.name] ?? photoForItem(it.name, it.category),
     available: true,
     prepTimeMinutes: it.prepTimeMinutes,
     requiresAgeVerification: AGE_GATED_CATEGORIES.includes(it.category),

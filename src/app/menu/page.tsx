@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { DEMO_MODE } from "@/lib/demo/config";
-import demoMenu from "@/data/menu.json";
 import { CATEGORIES } from "@/lib/brand";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import MenuBrowser from "@/components/MenuBrowser";
@@ -9,7 +8,7 @@ import MenuHeader from "@/components/MenuHeader";
 export const metadata: Metadata = {
   title: "Μενού",
   description:
-    "Πίτες, σουβλάκια, γύρος, ζυμαρικά, σαλάτες, καφέδες και ποτά. Παραγγελία online με διανομή στο Ξυλόκαστρο.",
+    "Πίτες, καλαμάκια, μερίδες στα κάρβουνα, burger, σαλάτες, ζυμαρικά και ποτά. Παραγγελία online με διανομή στο Ξυλόκαστρο.",
 };
 
 // The menu is read fresh so an availability toggle in the admin panel shows up
@@ -17,8 +16,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 async function loadMenu(): Promise<MenuItemDTO[]> {
-  // Demo mode: no database, the menu is the local JSON file.
-  if (DEMO_MODE) return demoMenu.items as MenuItemDTO[];
+  // Demo mode: no database; the owner-edited menu lives in Vercel Blob.
+  if (DEMO_MODE) {
+    const { loadLiveMenu } = await import("@/lib/menu-store");
+    return loadLiveMenu();
+  }
 
   const { prisma } = await import("@/lib/prisma");
   const order = new Map<string, number>(CATEGORIES.map((c, i) => [c.slug, i]));
