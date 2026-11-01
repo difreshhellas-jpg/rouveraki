@@ -4,13 +4,12 @@ import Link from "next/link";
 import clsx from "clsx";
 import { useOrders } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
-import { clearDemoOrders } from "@/lib/demo/store";
 import type { OrderStatus } from "@/lib/order-status";
 
 /**
- * "Shop owner view" for demos: every order placed in this browser, in four
- * columns. The buttons on each ticket move it New → Preparing → Ready →
- * Delivered, and the customer's tracking page (same browser) follows live.
+ * Shop screen: every order from the last two days, from any customer's
+ * device, in four columns. The buttons on each ticket move it New → Preparing → Ready →
+ * Delivered, and the customer's tracking page follows within seconds.
  */
 const COLUMNS: { title: string; statuses: OrderStatus[]; accent: string }[] = [
   { title: "Νέες / New", statuses: ["PAID_AWAITING_ACCEPTANCE"], accent: "text-rust" },
@@ -28,7 +27,7 @@ export default function DemoKitchenPage() {
   return (
     <div className="min-h-svh bg-sand">
       <p className="bg-rust px-4 py-2 text-center text-sm font-bold text-onrust">
-        DEMO - οι παραγγελίες υπάρχουν μόνο σε αυτόν τον browser · no real notifications
+        Οι παραγγελίες ανανεώνονται κάθε 15 δευτερόλεπτα · κράτα αυτή τη σελίδα ανοιχτή
       </p>
       <div className="mx-auto max-w-7xl px-4 py-6">
         <header className="mb-5 flex flex-wrap items-center gap-3">
@@ -42,16 +41,6 @@ export default function DemoKitchenPage() {
             <Link href="/menu" className="btn-secondary text-sm">
               Πίσω στο site
             </Link>
-            <button
-              type="button"
-              className="btn-ghost text-sm text-rust"
-              onClick={() => {
-                clearDemoOrders();
-                void refresh();
-              }}
-            >
-              Καθαρισμός demo παραγγελιών
-            </button>
           </div>
         </header>
 

@@ -9,4 +9,4 @@
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 /** How often demo screens re-read local orders (same-tab changes). */
-export const DEMO_POLL_MS = 2000;
+export const DEMO_POLL_MS = 15_000;
