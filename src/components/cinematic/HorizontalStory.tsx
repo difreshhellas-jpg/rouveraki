@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useI18n } from "@/i18n/LanguageProvider";
-import { photo, PHOTOS } from "@/lib/images";
+import { photo, SITE } from "@/lib/images";
 
 /**
  * Four-panel story that pans sideways while the section is pinned.
@@ -18,10 +18,10 @@ import { photo, PHOTOS } from "@/lib/images";
  */
 
 const PANELS = [
-  { img: PHOTOS.gyrosPita, k: "grill" },
-  { img: PHOTOS.mezeSpread, k: "share" },
-  { img: PHOTOS.coffee, k: "morning" },
-  { img: PHOTOS.barInterior, k: "night" },
+  { img: SITE.storyGrill, k: "grill" },
+  { img: SITE.storyShare, k: "share" },
+  { img: SITE.storyMorning, k: "morning" },
+  { img: SITE.storyNight, k: "night" },
 ] as const;
 
 const COPY: Record<string, { el: [string, string]; en: [string, string] }> = {

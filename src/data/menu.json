@@ -34,7 +34,7 @@
       "descriptionEn": "Lenten pita with a vegetable patty",
       "priceCents": 400,
       "category": "pites",
-      "image": "https://images.unsplash.com/photo-1701688596783-231b3764ef67?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/4409303/pexels-photo-4409303.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 8,
       "requiresAgeVerification": false
@@ -164,7 +164,7 @@
       "descriptionEn": "Grilled on the blade, 300 g, with vegetables",
       "priceCents": 1100,
       "category": "merides",
-      "image": "https://images.unsplash.com/photo-1776766237026-47ced47d3779?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/13533570/pexels-photo-13533570.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 20,
       "requiresAgeVerification": false
@@ -190,7 +190,7 @@
       "descriptionEn": "Charcoal-grilled mutton chops, one kilo",
       "priceCents": 2400,
       "category": "merides",
-      "image": "https://images.unsplash.com/photo-1766589152455-22eb3ab8849e?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/37206702/pexels-photo-37206702.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 25,
       "requiresAgeVerification": false
@@ -268,7 +268,7 @@
       "descriptionEn": "Handmade, 350 g",
       "priceCents": 1000,
       "category": "merides",
-      "image": "https://images.unsplash.com/photo-1781941622549-1a54f4364845?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/18363035/pexels-photo-18363035.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 16,
       "requiresAgeVerification": false
@@ -294,7 +294,7 @@
       "descriptionEn": "Charcoal-grilled chicken patty",
       "priceCents": 1050,
       "category": "merides",
-      "image": "https://images.unsplash.com/photo-1625147541750-dfecb0a624a5?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/14133038/pexels-photo-14133038.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 15,
       "requiresAgeVerification": false
@@ -320,7 +320,7 @@
       "descriptionEn": "Three boneless pork chops with BBQ sauce",
       "priceCents": 1400,
       "category": "merides",
-      "image": "https://images.unsplash.com/photo-1763647818263-62a9256f097c?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/20527110/pexels-photo-20527110.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 18,
       "requiresAgeVerification": false
@@ -398,7 +398,7 @@
       "descriptionEn": "Chicken stripes (nuggets)",
       "priceCents": 950,
       "category": "merides",
-      "image": "https://images.unsplash.com/photo-1670398564097-0762e1b30b3a?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/1059943/pexels-photo-1059943.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 12,
       "requiresAgeVerification": false
@@ -554,7 +554,7 @@
       "descriptionEn": "Toasted sandwich with chicken stripes",
       "priceCents": 600,
       "category": "santouits",
-      "image": "https://images.unsplash.com/photo-1712746784291-e29d5d2694d4?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/33014388/pexels-photo-33014388.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 10,
       "requiresAgeVerification": false
@@ -580,7 +580,7 @@
       "descriptionEn": "Handmade pork skewer, chicken skewer or politiko kebab, tomato, fries",
       "priceCents": 600,
       "category": "santouits",
-      "image": "https://images.unsplash.com/photo-1773620494884-940e0db95e46?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/13900667/pexels-photo-13900667.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 10,
       "requiresAgeVerification": false
@@ -645,7 +645,7 @@
       "descriptionEn": "With yoghurt sauce",
       "priceCents": 650,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1787273670681-b1886c2807a3?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/16976637/pexels-photo-16976637.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 10,
       "requiresAgeVerification": false
@@ -658,7 +658,7 @@
       "descriptionEn": "Rustic mushroom pie",
       "priceCents": 650,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1690919826634-516a688d4fb0?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/18140849/pexels-photo-18140849.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 12,
       "requiresAgeVerification": false
@@ -684,7 +684,7 @@
       "descriptionEn": "Grilled talagani cheese",
       "priceCents": 700,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1778850855907-8fbf7b089621?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/40607633/pexels-photo-40607633.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 10,
       "requiresAgeVerification": false
@@ -697,7 +697,7 @@
       "descriptionEn": "Pan-fried kefalotyri",
       "priceCents": 650,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1787690376659-e5e7cd2ae452?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/29177201/pexels-photo-29177201.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 10,
       "requiresAgeVerification": false
@@ -710,7 +710,7 @@
       "descriptionEn": "Feta, olive oil, oregano",
       "priceCents": 450,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1565805403925-fe49242d1892?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/25745486/pexels-photo-25745486.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 4,
       "requiresAgeVerification": false
@@ -723,7 +723,7 @@
       "descriptionEn": "With sesame & honey",
       "priceCents": 650,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1741791415742-61aa540b4d86?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/725993/pexels-photo-725993.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 12,
       "requiresAgeVerification": false
@@ -736,7 +736,7 @@
       "descriptionEn": "Feta, kefalotyri, tomato, baked in clay",
       "priceCents": 700,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1788464730134-333936411dc2?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/5112638/pexels-photo-5112638.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 15,
       "requiresAgeVerification": false
@@ -762,7 +762,7 @@
       "descriptionEn": "Homemade spicy cheese spread",
       "priceCents": 450,
       "category": "orektika",
-      "image": "https://images.unsplash.com/photo-1697126248475-a537cc5cce28?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/9337074/pexels-photo-9337074.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 4,
       "requiresAgeVerification": false
@@ -827,7 +827,7 @@
       "descriptionEn": "Barley rusk, chopped tomato, anthotyro, green pepper, capers, onion, olives, oregano, olive oil",
       "priceCents": 700,
       "category": "salates",
-      "image": "https://images.unsplash.com/photo-1506280754576-f6fa8a873550?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/726001/pexels-photo-726001.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 7,
       "requiresAgeVerification": false
@@ -1373,7 +1373,7 @@
       "descriptionEn": "Beer, 500 ml",
       "priceCents": 450,
       "category": "mpyres",
-      "image": "https://images.unsplash.com/photo-1636391945755-4e260dd880cb?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/1407476/pexels-photo-1407476.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 1,
       "requiresAgeVerification": false
@@ -1386,7 +1386,7 @@
       "descriptionEn": "Beer, 500 ml",
       "priceCents": 400,
       "category": "mpyres",
-      "image": "https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/5538223/pexels-photo-5538223.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 1,
       "requiresAgeVerification": false
@@ -1412,7 +1412,7 @@
       "descriptionEn": "Single ouzo or tsipouro with meze (note which)",
       "priceCents": 600,
       "category": "pota",
-      "image": "https://images.unsplash.com/photo-1571139317861-76cd3c032c76?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/13054466/pexels-photo-13054466.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 5,
       "requiresAgeVerification": false
@@ -1477,7 +1477,7 @@
       "descriptionEn": "Single-serve ouzo",
       "priceCents": 300,
       "category": "pota",
-      "image": "https://images.unsplash.com/photo-1551497406-3e4e11919f7a?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/17284852/pexels-photo-17284852.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 1,
       "requiresAgeVerification": false
@@ -1490,7 +1490,7 @@
       "descriptionEn": "Single-serve tsipouro",
       "priceCents": 300,
       "category": "pota",
-      "image": "https://images.unsplash.com/photo-1760627317288-8cc2b44efb2d?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/7624620/pexels-photo-7624620.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 1,
       "requiresAgeVerification": false
@@ -1503,7 +1503,7 @@
       "descriptionEn": "Single-serve tsipouro",
       "priceCents": 300,
       "category": "pota",
-      "image": "https://images.unsplash.com/photo-1758796545670-dee15e65784e?w=800&h=800&fit=crop&auto=format&q=70",
+      "image": "https://images.pexels.com/photos/4271812/pexels-photo-4271812.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop",
       "available": true,
       "prepTimeMinutes": 1,
       "requiresAgeVerification": false

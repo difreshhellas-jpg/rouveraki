@@ -9,7 +9,7 @@
  * drop files into /public/images/ and point HERO_IMAGES in lib/images.ts at
  * them. No component changes.
  */
-import { HERO_IMAGES, photo, PHOTOS } from "./images";
+import { HERO_IMAGES, photo, SITE } from "./images";
 
 export type Photo = {
   src: string;
@@ -21,9 +21,9 @@ export type Photo = {
 export const HERO_PHOTOS: Photo[] = HERO_IMAGES;
 
 export const STORY_PHOTO: Photo = {
-  src: photo(PHOTOS.barInterior, 1200, 900),
-  alt: "Ο χώρος του Ρουβεράκι το βράδυ",
-  altEn: "Inside Rouveraki at night",
+  src: photo(SITE.storyBar, 1200, 900),
+  alt: "Φωτισμένο μπαρ το βράδυ",
+  altEn: "A warm-lit bar in the evening",
 };
 
 /** Shown behind a hero slide until its image decodes. */

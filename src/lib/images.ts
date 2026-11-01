@@ -14,9 +14,14 @@
 
 const CDN = "https://images.unsplash.com";
 
-/** width/height/crop are appended per use site so one id serves every size. */
+/**
+ * width/height/crop are appended per use site so one photo serves every size.
+ * Takes an Unsplash id ("photo-...") or a full Pexels URL without a query.
+ */
 export const photo = (id: string, w = 800, h = 800): string =>
-  `${CDN}/${id}?w=${w}&h=${h}&fit=crop&auto=format&q=70`;
+  id.startsWith("https://images.pexels.com/")
+    ? `${id}?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`
+    : `${CDN}/${id}?w=${w}&h=${h}&fit=crop&auto=format&q=70`;
 
 /** Verified subjects. The comment is what the photo actually shows. */
 export const PHOTOS = {
@@ -31,6 +36,25 @@ export const PHOTOS = {
   wine: "photo-1510812431401-41d2bd2722f3", // red wine glasses, toasting
   bread: "photo-1509440159596-0249088772ff", // rustic loaves
   patty: "photo-1521305916504-4a1121188589", // grilled patty in a bun
+} as const;
+
+/**
+ * Site photography, hand-picked 2026-11-01 from Pexels (free licence, no
+ * attribution needed). The comment is what each photo shows.
+ */
+export const SITE = {
+  heroPita: "https://images.pexels.com/photos/32727455/pexels-photo-32727455.jpeg", // gyros pita in hand, white Greek wall
+  heroMeze: "https://images.pexels.com/photos/28845495/pexels-photo-28845495.jpeg", // meze spread from above
+  heroCoffee: "https://images.pexels.com/photos/18968046/pexels-photo-18968046.jpeg", // coffee on a blue table by the sea
+  dayMorning: "https://images.pexels.com/photos/39526245/pexels-photo-39526245.jpeg", // cappuccino, seaside terrace
+  dayGrill: "https://images.pexels.com/photos/30215494/pexels-photo-30215494.jpeg", // souvlaki skewers on the grill
+  dayEvening: "https://images.pexels.com/photos/36030407/pexels-photo-36030407.jpeg", // seaside terrace at dusk, string lights
+  storyGrill: "https://images.pexels.com/photos/38602968/pexels-photo-38602968.jpeg", // skewers over charcoal
+  storyShare: "https://images.pexels.com/photos/27177297/pexels-photo-27177297.jpeg", // hands sharing meze plates
+  storyMorning: "https://images.pexels.com/photos/24389744/pexels-photo-24389744.jpeg", // moka pot in a stone window over the sea
+  storyNight: "https://images.pexels.com/photos/5029891/pexels-photo-5029891.jpeg", // waterfront taverna lit at night
+  breakBurger: "https://images.pexels.com/photos/36554232/pexels-photo-36554232.jpeg", // burger close-up
+  storyBar: "https://images.pexels.com/photos/36964863/pexels-photo-36964863.jpeg", // warm-lit bar counter
 } as const;
 
 /**
@@ -89,21 +113,21 @@ export function photoForItem(
 /** Homepage hero. Three slides, crossfaded. */
 export const HERO_IMAGES = [
   {
-    src: photo(PHOTOS.gyrosPita, 2000, 1400),
-    alt: "Γύρος σε πίτα με πατάτες",
-    altEn: "Gyros in pita with fries",
+    src: photo(SITE.heroPita, 2000, 1400),
+    alt: "Πίτα γύρο στο χέρι",
+    altEn: "Gyros pita in hand",
   },
   // The bar-interior shot is kept for the story section. Under the hero's
   // legibility scrim it read as a solid black frame, so the middle slide is a
   // bright food shot instead.
   {
-    src: photo(PHOTOS.mezeSpread, 2000, 1400),
-    alt: "Ορεκτικά και πιάτα για μοίρασμα",
-    altEn: "Starters and sharing plates",
+    src: photo(SITE.heroMeze, 2000, 1400),
+    alt: "Μεζέδες και πιάτα για μοίρασμα",
+    altEn: "Meze and sharing plates",
   },
   {
-    src: photo(PHOTOS.coffee, 2000, 1400),
-    alt: "Καφέδες σε τραπέζι",
-    altEn: "Coffees on a table",
+    src: photo(SITE.heroCoffee, 2000, 1400),
+    alt: "Καφές δίπλα στη θάλασσα",
+    altEn: "Coffee by the sea",
   },
 ];

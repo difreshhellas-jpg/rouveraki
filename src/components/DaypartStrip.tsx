@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { photo, PHOTOS } from "@/lib/images";
+import { photo, SITE } from "@/lib/images";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { CATEGORIES } from "@/lib/brand";
 import Reveal from "./Reveal";
@@ -15,9 +15,9 @@ import Tilt from "./Tilt";
  */
 /** Each card leads with a verified photo of what that part of the day is. */
 const DAYPARTS = [
-  { id: "morning", photo: PHOTOS.coffee, icon: CupIcon },
-  { id: "grill", photo: PHOTOS.gyrosPita, icon: FlameIcon },
-  { id: "evening", photo: PHOTOS.cocktails, icon: GlassIcon },
+  { id: "morning", photo: SITE.dayMorning, icon: CupIcon },
+  { id: "grill", photo: SITE.dayGrill, icon: FlameIcon },
+  { id: "evening", photo: SITE.dayEvening, icon: GlassIcon },
 ] as const;
 
 export default function DaypartStrip() {

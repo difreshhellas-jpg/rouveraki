@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useI18n } from "@/i18n/LanguageProvider";
-import { photo, PHOTOS } from "@/lib/images";
+import { photo, SITE } from "@/lib/images";
 
 /**
  * A full-bleed panel that wipes upward as the reader scrolls through it,
@@ -33,7 +33,7 @@ export default function ScrollBreak({
     <div className="wipe-outer relative" style={{ height: `${heightSvh}svh` }}>
       <div className="wipe-panel relative grid place-items-center overflow-hidden bg-band">
         <Image
-          src={photo(PHOTOS.patty, 1800, 1100)}
+          src={photo(SITE.breakBurger, 1800, 1100)}
           alt=""
           fill
           sizes="100vw"

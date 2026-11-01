@@ -47,6 +47,7 @@ function isAllowedImage(src: string): boolean {
     return (
       u.protocol === "https:" &&
       (u.hostname === "images.unsplash.com" ||
+        u.hostname === "images.pexels.com" ||
         u.hostname.endsWith(".public.blob.vercel-storage.com") ||
         u.hostname.endsWith(".supabase.co"))
     );
