@@ -1,4 +1,4 @@
-import { DEMO_MODE } from "@/lib/demo/config";
+import { DEMO_MODE, LAUNCHED } from "@/lib/demo/config";
 
 /**
  * Whether this build is a deployed test site rather than the real shop.
@@ -18,8 +18,9 @@ import { DEMO_MODE } from "@/lib/demo/config";
  * redeploy to drop the notice — which going live needs anyway.
  */
 export const IS_TEST_DEPLOY =
-  DEMO_MODE ||
-  (Boolean(process.env.VERCEL_ENV) && process.env.PAYMENT_MODE !== "live");
+  !LAUNCHED &&
+  (DEMO_MODE ||
+    (Boolean(process.env.VERCEL_ENV) && process.env.PAYMENT_MODE !== "live"));
 
 /**
  * The public origin, used for canonical links, Open Graph and the tracking

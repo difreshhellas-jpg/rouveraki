@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { DEMO_MODE } from "@/lib/demo/config";
+import { DEMO_MODE, LAUNCHED } from "@/lib/demo/config";
 
 /** Small fixed pill so nobody mistakes the demo for the live shop. */
 export default function DemoBadge() {
-  if (!DEMO_MODE) return null;
+  if (!DEMO_MODE || LAUNCHED) return null;
   return (
     <Link
       href="/demo-kitchen"

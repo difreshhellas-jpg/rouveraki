@@ -71,3 +71,18 @@ NEXT_PUBLIC_DEMO_MODE=true npx next dev
 - Μερικές φωτογραφίες είναι προσεγγιστικές (ούζο/τσίπουρο, μάρκες μπύρας, μπιφτέκια) — ο ιδιοκτήτης μπορεί να ανεβάσει δικές του από το admin.
 
 Ιστορικό αλλαγών 31/10: `docs/CHECKLIST-2026-10-31.md`.
+
+## Ημέρα launch (έτοιμο από 1/11, ΔΕΝ έχει ενεργοποιηθεί)
+
+Όλα είναι πίσω από ένα διακόπτη: `NEXT_PUBLIC_LAUNCHED=true`. Όσο είναι off το site μένει ακριβώς όπως τώρα.
+
+1. Domain: Vercel → Settings → Domains → πρόσθεσε π.χ. `rouveraki.gr` και `www.rouveraki.gr`, ρύθμισε τα DNS όπως δείχνει το Vercel.
+2. Deploy με τον διακόπτη και το domain:
+   ```bash
+   npx vercel deploy --prod --yes      --build-env NEXT_PUBLIC_DEMO_MODE=true --env NEXT_PUBLIC_DEMO_MODE=true      --build-env NEXT_PUBLIC_LAUNCHED=true      --build-env NEXT_PUBLIC_SITE_URL=https://rouveraki.gr
+   ```
+   (ή πρόσθεσέ τα ως Production env vars αν το Git κάνει πλέον τα deploys)
+3. Τι αλλάζει: φεύγει το banner «DEMO» και το badge, το site επιτρέπει index στη Google, canonical = το νέο domain.
+4. Άλλαξε το `ADMIN_PASSWORD` (έχει κοινοποιηθεί σε chat) και κάνε redeploy.
+
+**Εγκατάσταση ως εφαρμογή (ήδη ενεργό, και πριν το launch):** `src/app/manifest.ts` + εικονίδια στο `public/icons/`. Android/Chrome: «Εγκατάσταση εφαρμογής». iPhone/Safari: Κοινοποίηση → «Προσθήκη στην οθόνη Αφετηρίας». Ανοίγει στο μενού, πλήρης οθόνη. App Store / Play Store θέλουν wrapper + developer accounts στο όνομα του πελάτη.

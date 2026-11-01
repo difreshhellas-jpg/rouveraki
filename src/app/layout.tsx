@@ -53,6 +53,8 @@ export const metadata: Metadata = {
     url: siteUrl,
   },
   alternates: { canonical: siteUrl },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "Ρουβεράκι", statusBarStyle: "default" },
   // A test deploy carries the real name and address; keep it out of search so
   // it never outranks or impersonates the live shop. See lib/site-mode.ts.
   robots: IS_TEST_DEPLOY
