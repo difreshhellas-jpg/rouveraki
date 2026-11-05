@@ -85,7 +85,7 @@ export const DELIVERY_ZONES: DeliveryZone[] = [
 export const zoneById = (id: string) => DELIVERY_ZONES.find((z) => z.id === id);
 
 /** Default kitchen ETA offered when staff accept without editing it. */
-export const DEFAULT_ETA_MINUTES = { delivery: 35, pickup: 20 } as const;
+export const DEFAULT_ETA_MINUTES = { delivery: 40, pickup: 40 } as const;
 
 /** Window in which a customer can still cancel themselves (spec §4). */
 export const CUSTOMER_CANCEL_GRACE_SECONDS = 120;

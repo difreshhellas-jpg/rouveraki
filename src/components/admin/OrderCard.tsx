@@ -51,6 +51,8 @@ export default function OrderCard({
   );
   const [error, setError] = useState<string | null>(null);
   const { print, ticket } = usePrintOrder();
+  const [open, setOpen] = useState(!compact);
+  const itemCount = order.items.reduce((n, it) => n + it.quantity, 0);
 
   const money = (c: number) => formatEuro(c / 100, "el-GR");
   const waitedMinutes = Math.floor(
@@ -105,14 +107,30 @@ export default function OrderCard({
       )}
     >
       {/* ---- header ------------------------------------------------------ */}
+      {/* ---- summary: the box you see in the list; tap to open ------------ */}
       <header
+        role={compact ? "button" : undefined}
+        tabIndex={compact ? 0 : undefined}
+        aria-expanded={compact ? open : undefined}
+        onClick={compact ? () => setOpen((o) => !o) : undefined}
+        onKeyDown={
+          compact
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setOpen((o) => !o);
+                }
+              }
+            : undefined
+        }
         className={clsx(
-          "flex flex-wrap items-center justify-between gap-3 px-4 py-3",
+          "space-y-2 px-4 py-3",
+          compact && "cursor-pointer select-none",
           isNew ? "bg-rust text-onrust" : "bg-char/5",
         )}
       >
-        <div className="flex items-center gap-3">
-          <span className="font-display text-xl font-bold tracking-wider tabular-nums">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="font-display text-2xl font-bold tracking-wider tabular-nums">
             {order.orderCode}
           </span>
           <span
@@ -123,46 +141,86 @@ export default function OrderCard({
           >
             {order.fulfillmentType === "delivery" ? "Διανομή" : "Παραλαβή"}
           </span>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 text-sm">
-          <span className={clsx("font-semibold", !isNew && "text-char/70")}>
-            {STATUS_LABEL(order.status)}
-          </span>
-          {COUNTING.includes(order.status) ? (
-            <EtaCountdown etaMinutes={order.etaMinutes} etaConfirmedAt={order.etaConfirmedAt} />
-          ) : (
-            <span className={clsx("tabular-nums", isNew ? "opacity-85" : "text-char/55")}>
-              {waitedMinutes}′
-            </span>
-          )}
-          <span className="font-bold tabular-nums">{money(order.totalCents)}</span>
-          <button
-            type="button"
-            onClick={() => print(order)}
-            className={clsx(
-              "inline-flex min-h-touch items-center gap-1.5 rounded-lg px-3 text-xs font-bold uppercase tracking-wide",
-              isNew ? "bg-onrust/20 hover:bg-onrust/30" : "bg-char/10 hover:bg-char/15",
+          <div className="ml-auto flex items-center gap-2">
+            {COUNTING.includes(order.status) ? (
+              <EtaCountdown size="lg" etaMinutes={order.etaMinutes} etaConfirmedAt={order.etaConfirmedAt} />
+            ) : (
+              <span
+                className={clsx(
+                  "rounded-full px-3 py-1 text-xl font-bold tabular-nums",
+                  isNew ? "bg-onrust/20" : "bg-char/10 text-char/70",
+                )}
+                title="Πόση ώρα περιμένει"
+              >
+                {waitedMinutes}′
+              </span>
             )}
-            title="Εκτύπωση δελτίου παραγγελίας"
-          >
-            <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z" />
-            </svg>
-            Εκτύπωση
-          </button>
+            {compact && (
+              <svg
+                aria-hidden
+                viewBox="0 0 24 24"
+                className={clsx("size-6 shrink-0 transition-transform", open && "rotate-180")}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            )}
+          </div>
         </div>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-base">
+          <span className="font-semibold">{order.customerName}</span>
+          <span className={clsx("tabular-nums", isNew ? "opacity-90" : "text-char/70")}>
+            {itemCount} προϊόντα · <b>{money(order.totalCents)}</b>
+          </span>
+        </div>
+        <p className={clsx("text-sm font-semibold", isNew ? "opacity-90" : "text-char/60")}>
+          {STATUS_LABEL(order.status)}
+          {!open && order.fulfillmentType === "delivery" && order.customerAddress
+            ? ` · ${order.customerAddress}`
+            : ""}
+        </p>
       </header>
 
-      {/* ---- items: always visible, never behind a tap ------------------- */}
-      <ul className="divide-y divide-line">
+      {open && (
+        <>
+      {/* ---- who and where ------------------------------------------------ */}
+      <div className="border-t border-line px-4 py-3 text-base">
+        <p className="text-lg font-bold">{order.customerName}</p>
+        <a
+          href={`tel:${order.customerPhone}`}
+          className="inline-flex min-h-touch items-center text-lg font-semibold text-rust underline underline-offset-4"
+        >
+          {order.customerPhone}
+        </a>
+        {order.fulfillmentType === "delivery" ? (
+          <p className="mt-1 font-semibold">
+            Διεύθυνση: <span className="font-normal">{order.customerAddress ?? "—"}</span>
+            {order.deliveryZone && (
+              <span className="text-char/50"> · {zoneById(order.deliveryZone)?.el ?? order.deliveryZone}</span>
+            )}
+          </p>
+        ) : (
+          <p className="mt-1 font-semibold">Παραλαβή από το κατάστημα</p>
+        )}
+        <p className="mt-1 text-sm text-char/60">
+          Πληρωμή: {PAY_LABEL[order.paymentMethod] ?? order.paymentMethod.toUpperCase()}
+          {order.paymentStatus ? ` (${order.paymentStatus})` : ""} · Παραγγέλθηκε{" "}
+          {new Date(order.createdAt).toLocaleTimeString("el-GR", { hour: "2-digit", minute: "2-digit" })}
+          {order.etaMinutes ? ` · ETA ${order.etaMinutes}′` : ""}
+        </p>
+      </div>
+
+      {/* ---- products ----------------------------------------------------- */}
+      <ul className="divide-y divide-line border-t border-line">
         {order.items.map((it, i) => (
           <li key={`${it.menu_item_id}-${i}`} className="flex gap-3 px-4 py-2.5">
-            <span className="min-w-8 text-lg font-bold tabular-nums text-rust">
+            <span className="min-w-8 text-xl font-bold tabular-nums text-rust">
               {it.quantity}×
             </span>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold leading-snug">{it.name}</p>
+              <p className="text-lg font-semibold leading-snug">{it.name}</p>
               {it.item_notes && (
                 <p className="mt-0.5 rounded bg-rust/10 px-2 py-1 text-sm font-semibold text-rust">
                   {it.item_notes}
@@ -177,35 +235,6 @@ export default function OrderCard({
         <p className="border-t border-line bg-gold/10 px-4 py-2.5 text-sm font-semibold">
           Σημείωση παραγγελίας: {order.generalNotes}
         </p>
-      )}
-
-      {/* ---- customer ---------------------------------------------------- */}
-      {!compact && (
-        <div className="border-t border-line px-4 py-3 text-sm">
-          <p className="font-semibold">{order.customerName}</p>
-          <a
-            href={`tel:${order.customerPhone}`}
-            className="inline-flex min-h-touch items-center font-semibold text-rust underline underline-offset-4"
-          >
-            {order.customerPhone}
-          </a>
-          {order.customerAddress && (
-            <p className="mt-1 text-char/75">
-              {order.customerAddress}
-              {order.deliveryZone && (
-                <span className="text-char/50">
-                  {" "}
-                  · {zoneById(order.deliveryZone)?.el ?? order.deliveryZone}
-                </span>
-              )}
-            </p>
-          )}
-          <p className="mt-1 text-char/55">
-            Πληρωμή: {PAY_LABEL[order.paymentMethod] ?? order.paymentMethod.toUpperCase()}
-            {order.paymentStatus ? ` (${order.paymentStatus})` : ""}
-            {order.etaMinutes ? ` · ETA ${order.etaMinutes}′` : ""}
-          </p>
-        </div>
       )}
 
       {/* ---- actions ----------------------------------------------------- */}
@@ -308,6 +337,9 @@ export default function OrderCard({
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => print(order)} className="btn-secondary" title="Εκτύπωση δελτίου παραγγελίας">
+              Εκτύπωση
+            </button>
             {primaryForFulfillment && (
               <button
                 type="button"
@@ -335,6 +367,8 @@ export default function OrderCard({
           <p className="mt-3 text-sm text-char/65">Λόγος: {order.lastReason}</p>
         )}
       </div>
+        </>
+      )}
       {ticket}
     </article>
   );

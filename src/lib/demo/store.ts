@@ -189,7 +189,7 @@ export function placeOrder(
     paymentStatus: null,
     ageVerified: false,
     etaMinutes:
-      DEFAULT_ETA_MINUTES[input.fulfillmentType] + Math.max(0, maxPrep - 10),
+      DEFAULT_ETA_MINUTES[input.fulfillmentType],
     // Shown on the confirmation screen straight away so it reads as a real ETA.
     etaConfirmedAt: now,
     lastReason: null,

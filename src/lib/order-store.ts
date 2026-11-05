@@ -140,7 +140,7 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
     paymentMethod: input.paymentMethod,
     paymentStatus: null,
     ageVerified: false,
-    etaMinutes: DEFAULT_ETA_MINUTES[input.fulfillmentType] + Math.max(0, maxPrep - 10),
+    etaMinutes: DEFAULT_ETA_MINUTES[input.fulfillmentType],
     etaConfirmedAt: now,
     lastReason: null,
     createdAt: now,

@@ -42,12 +42,14 @@ export default function EtaCountdown({
       aria-label={late ? `Καθυστέρηση ${Math.ceil(s / 60)} λεπτά` : `Απομένουν ${Math.ceil(s / 60)} λεπτά`}
       className={clsx(
         "inline-flex items-center gap-1.5 rounded-full font-bold tabular-nums",
-        size === "lg" ? "px-4 py-1.5 text-2xl" : "px-2.5 py-0.5 text-sm",
-        late && lateText ? "bg-gold/25 text-char" : late ? "bg-rust text-onrust" : left < 300 ? "bg-gold/25 text-char" : "bg-emerald-600/15 text-emerald-800",
+        size === "lg" ? "px-4 py-1.5 text-3xl" : "px-2.5 py-0.5 text-sm",
+        size === "lg"
+          ? late && lateText ? "bg-gold text-char" : late ? "bg-black text-white ring-2 ring-white" : left < 300 ? "bg-gold text-char" : "bg-emerald-700 text-white"
+          : late && lateText ? "bg-gold/25 text-char" : late ? "bg-rust text-onrust" : left < 300 ? "bg-gold/25 text-char" : "bg-emerald-600/15 text-emerald-800",
         className,
       )}
     >
-      <svg aria-hidden viewBox="0 0 24 24" className={size === "lg" ? "size-6" : "size-4"} fill="none" stroke="currentColor" strokeWidth={2}>
+      <svg aria-hidden viewBox="0 0 24 24" className={size === "lg" ? "size-7" : "size-4"} fill="none" stroke="currentColor" strokeWidth={2}>
         <circle cx="12" cy="13" r="8" />
         <path d="M12 9v4l2.5 2.5M9 2h6" />
       </svg>
