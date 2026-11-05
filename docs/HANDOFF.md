@@ -1,3 +1,5 @@
+> **Ενημέρωση 05/11:** το Vercel Blob store ανεστάλη (όριο Hobby). Οι παραγγελίες και το μενού πηγαίνουν πλέον σε Upstash Redis (`src/lib/kv.ts`), και η ροή παραγγελίας έχει μόνο δύο βήματα για το κατάστημα: **Αποδοχή** (με εκτύπωση) και **Παραδόθηκε**. Για να λειτουργήσουν οι παραγγελίες στο live πρέπει να συνδεθεί το store: `vercel integration add upstash/upstash-kv --name rouveraki-orders` (μία φορά, αφού γίνουν αποδεκτοί οι όροι στο browser). Οι παλιές αναφορές στο Blob παρακάτω είναι ιστορικές. Η αλλαγή φωτογραφίας πιάτου από το /demo-kitchen/menu δεν λειτουργεί χωρίς αποθήκευση αρχείων.
+
 # Ρουβεράκι — παράδοση έργου (1/11/2026)
 
 Για όποιον αναλαμβάνει το site και το Vercel (αναβάθμιση σε Vercel Pro).
@@ -39,14 +41,14 @@ cd /tmp/rv && npx vercel deploy --prod --yes \
 
 | Όνομα | Τι κάνει |
 |---|---|
-| `BLOB_READ_WRITE_TOKEN` | πρόσβαση στο Blob store (μπήκε αυτόματα όταν δημιουργήθηκε το store) |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis (Vercel Marketplace, δωρεάν) για παραγγελίες και μενού· μπαίνουν αυτόματα όταν συνδεθεί το store |
 | `ADMIN_PASSWORD` | κωδικός για το `/demo-kitchen/menu` (μόνο Production). Για αλλαγή: νέα τιμή + νέο deploy |
 | `NEXT_PUBLIC_DEMO_MODE` | περνιέται στο deploy command (δεν είναι αποθηκευμένο στο project) |
 | `DATABASE_URL`, `SUPABASE_*`, `POSTGRES_*`, `VIVA_*`, `PAYMENT_MODE`, `SMS_PROVIDER` | παλιά, για το non-demo backend. Δεν χρησιμοποιούνται σε demo mode |
 
 ## Μετά την αναβάθμιση σε Pro
 
-1. **Μεταφορά project** στο Pro team (Project → Settings → Transfer). Το Blob store και τα env vars ακολουθούν το project — έλεγξε μετά ότι το `BLOB_READ_WRITE_TOKEN` υπάρχει και ότι το `/api/live-menu` απαντά 200.
+1. **Μεταφορά project** στο Pro team (Project → Settings → Transfer). Το Redis store και τα env vars ακολουθούν το project — έλεγξε μετά ότι τα `KV_REST_API_*` υπάρχουν και ότι το `/api/live-menu` απαντά 200.
 2. **Σταμάτα το λάθος auto-deploy**: είτε Settings → Git → Production Branch = `demo-mode` **και** πρόσθεσε `NEXT_PUBLIC_DEMO_MODE=true` στα Production env vars, είτε merge το `demo-mode` στο `main` με το ίδιο env var. Μετά τα pushes κάνουν σωστό deploy και το CLI βήμα δεν χρειάζεται.
 3. **Όρια Blob**: σε Hobby υπάρχει όριο 2.000 advanced operations/μήνα (κάθε παραγγελία, αλλαγή κατάστασης και κάθε ανανέωση της οθόνης καταστήματος = list) και 10.000 simple. Αν ξεπεραστεί, το Blob μπλοκάρεται 30 ημέρες (και το μενού). Στο Pro χρεώνεται ανά χρήση (~$5/εκατομμύριο advanced) — γι' αυτό το στήσιμο είναι για Pro.
 4. Το Pro δίνει περισσότερα Blob operations/bandwidth — σε Hobby κάθε φόρτωση `/menu` κάνει ένα Blob read, να το παρακολουθείτε στο Usage.

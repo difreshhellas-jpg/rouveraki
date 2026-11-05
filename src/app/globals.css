@@ -557,56 +557,35 @@
 }
 .hstory-panel { flex: 0 0 calc(100% / var(--panels, 4)); }
 
-@media (min-width: 768px) {
-  @supports (animation-timeline: view()) {
-    /* The timeline has to be NAMED and declared on the tall outer section.
-       An anonymous view() on the track itself is degenerate: the track is
-       exactly one viewport tall, so its own "contain" phase is a single point
-       and the pan never advances past panel one. The outer section is four
-       viewports tall, so its contain phase spans the three we want to pan. */
-    .hstory-outer {
-      view-timeline-name: --hstory;
-      view-timeline-axis: block;
-      /* inset:0, never auto. `auto` adopts the scroller's scroll-padding, and
-         html carries scroll-padding-top:136px so anchor links clear the fixed
-         header. Inherited here it shrinks the scrollport, so `contain 0%` is
-         reached 136px early and the pan starts already 336px along, clipping
-         the first panel before the section has even pinned. */
-      view-timeline-inset: 0;
-    }
-    .hstory-track {
-      animation: hstory-pan linear both;
-      animation-timeline: --hstory;
-      animation-range: contain 0% contain 100%;
-      will-change: transform;
-    }
+/* Same pinned pan on phones and desktops: vertical scroll drives it, every
+   panel fills the whole screen. Browsers with scroll-driven animations use the
+   CSS timeline below; the rest (older iOS Safari) are driven by the small
+   scroll listener in HorizontalStory.tsx, which sets --hstory-x on the track. */
+@supports (animation-timeline: view()) {
+  /* The timeline has to be NAMED and declared on the tall outer section.
+     An anonymous view() on the track itself is degenerate: the track is
+     exactly one viewport tall, so its own "contain" phase is a single point
+     and the pan never advances past panel one. */
+  .hstory-outer {
+    view-timeline-name: --hstory;
+    view-timeline-axis: block;
+    /* inset:0, never auto: `auto` adopts html's scroll-padding-top (the fixed
+       header offset) and the pan would start already part-way along. */
+    view-timeline-inset: 0;
   }
-  /* Without a timeline the sticky rail would show panel 1 for the whole
-     section. Release the sticky and let the panels scroll horizontally by
-     hand, which is still usable. */
-  @supports not (animation-timeline: view()) {
-    .hstory-rail { position: static; height: auto; overflow-x: auto; scroll-snap-type: x mandatory; }
-    .hstory-panel { scroll-snap-align: center; }
+  .hstory-track {
+    animation: hstory-pan linear both;
+    animation-timeline: --hstory;
+    animation-range: contain 0% contain 100%;
+    will-change: transform;
   }
+}
+@supports not (animation-timeline: view()) {
+  .hstory-track { transform: translate3d(var(--hstory-x, 0px), 0, 0); will-change: transform; }
 }
 @keyframes hstory-pan {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(calc(-100% + 100vw), 0, 0); }
-}
-/* Phone: swipeable carousel. */
-@media (max-width: 767px) {
-  .hstory-outer { height: auto !important; }
-  .hstory-rail {
-    position: static;
-    height: auto;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-  .hstory-rail::-webkit-scrollbar { display: none; }
-  /* The rail itself scrolls here, so the track is content-width, not 400%. */
-  .hstory-track { width: auto; }
-  .hstory-panel { flex: 0 0 86%; scroll-snap-align: center; }
 }
 
 /* ---- 3. scroll-break wipe ------------------------------------------------ */
@@ -884,7 +863,7 @@ html[data-intro-seen] [data-intro] { display: none; }
     scroll-snap-type: x mandatory;
   }
   .hstory-track { animation: none !important; transform: none !important; }
-  .hstory-panel { flex: 0 0 86%; scroll-snap-align: center; }
+  .hstory-panel { flex: 0 0 86%; scroll-snap-align: center; min-height: 80svh; }
 
   .wipe-outer { height: auto !important; }
   .wipe-panel {

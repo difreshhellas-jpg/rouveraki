@@ -15,8 +15,8 @@ import type { OrderStatus } from "@/lib/order-status";
  */
 const COLUMNS: { title: string; statuses: OrderStatus[]; accent: string }[] = [
   { title: "Νέες", statuses: ["PAID_AWAITING_ACCEPTANCE"], accent: "text-rust" },
-  { title: "Στη σειρά", statuses: ["ACCEPTED", "PREPARING"], accent: "text-gold" },
-  { title: "Έτοιμες", statuses: ["READY", "DISPATCHED"], accent: "text-emerald-700" },
+  { title: "Στη σειρά", statuses: ["ACCEPTED", "PREPARING", "READY"], accent: "text-gold" },
+  { title: "Έτοιμες", statuses: ["DISPATCHED"], accent: "text-emerald-700" },
 ];
 
 export default function KitchenPage() {

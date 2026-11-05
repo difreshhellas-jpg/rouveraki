@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_image" }, { status: 400 });
   }
   try {
-    return NextResponse.json({ url: await saveMenuImage(file) });
+    return NextResponse.json({ url: await saveMenuImage() });
   } catch {
     return NextResponse.json({ error: "upload_failed" }, { status: 502 });
   }

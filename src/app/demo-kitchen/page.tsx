@@ -8,13 +8,12 @@ import type { OrderStatus } from "@/lib/order-status";
 
 /**
  * Shop screen: every order from the last two days, from any customer's
- * device, in four columns. The buttons on each ticket move it New → Preparing → Ready →
+ * device, in three columns. The buttons on each ticket move it New → Accepted →
  * Delivered, and the customer's tracking page follows within seconds.
  */
 const COLUMNS: { title: string; statuses: OrderStatus[]; accent: string }[] = [
   { title: "Νέες / New", statuses: ["PAID_AWAITING_ACCEPTANCE"], accent: "text-rust" },
-  { title: "Σε προετοιμασία / Preparing", statuses: ["ACCEPTED", "PREPARING"], accent: "text-gold" },
-  { title: "Έτοιμες / Ready", statuses: ["READY", "DISPATCHED"], accent: "text-emerald-700" },
+  { title: "Αποδεκτές / Accepted", statuses: ["ACCEPTED", "PREPARING", "READY", "DISPATCHED"], accent: "text-gold" },
   { title: "Παραδόθηκαν / Delivered", statuses: ["DELIVERED", "COMPLETED"], accent: "text-char/60" },
 ];
 

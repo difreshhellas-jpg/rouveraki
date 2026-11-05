@@ -55,9 +55,6 @@ check("happy path, delivery", () => {
     "PENDING_PAYMENT",
     "PAID_AWAITING_ACCEPTANCE",
     "ACCEPTED",
-    "PREPARING",
-    "READY",
-    "DISPATCHED",
     "DELIVERED",
   ];
   for (let i = 0; i < path.length - 1; i++) {
@@ -68,9 +65,12 @@ check("happy path, delivery", () => {
   }
 });
 
-check("happy path, pickup ends at COMPLETED", () => {
-  assert.ok(canTransition("READY", "COMPLETED"));
-  assert.ok(isTerminal("COMPLETED"));
+check("only accept and delivered: no steps in between", () => {
+  assert.ok(!canTransition("ACCEPTED", "PREPARING"));
+  assert.ok(!canTransition("ACCEPTED", "READY"));
+  assert.ok(!canTransition("ACCEPTED", "DISPATCHED"));
+  assert.ok(!canTransition("ACCEPTED", "COMPLETED"));
+  assert.ok(isTerminal("DELIVERED"));
 });
 
 check("cannot skip acceptance", () => {
@@ -79,21 +79,20 @@ check("cannot skip acceptance", () => {
 });
 
 check("cannot walk backwards", () => {
-  assert.ok(!canTransition("READY", "PREPARING"));
-  assert.ok(!canTransition("DELIVERED", "DISPATCHED"));
+  assert.ok(!canTransition("DELIVERED", "ACCEPTED"));
+  assert.ok(!canTransition("ACCEPTED", "PAID_AWAITING_ACCEPTANCE"));
 });
 
 check("customer cancel only before acceptance", () => {
   assert.ok(canTransition("PAID_AWAITING_ACCEPTANCE", "CANCELLED_BY_CUSTOMER"));
   assert.ok(!canTransition("ACCEPTED", "CANCELLED_BY_CUSTOMER"));
-  assert.ok(!canTransition("PREPARING", "CANCELLED_BY_CUSTOMER"));
+  assert.ok(!canTransition("DELIVERED", "CANCELLED_BY_CUSTOMER"));
 });
 
 check("restaurant cancel only after acceptance", () => {
   assert.ok(canTransition("ACCEPTED", "CANCELLED_BY_RESTAURANT"));
-  assert.ok(canTransition("PREPARING", "CANCELLED_BY_RESTAURANT"));
   assert.ok(!canTransition("PAID_AWAITING_ACCEPTANCE", "CANCELLED_BY_RESTAURANT"));
-  assert.ok(!canTransition("DISPATCHED", "CANCELLED_BY_RESTAURANT"));
+  assert.ok(!canTransition("DELIVERED", "CANCELLED_BY_RESTAURANT"));
 });
 
 check("every terminal state is really terminal", () => {
@@ -126,14 +125,15 @@ check("no status is unreachable from the start", () => {
       }
     }
   }
-  const unreachable = ORDER_STATUSES.filter((s) => !seen.has(s));
+  const legacy = new Set<OrderStatus>(["PREPARING", "READY", "DISPATCHED", "COMPLETED"]);
+  const unreachable = ORDER_STATUSES.filter((s) => !seen.has(s) && !legacy.has(s));
   assert.deepEqual(unreachable, [], `unreachable: ${unreachable.join(", ")}`);
 });
 
 check("tracking steps match the fulfillment type", () => {
-  assert.ok(trackingSteps("delivery").includes("DISPATCHED"));
-  assert.ok(!trackingSteps("pickup").includes("DISPATCHED"));
-  assert.equal(trackingSteps("pickup").at(-1), "COMPLETED");
+  for (const f of ["delivery", "pickup"] as const) {
+    assert.deepEqual(trackingSteps(f), ["PAID_AWAITING_ACCEPTANCE", "ACCEPTED", "DELIVERED"]);
+  }
 });
 
 check("cash orders skip the payment state", () => {

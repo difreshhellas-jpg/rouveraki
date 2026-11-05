@@ -26,9 +26,9 @@ const COUNTING: OrderStatus[] = ["ACCEPTED", "PREPARING", "READY", "DISPATCHED"]
 
 /** Primary action per state, so staff never hunt for the obvious next tap. */
 const PRIMARY_NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
-  ACCEPTED: "PREPARING",
-  PREPARING: "READY",
-  READY: "DISPATCHED",
+  ACCEPTED: "DELIVERED",
+  PREPARING: "DELIVERED",
+  READY: "DELIVERED",
   DISPATCHED: "DELIVERED",
 };
 
@@ -93,11 +93,7 @@ export default function OrderCard({
 
   const isNew = order.status === "PAID_AWAITING_ACCEPTANCE";
   const primary = PRIMARY_NEXT[order.status];
-  // A pickup order that is READY is completed, not dispatched.
-  const primaryForFulfillment =
-    order.status === "READY" && order.fulfillmentType === "pickup"
-      ? ("COMPLETED" as OrderStatus)
-      : primary;
+  const primaryForFulfillment = primary;
 
   const canCancel = order.allowedNext.includes("CANCELLED_BY_RESTAURANT");
 
@@ -320,17 +316,6 @@ export default function OrderCard({
                 className="btn-primary flex-1 disabled:opacity-60"
               >
                 {STATUS_LABEL(primaryForFulfillment)}
-              </button>
-            )}
-            {order.status === "READY" && order.fulfillmentType === "delivery" && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void transition("COMPLETED")}
-                className="btn-secondary"
-                title="Ο πελάτης το πήρε από το κατάστημα"
-              >
-                Παραλήφθηκε
               </button>
             )}
             {canCancel && (

@@ -2,9 +2,11 @@
  * Order lifecycle (spec §4). This module is the single authority on what a legal
  * transition is; nothing else may write `orders.status` directly.
  *
- *  PENDING_PAYMENT → PAID_AWAITING_ACCEPTANCE → ACCEPTED → PREPARING → READY
- *    → DISPATCHED → DELIVERED   (delivery)
- *    → COMPLETED                (pickup)
+ *  PENDING_PAYMENT → PAID_AWAITING_ACCEPTANCE → ACCEPTED → DELIVERED
+ *
+ * Two staff steps only: accept, then delivered (pickup and delivery alike).
+ * PREPARING / READY / DISPATCHED / COMPLETED stay in the type for old rows but
+ * nothing can move into them any more.
  */
 
 export const ORDER_STATUSES = [
@@ -31,10 +33,10 @@ export const isOrderStatus = (v: unknown): v is OrderStatus =>
 const TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   PENDING_PAYMENT: ["PAID_AWAITING_ACCEPTANCE", "PAYMENT_FAILED", "CANCELLED_BY_CUSTOMER"],
   PAID_AWAITING_ACCEPTANCE: ["ACCEPTED", "REJECTED", "CANCELLED_BY_CUSTOMER"],
-  ACCEPTED: ["PREPARING", "CANCELLED_BY_RESTAURANT"],
-  PREPARING: ["READY", "CANCELLED_BY_RESTAURANT"],
-  // Pickup orders go straight to COMPLETED from READY; delivery orders go out.
-  READY: ["DISPATCHED", "COMPLETED", "CANCELLED_BY_RESTAURANT"],
+  ACCEPTED: ["DELIVERED", "CANCELLED_BY_RESTAURANT"],
+  // Legacy states: orders already sitting here can still be finished.
+  PREPARING: ["DELIVERED", "CANCELLED_BY_RESTAURANT"],
+  READY: ["DELIVERED", "CANCELLED_BY_RESTAURANT"],
   DISPATCHED: ["DELIVERED"],
   DELIVERED: [],
   COMPLETED: [],
@@ -83,10 +85,8 @@ export const isUnsuccessful = (s: OrderStatus): boolean =>
  * type. PENDING_PAYMENT is omitted — the customer never sees the tracking page
  * before payment resolves.
  */
-export const trackingSteps = (fulfillment: "delivery" | "pickup"): OrderStatus[] =>
-  fulfillment === "delivery"
-    ? ["PAID_AWAITING_ACCEPTANCE", "ACCEPTED", "PREPARING", "READY", "DISPATCHED", "DELIVERED"]
-    : ["PAID_AWAITING_ACCEPTANCE", "ACCEPTED", "PREPARING", "READY", "COMPLETED"];
+const TRACKING: OrderStatus[] = ["PAID_AWAITING_ACCEPTANCE", "ACCEPTED", "DELIVERED"];
+export const trackingSteps = (_fulfillment: "delivery" | "pickup"): OrderStatus[] => TRACKING; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /** Cash orders skip the payment step entirely and land straight in the queue. */
 export const initialStatus = (paymentMethod: string): OrderStatus =>

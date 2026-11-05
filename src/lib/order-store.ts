@@ -1,107 +1,43 @@
 import "server-only";
-import { list, put } from "@vercel/blob";
+import { kvGet, kvIndexAdd, kvIndexSince, kvMGet, kvSet } from "@/lib/kv";
 import { z } from "zod";
 import { generateOrderCode } from "@/lib/order-code";
 import { codeToId } from "@/lib/order-id";
 import { CUSTOMER_CANCEL_GRACE_SECONDS, DEFAULT_ETA_MINUTES } from "@/lib/brand";
-import { canTransition, nextStatuses, type OrderStatus, isOrderStatus } from "@/lib/order-status";
+import { canTransition, nextStatuses, type OrderStatus } from "@/lib/order-status";
 import { normalizeGreekPhone } from "@/lib/sanitize";
 import { loadLiveMenu } from "@/lib/menu-store";
 import type { AdminOrder, AdminOrderItem } from "@/components/admin/useOrders";
 import type { TrackedOrder } from "@/components/OrderTracker";
 
 /**
- * Shared orders for demo mode, kept in the same Vercel Blob store as the menu.
+ * Shared orders for demo mode, kept in a small key-value store (lib/kv.ts).
  *
- * Every file is written once and never overwritten, which sidesteps Blob's
- * few-second stale reads after an overwrite and makes two customers ordering
- * at the same moment harmless:
+ *   order:<CODE>      the whole order as JSON, status included (expires after 4 days)
+ *   orders:index      sorted set of codes by time placed, for the shop screen
  *
- *   orders/<day>/<CODE>/a-order.json              the order as placed
- *   orders/<day>/<CODE>/e-<ms>-<STATUS>.json      one file per status change
- *
- * The current state is the order replayed through its events. Blob adds a
- * random suffix to every name, so the public URLs cannot be guessed; only the
- * server (which holds the token) can list them. <day> is the UTC date the
- * order was placed; the shop screen and tracking look at today and yesterday.
+ * A status change re-reads the order, checks it is still in the state the
+ * screen saw (expectedFrom) and writes it back, so two taps at once cannot
+ * push an order through an illegal step.
  */
 
 type Stored = Omit<AdminOrder, "allowedNext">;
-type Event = { status: OrderStatus; at: string; etaMinutes?: number; reasonText?: string };
 
 type Result<T> =
   | { ok: true; data: T }
   | { ok: false; error: string; status?: number; extra?: Record<string, unknown> };
 
-const day = (offsetDays = 0) =>
-  new Date(Date.now() - offsetDays * 86_400_000).toISOString().slice(0, 10);
-
-/* ---- reading ------------------------------------------------------------- */
-
-/** Files never change once written, so their contents are cached for good. */
-const contents = new Map<string, unknown>();
-
-async function readJson<T>(url: string): Promise<T> {
-  if (!contents.has(url)) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`order_read_${res.status}`);
-    contents.set(url, await res.json());
-  }
-  return contents.get(url) as T;
-}
-
-async function listAll(prefix: string) {
-  const blobs: { pathname: string; url: string }[] = [];
-  let cursor: string | undefined;
-  do {
-    const page = await list({ prefix, cursor, limit: 1000 });
-    blobs.push(...page.blobs);
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor);
-  return blobs;
-}
-
-async function build(blobs: { pathname: string; url: string }[]): Promise<Stored[]> {
-  const byCode = new Map<string, { order?: string; events: { pathname: string; url: string }[] }>();
-  for (const b of blobs) {
-    const [, , code, file] = b.pathname.split("/");
-    if (!code || !file) continue;
-    const entry = byCode.get(code) ?? { events: [] };
-    if (file.startsWith("a-order")) entry.order = b.url;
-    else if (file.startsWith("e-")) entry.events.push(b);
-    byCode.set(code, entry);
-  }
-
-  const out: Stored[] = [];
-  for (const entry of byCode.values()) {
-    if (!entry.order) continue;
-    const o = { ...(await readJson<Stored>(entry.order)) };
-    // e-<ms>-... sorts by time; a change that is not allowed from the state
-    // reached so far (e.g. a double tap) is skipped, not applied.
-    const events = [...entry.events].sort((a, b) => a.pathname.localeCompare(b.pathname));
-    for (const e of events) {
-      const ev = await readJson<Event>(e.url);
-      if (!isOrderStatus(ev.status) || !canTransition(o.status, ev.status)) continue;
-      o.status = ev.status;
-      o.updatedAt = ev.at;
-      if (ev.etaMinutes) {
-        o.etaMinutes = ev.etaMinutes;
-        o.etaConfirmedAt = ev.at;
-      }
-      o.lastReason = ev.reasonText?.trim() || null;
-    }
-    out.push(o);
-  }
-  return out;
-}
+const TTL = 4 * 86_400;
+const key = (code: string) => `order:${code.toUpperCase()}`;
 
 async function findOrder(code: string): Promise<Stored | null> {
-  const c = code.toUpperCase();
-  for (const d of [day(0), day(1)]) {
-    const blobs = await listAll(`orders/${d}/${c}/`);
-    if (blobs.length) return (await build(blobs))[0] ?? null;
-  }
-  return null;
+  return kvGet<Stored>(key(code));
+}
+
+async function recent(days: number): Promise<Stored[]> {
+  const codes = await kvIndexSince("orders:index", Date.now() - days * 86_400_000);
+  const rows = await kvMGet<Stored>(codes.map(key));
+  return rows.filter((o): o is Stored => Boolean(o));
 }
 
 /* ---- shapes -------------------------------------------------------------- */
@@ -210,11 +146,8 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
     createdAt: now,
     updatedAt: now,
   };
-  await put(`orders/${day()}/${orderCode}/a-order.json`, JSON.stringify(order), {
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: true,
-  });
+  await kvSet(key(orderCode), order, TTL);
+  await kvIndexAdd("orders:index", orderCode, Date.now());
   return { ok: true, data: { orderCode, trackingUrl: `/order/${orderCode}` } };
 }
 
@@ -233,9 +166,7 @@ const DONE: OrderStatus[] = [
 ];
 
 export async function listAdmin(view: "live" | "all"): Promise<AdminOrder[]> {
-  const days = view === "all" ? [0, 1, 2] : [0, 1];
-  const blobs = (await Promise.all(days.map((d) => listAll(`orders/${day(d)}/`)))).flat();
-  return (await build(blobs))
+  return (await recent(view === "all" ? 3 : 2))
     .filter((o) => view === "all" || !DONE.includes(o.status))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map(toAdmin);
@@ -254,18 +185,17 @@ export async function transition(
   if (!canTransition(o.status, to)) return { ok: false, error: "illegal_transition" };
 
   const at = new Date().toISOString();
-  const event: Event = {
+  const next: Stored = {
+    ...o,
     status: to,
-    at,
-    ...(extra.etaMinutes ? { etaMinutes: Math.min(240, Math.max(1, Math.round(extra.etaMinutes))) } : {}),
-    ...(extra.reasonText?.trim() ? { reasonText: extra.reasonText.trim().slice(0, 300) } : {}),
+    updatedAt: at,
+    lastReason: extra.reasonText?.trim().slice(0, 300) || null,
   };
-  const placedDay = o.createdAt.slice(0, 10);
-  await put(`orders/${placedDay}/${o.orderCode}/e-${Date.now()}-${to}.json`, JSON.stringify(event), {
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: true,
-  });
+  if (extra.etaMinutes) {
+    next.etaMinutes = Math.min(240, Math.max(1, Math.round(extra.etaMinutes)));
+    next.etaConfirmedAt = at;
+  }
+  await kvSet(key(o.orderCode), next, TTL);
   return { ok: true, data: null };
 }
 
