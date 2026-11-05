@@ -20,8 +20,26 @@ const PAY_LABEL: Record<string, string> = {
  * <body> makes the print stylesheet hide everything else, so the browser's
  * print dialog sees this ticket alone (works on a tablet, where popups don't).
  */
-export function usePrintOrder() {
+const PRINT_EVENT = "rouveraki:print";
+
+/** Ask the page's <PrintHost /> to print this order's ticket right now. */
+export function printOrder(order: AdminOrder) {
+  window.dispatchEvent(new CustomEvent<AdminOrder>(PRINT_EVENT, { detail: order }));
+}
+
+/**
+ * Mount once per screen. Printing lives here rather than in each order card, so
+ * a card moving to another column (or the list refreshing) cannot cancel a
+ * print that is already on its way.
+ */
+export function PrintHost() {
   const [order, setOrder] = useState<AdminOrder | null>(null);
+
+  useEffect(() => {
+    const onPrint = (e: Event) => setOrder((e as CustomEvent<AdminOrder>).detail);
+    window.addEventListener(PRINT_EVENT, onPrint);
+    return () => window.removeEventListener(PRINT_EVENT, onPrint);
+  }, []);
 
   useEffect(() => {
     if (!order) return;
@@ -37,8 +55,7 @@ export function usePrintOrder() {
     };
   }, [order]);
 
-  const ticket = order ? createPortal(<Ticket order={order} />, document.body) : null;
-  return { print: setOrder, ticket };
+  return order ? createPortal(<Ticket order={order} />, document.body) : null;
 }
 
 function Ticket({ order }: { order: AdminOrder }) {

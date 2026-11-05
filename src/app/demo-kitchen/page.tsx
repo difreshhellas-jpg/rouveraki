@@ -4,6 +4,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import { useOrders } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
+import { PrintHost } from "@/components/admin/PrintTicket";
 import type { OrderStatus } from "@/lib/order-status";
 
 /**
@@ -25,6 +26,7 @@ export default function DemoKitchenPage() {
 
   return (
     <div className="min-h-svh bg-sand">
+      <PrintHost />
       <p className="bg-rust px-4 py-2 text-center text-sm font-bold text-onrust">
         Οι παραγγελίες ανανεώνονται κάθε 15 δευτερόλεπτα · κράτα αυτή τη σελίδα ανοιχτή
       </p>

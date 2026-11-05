@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useOrders, useAlertSound } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
+import { PrintHost } from "@/components/admin/PrintTicket";
 
 export default function AdminOrdersPage() {
   const [view, setView] = useState<"live" | "all">("live");
@@ -23,6 +24,7 @@ export default function AdminOrdersPage() {
 
   return (
     <div>
+      <PrintHost />
       <header className="mb-5 flex flex-wrap items-center gap-3">
         <h1 className="font-display text-2xl font-bold">Παραγγελίες</h1>
 

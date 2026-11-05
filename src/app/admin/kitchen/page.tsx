@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import clsx from "clsx";
 import { useOrders, useAlertSound } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
+import { PrintHost } from "@/components/admin/PrintTicket";
 import type { OrderStatus } from "@/lib/order-status";
 
 /**
@@ -32,6 +33,7 @@ export default function KitchenPage() {
 
   return (
     <div>
+      <PrintHost />
       <header className="mb-5 flex flex-wrap items-center gap-3">
         <h1 className="font-display text-2xl font-bold">Κουζίνα</h1>
         <span
