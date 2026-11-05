@@ -78,6 +78,10 @@ export default function ProductScrollHero() {
     if (indices[indices.length - 1] !== FRAMES - 1) indices.push(FRAMES - 1);
 
     const imgs = new Map<number, HTMLImageElement>();
+    const idle = (fn: () => void) =>
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback(fn, { timeout: 600 })
+        : setTimeout(fn, 30); // Safari has no requestIdleCallback
     let loaded = 0;
     let dead = false;
 
@@ -94,10 +98,12 @@ export default function ProductScrollHero() {
           resolve();
         };
         img.onerror = () => resolve();
+        // Decode before the frame can be drawn (drawing an undecoded image
+        // decodes it synchronously: the scroll stutter), but one at a time
+        // when the phone is idle, never all at once during page load.
+        img.onload = () =>
+          idle(() => img.decode().then(done, () => (img.naturalWidth ? done() : resolve())));
         img.src = src(i);
-        // Decode off the main thread before the frame can be drawn; drawing an
-        // undecoded image decodes it synchronously, which is the scroll stutter.
-        img.decode().then(done, () => (img.complete && img.naturalWidth ? done() : resolve()));
       });
 
     // Frame 1 first, the poster frame second, then the rest in coarse-to-fine
@@ -106,16 +112,28 @@ export default function ProductScrollHero() {
     const first = order.shift()!;
     const coarse = order.filter((_, k) => k % 6 === 0);
     const rest = order.filter((_, k) => k % 6 !== 0);
-    (async () => {
+    // Nothing downloads until the visitor is about a screen away: on a slow
+    // connection 50 frames competing with the first screen cost seconds.
+    const start = async () => {
       await load(first);
       if (dead) return;
       draw(0);
       const queue = [...coarse, ...rest];
-      const workers = Array.from({ length: small ? 3 : 6 }, async () => {
+      const workers = Array.from({ length: small ? 2 : 6 }, async () => {
         while (!dead && queue.length) await load(queue.shift()!);
       });
       await Promise.all(workers);
-    })();
+    };
+    const near = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          near.disconnect();
+          void start();
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    near.observe(wrap);
 
     // ---- canvas sizing --------------------------------------------------
     let cw = 0;
@@ -277,6 +295,7 @@ export default function ProductScrollHero() {
 
     return () => {
       dead = true;
+      near.disconnect();
       cancelAnimationFrame(raf);
       window.clearInterval(poll);
       window.removeEventListener("scroll", readScroll);
