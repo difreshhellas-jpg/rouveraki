@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { BRAND } from "@/lib/brand";
 import Reveal from "./Reveal";
 
 export default function LocationSection() {
   const { t, locale } = useI18n();
+  // Google Maps is ~1 MB of script and froze phones mid-scroll; it loads on tap.
+  const [showMap, setShowMap] = useState(false);
 
   const fullAddress = `${BRAND.address.street}, ${BRAND.address.city} ${BRAND.address.postalCode}`;
   const mapsQuery = encodeURIComponent(`${fullAddress}, Greece`);
@@ -64,16 +67,31 @@ export default function LocationSection() {
         {/* --- map ------------------------------------------------------ */}
         <Reveal delayMs={80}>
           <div className="h-full min-h-[22rem] overflow-hidden rounded-card border border-line shadow-card">
-            <iframe
-              title={t("location.mapLabel")}
-              src={`https://www.google.com/maps?q=${mapsQuery}&hl=${locale}&z=16&output=embed`}
-              className="size-full min-h-[22rem]"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              // Keeping the map sandboxed and out of the referrer chain is the
-              // difference between an embed and a third-party tracker.
-              allowFullScreen={false}
-            />
+            {showMap ? (
+              <iframe
+                title={t("location.mapLabel")}
+                src={`https://www.google.com/maps?q=${mapsQuery}&hl=${locale}&z=16&output=embed`}
+                className="size-full min-h-[22rem]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                // Keeping the map sandboxed and out of the referrer chain is the
+                // difference between an embed and a third-party tracker.
+                allowFullScreen={false}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowMap(true)}
+                className="group relative flex size-full min-h-[22rem] flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_30%_30%,rgb(var(--accent-rgb)/0.14),transparent_60%),linear-gradient(135deg,rgb(var(--rouveraki-sand-rgb)),rgb(var(--rouveraki-char-rgb)/0.06))] text-center"
+              >
+                <svg aria-hidden width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-rust">
+                  <path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z" />
+                  <circle cx="12" cy="9.5" r="2.5" />
+                </svg>
+                <span className="font-semibold">{fullAddress}</span>
+                <span className="btn-secondary px-5 text-sm">{locale === "en" ? "Show map" : "Δείτε τον χάρτη"}</span>
+              </button>
+            )}
           </div>
         </Reveal>
       </div>

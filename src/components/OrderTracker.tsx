@@ -15,6 +15,7 @@ import { supabaseConfigured } from "@/lib/supabase/config";
 import { loadSupabaseBrowser } from "@/lib/supabase/lazy";
 import { DEV_BYPASS, DEV_POLL_MS } from "@/lib/dev-mode";
 import { apiFetch } from "@/lib/api";
+import EtaCountdown from "@/components/EtaCountdown";
 import { DEMO_MODE, DEMO_POLL_MS } from "@/lib/demo/config";
 
 export type TrackedOrder = {
@@ -205,6 +206,15 @@ export default function OrderTracker({ initial }: { initial: TrackedOrder }) {
                 ? `${t("order.eta")}: ~${order.etaMinutes} ${t("menu.minutes")}`
                 : t("order.etaPending")}
             </p>
+            {["ACCEPTED", "PREPARING", "READY", "DISPATCHED"].includes(order.status) && (
+              <EtaCountdown
+                size="lg"
+                className="mt-4"
+                etaMinutes={order.etaMinutes}
+                etaConfirmedAt={order.etaConfirmedAt}
+                lateText={locale === "en" ? "Any minute now" : "Σε λίγο"}
+              />
+            )}
 
             <ol className="mt-6 space-y-0" aria-label={t("order.title")}>
               {steps.map((s, i) => {

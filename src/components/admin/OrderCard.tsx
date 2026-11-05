@@ -4,6 +4,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import { useAdminAuth } from "./AdminAuth";
 import { usePrintOrder } from "./PrintTicket";
+import EtaCountdown from "@/components/EtaCountdown";
 import type { AdminOrder } from "./useOrders";
 import { formatEuro } from "@/lib/money";
 import { REJECTION_REASONS, DEFAULT_ETA_MINUTES, zoneById } from "@/lib/brand";
@@ -19,6 +20,9 @@ const PAY_LABEL: Record<string, string> = {
 
 const STATUS_LABEL = (s: OrderStatus) =>
   (dict.el as Record<string, string>)[`status.${s}`] ?? s;
+
+/** States where the clock runs down to the time promised to the customer. */
+const COUNTING: OrderStatus[] = ["ACCEPTED", "PREPARING", "READY", "DISPATCHED"];
 
 /** Primary action per state, so staff never hunt for the obvious next tap. */
 const PRIMARY_NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -72,7 +76,16 @@ export default function OrderCard({
         return;
       }
       setRejecting(false);
-      onChanged();
+      if (to === "ACCEPTED") {
+        // Accepting prints the kitchen ticket straight away, with the ETA just
+        // promised. The refresh waits so the card doesn't move columns (and
+        // unmount the ticket) while the print dialog is still preparing.
+        const at = new Date().toISOString();
+        print({ ...order, status: "ACCEPTED", etaMinutes: Number(extra.etaMinutes) || order.etaMinutes, etaConfirmedAt: at });
+        window.setTimeout(onChanged, 1500);
+      } else {
+        onChanged();
+      }
     } finally {
       setBusy(false);
     }
@@ -116,13 +129,17 @@ export default function OrderCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 text-sm">
           <span className={clsx("font-semibold", !isNew && "text-char/70")}>
             {STATUS_LABEL(order.status)}
           </span>
-          <span className={clsx("tabular-nums", isNew ? "opacity-85" : "text-char/55")}>
-            {waitedMinutes}′
-          </span>
+          {COUNTING.includes(order.status) ? (
+            <EtaCountdown etaMinutes={order.etaMinutes} etaConfirmedAt={order.etaConfirmedAt} />
+          ) : (
+            <span className={clsx("tabular-nums", isNew ? "opacity-85" : "text-char/55")}>
+              {waitedMinutes}′
+            </span>
+          )}
           <span className="font-bold tabular-nums">{money(order.totalCents)}</span>
           <button
             type="button"
@@ -287,8 +304,9 @@ export default function OrderCard({
                 disabled={busy}
                 onClick={() => void transition("ACCEPTED", { etaMinutes: eta })}
                 className="btn flex-[2] bg-emerald-600 text-white disabled:opacity-60"
+                title="Αποδοχή και εκτύπωση δελτίου"
               >
-                Αποδοχή
+                Αποδοχή & εκτύπωση
               </button>
             </div>
           </div>

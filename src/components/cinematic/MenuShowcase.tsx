@@ -33,7 +33,7 @@ export default function MenuShowcase() {
       <Reveal as="header" className="max-w-2xl">
         <p className="eyebrow">{locale === "en" ? "The menu" : "Το μενού"}</p>
         <h2 className="mt-3 font-display text-[clamp(1.9rem,5vw,3rem)] font-semibold leading-tight">
-          {locale === "en" ? "Twelve reasons to stop by" : "Δώδεκα λόγοι να περάσεις"}
+          {locale === "en" ? `${CATEGORIES.length} reasons to stop by` : `${CATEGORIES.length} λόγοι να περάσεις`}
         </h2>
         <div className="tex-rope mt-6 w-24" />
       </Reveal>

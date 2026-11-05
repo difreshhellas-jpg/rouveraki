@@ -49,7 +49,10 @@ export default function ProductScrollHero() {
   const beatCRef = useRef<HTMLDivElement>(null);
   const chipRefs = useRef<(HTMLLIElement | null)[]>([]);
   const cueRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(0); // 0..1 preload progress, for the loader
+  const loaderRef = useRef<HTMLDivElement>(null);
+  // Only "has frame 1 arrived" and "all loaded" re-render; the percentage is
+  // written straight to the DOM so 50 arriving frames don't re-render this tree.
+  const [ready, setReady] = useState(0);
   const [still, setStill] = useState(false); // reduced motion: no pin, no scrub
 
   useEffect(() => {
@@ -69,6 +72,7 @@ export default function ProductScrollHero() {
 
     const small = window.innerWidth < 760;
     const stride = small ? 2 : 1;
+    const blendSteps = small ? 6 : 24;
     const indices: number[] = [];
     for (let i = 0; i < FRAMES; i += stride) indices.push(i);
     if (indices[indices.length - 1] !== FRAMES - 1) indices.push(FRAMES - 1);
@@ -81,14 +85,19 @@ export default function ProductScrollHero() {
       new Promise<void>((resolve) => {
         const img = new Image();
         img.decoding = "async";
-        img.onload = () => {
+        const done = () => {
           imgs.set(i, img);
           loaded++;
-          setReady(loaded / indices.length);
+          const r = loaded / indices.length;
+          if (loaderRef.current) loaderRef.current.textContent = String(Math.round(r * 100));
+          if (loaded === 1 || r === 1) setReady(r);
           resolve();
         };
         img.onerror = () => resolve();
         img.src = src(i);
+        // Decode off the main thread before the frame can be drawn; drawing an
+        // undecoded image decodes it synchronously, which is the scroll stutter.
+        img.decode().then(done, () => (img.complete && img.naturalWidth ? done() : resolve()));
       });
 
     // Frame 1 first, the poster frame second, then the rest in coarse-to-fine
@@ -112,7 +121,9 @@ export default function ProductScrollHero() {
     let cw = 0;
     let ch = 0;
     const size = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Phones: 1.5x is visually the same on this soft, blurred-edge render and
+      // pushes ~45% fewer pixels per frame than 2x.
+      const dpr = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2);
       const r = canvas.getBoundingClientRect();
       cw = Math.max(1, Math.round(r.width * dpr));
       ch = Math.max(1, Math.round(r.height * dpr));
@@ -180,7 +191,9 @@ export default function ProductScrollHero() {
       const B = nearest(hi, -1);
       if (!A) return;
       compose(p);
-      const key = `${A.idx}|${B?.idx}|${Math.round(f * 24)}|${cw}x${ch}|${Math.round(dx * 400)}|${Math.round(dy * 400)}|${Math.round(zoom * 400)}`;
+      // Phones blend in 6 steps between frames instead of 24: same look at
+      // this motion blur, a quarter of the redraws.
+      const key = `${A.idx}|${B?.idx}|${Math.round(f * blendSteps)}|${cw}x${ch}|${Math.round(dx * 400)}|${Math.round(dy * 400)}|${Math.round(zoom * 400)}`;
       if (key === lastKey) return; // same pixels as last time
       lastKey = key;
       ctx!.fillStyle = GROUND;
@@ -402,7 +415,7 @@ export default function ProductScrollHero() {
           </div>
           {!still && ready < 1 && (
             <div aria-hidden="true" className="absolute right-4 top-24 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/45">
-              {locale === "en" ? "Loading" : "Φόρτωση"} {Math.round(ready * 100)}%
+              {locale === "en" ? "Loading" : "Φόρτωση"} <span ref={loaderRef}>{Math.round(ready * 100)}</span>%
             </div>
           )}
         </div>
