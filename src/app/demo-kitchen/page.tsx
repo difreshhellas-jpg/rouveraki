@@ -27,9 +27,6 @@ export default function DemoKitchenPage() {
   return (
     <div className="min-h-svh bg-sand">
       <PrintHost />
-      <p className="bg-rust px-4 py-2 text-center text-sm font-bold text-onrust">
-        Οι παραγγελίες ανανεώνονται κάθε 15 δευτερόλεπτα · κράτα αυτή τη σελίδα ανοιχτή
-      </p>
       <div className="mx-auto max-w-7xl px-4 py-6">
         <header className="mb-5 flex flex-wrap items-center gap-3">
           <h1 className="font-display text-2xl font-bold">

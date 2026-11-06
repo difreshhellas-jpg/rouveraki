@@ -20,7 +20,7 @@ const CartSheet = dynamic(() => import("./CartSheet"), { ssr: false });
  * Hidden on checkout (the cart is the page there), on the tracking page and in
  * admin, where it would be noise.
  */
-const HIDDEN_ON = ["/checkout", "/order", "/admin"];
+const HIDDEN_ON = ["/checkout", "/order", "/admin", "/demo-kitchen"];
 
 export default function CartBar() {
   const { t, locale } = useI18n();

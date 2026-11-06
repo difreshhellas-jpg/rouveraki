@@ -5,7 +5,7 @@ import AdminGate from "@/components/admin/AdminGate";
 import { DEMO_MODE } from "@/lib/demo/config";
 
 export const metadata: Metadata = {
-  title: "Demo - Οθόνη καταστήματος",
+  title: "Οθόνη καταστήματος",
   robots: { index: false, follow: false },
 };
 

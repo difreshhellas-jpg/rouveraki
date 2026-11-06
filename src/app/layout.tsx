@@ -8,8 +8,6 @@ import Footer from "@/components/Footer";
 import CartBar from "@/components/CartBar";
 import { ToastProvider } from "@/components/Toaster";
 import Intro from "@/components/Intro";
-import QaBanner from "@/components/QaBanner";
-import DemoBadge from "@/components/DemoBadge";
 import { IS_TEST_DEPLOY, siteUrl as resolveSiteUrl } from "@/lib/site-mode";
 
 /**
@@ -140,14 +138,12 @@ export default function RootLayout({
       </head>
       <body className={`${display.variable} ${sans.variable} tex-linen`}>
         <LanguageProvider>
-          <QaBanner />
           <Header />
           <main id="content">{children}</main>
           <Footer />
           <CartBar />
           <ToastProvider />
           <Intro />
-          <DemoBadge />
         </LanguageProvider>
       </body>
     </html>

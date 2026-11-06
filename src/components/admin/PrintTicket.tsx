@@ -83,20 +83,15 @@ function Ticket({ order }: { order: AdminOrder }) {
         {order.etaMinutes ? ` · ETA ${order.etaMinutes}′` : ""}
       </p>
       <hr />
-      <table>
-        <tbody>
-          {order.items.map((it, i) => (
-            <tr key={`${it.menu_item_id}-${i}`}>
-              <td className="pt-bold">{it.quantity}×</td>
-              <td>
-                {it.name}
-                {it.item_notes && <div className="pt-bold">» {it.item_notes}</div>}
-              </td>
-              <td className="pt-right">{money(it.unit_price_cents * it.quantity)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {order.items.map((it, i) => (
+        <div key={`${it.menu_item_id}-${i}`} className="pt-item">
+          <p className="pt-name pt-bold">
+            {it.quantity}× {it.name}
+          </p>
+          {it.item_notes && <p className="pt-note">» {it.item_notes}</p>}
+          <p className="pt-right">{money(it.unit_price_cents * it.quantity)}</p>
+        </div>
+      ))}
       {order.generalNotes && (
         <>
           <hr />
@@ -104,24 +99,16 @@ function Ticket({ order }: { order: AdminOrder }) {
         </>
       )}
       <hr />
-      <table>
-        <tbody>
-          <tr>
-            <td>Υποσύνολο</td>
-            <td className="pt-right">{money(order.subtotalCents)}</td>
-          </tr>
-          {order.deliveryFeeCents > 0 && (
-            <tr>
-              <td>Έξοδα διανομής</td>
-              <td className="pt-right">{money(order.deliveryFeeCents)}</td>
-            </tr>
-          )}
-          <tr className="pt-bold pt-lg">
-            <td>ΣΥΝΟΛΟ</td>
-            <td className="pt-right">{money(order.totalCents)}</td>
-          </tr>
-        </tbody>
-      </table>
+      {order.deliveryFeeCents > 0 && (
+        <div className="pt-row">
+          <span>Έξοδα διανομής</span>
+          <span>{money(order.deliveryFeeCents)}</span>
+        </div>
+      )}
+      <div className="pt-row pt-bold pt-lg">
+        <span>ΣΥΝΟΛΟ</span>
+        <span>{money(order.totalCents)}</span>
+      </div>
       <p>
         Πληρωμή: {PAY_LABEL[order.paymentMethod] ?? order.paymentMethod.toUpperCase()}
         {order.paymentStatus ? ` (${order.paymentStatus})` : ""}
