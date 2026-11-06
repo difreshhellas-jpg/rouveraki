@@ -26,7 +26,14 @@ const csp = [
   "object-src 'none'",
 ].join("; ");
 
+// No database configured (a fresh fork, a new Vercel project) means the shared
+// demo/ordering mode, not the Prisma + Supabase backend that would crash on
+// every page that touches it. NEXT_PUBLIC_DEMO_MODE=false forces the backend.
+const demoDefault =
+  process.env.NEXT_PUBLIC_DEMO_MODE ?? (process.env.DATABASE_URL ? "false" : "true");
+
 const nextConfig: NextConfig = {
+  env: { NEXT_PUBLIC_DEMO_MODE: demoDefault },
   // A production build writes into the same .next the dev server is serving
   // from, which leaves dev throwing "Cannot find module './331.js'" until the
   // directory is deleted. Setting NEXT_DIST_DIR lets a verification build go
