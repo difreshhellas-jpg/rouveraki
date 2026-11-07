@@ -1,6 +1,9 @@
 import "server-only";
 import { timingSafeEqual } from "node:crypto";
-import { hasKv, kvGet, kvSet } from "@/lib/kv";
+import { hasKv, kvGet, kvGetCached, kvSet } from "@/lib/kv";
+
+/** Cache tag for the customer-facing menu; a save revalidates it. */
+export const MENU_TAG = "live-menu";
 import bundled from "@/data/menu.json";
 import { CATEGORIES } from "@/lib/brand";
 import type { MenuItemDTO } from "@/lib/menu-types";
@@ -26,8 +29,8 @@ const byCategory = (items: MenuItemDTO[]) =>
  */
 export type MenuDoc = { items: MenuItemDTO[]; savedAt: string | null };
 
-export async function loadLiveMenu({ strict = false } = {}): Promise<MenuItemDTO[]> {
-  return (await loadLiveMenuDoc({ strict })).items;
+export async function loadLiveMenu({ strict = false, cached = false } = {}): Promise<MenuItemDTO[]> {
+  return (await loadLiveMenuDoc({ strict, cached })).items;
 }
 
 /**
@@ -35,10 +38,13 @@ export async function loadLiveMenu({ strict = false } = {}): Promise<MenuItemDTO
  * for a few seconds (measured 4-7 s). `savedAt` lets the owner's screen tell
  * an older copy from its own newer save.
  */
-export async function loadLiveMenuDoc({ strict = false } = {}): Promise<MenuDoc> {
+export async function loadLiveMenuDoc({ strict = false, cached = false } = {}): Promise<MenuDoc> {
   if (hasKv()) {
     try {
-      const data = await kvGet<{ items: MenuItemDTO[]; savedAt?: string }>(MENU_KEY);
+      type Saved = { items: MenuItemDTO[]; savedAt?: string };
+      const data = cached
+        ? await kvGetCached<Saved>(MENU_KEY, MENU_TAG)
+        : await kvGet<Saved>(MENU_KEY);
       // Nothing saved yet is normal: serve the bundled menu.
       if (data) return { items: byCategory(data.items), savedAt: data.savedAt ?? null };
     } catch (err) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { photo, SITE } from "@/lib/images";
@@ -37,6 +37,25 @@ export default function HorizontalStory() {
   const { locale } = useI18n();
   const outer = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
+  // Panels 2-4 sit off to the side until the pan reaches them, so the
+  // browser's own lazy loading would not fetch them until they slide in (black
+  // panels mid-pan). Load all four once the section is a screen away.
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const o = outer.current;
+    if (!o) return;
+    const io = new IntersectionObserver(
+      (es) => {
+        if (es.some((e) => e.isIntersecting)) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    io.observe(o);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     if (CSS.supports("animation-timeline: view()")) return;
@@ -91,6 +110,7 @@ export default function HorizontalStory() {
                   alt=""
                   fill
                   sizes="100vw"
+                  loading={near ? "eager" : "lazy"}
                   className="object-cover"
                 />
                 <div

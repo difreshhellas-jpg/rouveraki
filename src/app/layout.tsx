@@ -19,7 +19,8 @@ import { IS_TEST_DEPLOY, siteUrl as resolveSiteUrl } from "@/lib/site-mode";
  */
 const display = Noto_Serif_Display({
   subsets: ["greek", "latin"],
-  weight: ["400", "500", "600", "700"],
+  // Variable font: one file per subset and style covers every weight, instead
+  // of a separate file for each of 400-700.
   style: ["normal", "italic"],
   variable: "--font-display",
   display: "swap",
@@ -27,7 +28,7 @@ const display = Noto_Serif_Display({
 
 const sans = Manrope({
   subsets: ["greek", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  // Variable font (200-800): one file per subset.
   variable: "--font-sans",
   display: "swap",
 });

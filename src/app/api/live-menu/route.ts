@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { CATEGORIES } from "@/lib/brand";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { isAdmin, loadLiveMenuDoc, saveLiveMenu } from "@/lib/menu-store";
+import { MENU_TAG, isAdmin, loadLiveMenuDoc, saveLiveMenu } from "@/lib/menu-store";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,10 @@ export async function PUT(req: Request) {
   } catch {
     return NextResponse.json({ error: "save_failed" }, { status: 502 });
   }
+  // /menu is cached; rebuild it now so customers see the edit straight away.
+  revalidateTag(MENU_TAG);
+  revalidatePath("/menu");
+  revalidatePath("/");
   return NextResponse.json({ ok: true, count: ids.length, savedAt });
 }
 

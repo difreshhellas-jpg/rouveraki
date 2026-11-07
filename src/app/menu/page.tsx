@@ -11,15 +11,16 @@ export const metadata: Metadata = {
     "Πίτες, καλαμάκια, μερίδες στα κάρβουνα, burger, σαλάτες, ζυμαρικά και ποτά. Παραγγελία online με διανομή στο Ξυλόκαστρο.",
 };
 
-// The menu is read fresh so an availability toggle in the admin panel shows up
-// on the next page load rather than after a rebuild.
-export const dynamic = "force-dynamic";
+// Served from cache and rebuilt at most once a minute. A save from the menu
+// editor (PUT /api/live-menu) revalidates it at once, so an availability
+// toggle still shows up on the next page load.
+export const revalidate = 60;
 
 async function loadMenu(): Promise<MenuItemDTO[]> {
   // Demo mode: no database; the owner-edited menu lives in Vercel Blob.
   if (DEMO_MODE) {
     const { loadLiveMenu } = await import("@/lib/menu-store");
-    return loadLiveMenu();
+    return loadLiveMenu({ cached: true });
   }
 
   const { prisma } = await import("@/lib/prisma");

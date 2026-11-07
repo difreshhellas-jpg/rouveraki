@@ -44,6 +44,24 @@ export async function kvGet<T>(key: string): Promise<T | null> {
   return raw ? (JSON.parse(raw) as T) : null;
 }
 
+/**
+ * Read through Next's data cache: at most one Redis call per `revalidate`
+ * seconds, dropped early by revalidateTag(tag). Only for public, read-mostly
+ * data (the menu shown to customers). Anything that must be current, such as
+ * pricing an order, uses kvGet.
+ */
+export async function kvGetCached<T>(key: string, tag: string, revalidate = 60): Promise<T | null> {
+  if (!hasKv()) return kvGet<T>(key);
+  const res = await fetch(`${URL_}/get/${encodeURIComponent(key)}`, {
+    headers: { Authorization: `Bearer ${TOKEN}` },
+    next: { revalidate, tags: [tag] },
+  });
+  if (!res.ok) throw new Error(`kv_${res.status}`);
+  const body = (await res.json()) as { result: string | null; error?: string };
+  if (body.error) throw new Error(`kv_${body.error}`);
+  return body.result ? (JSON.parse(body.result) as T) : null;
+}
+
 export async function kvSet(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
   assertStore();
   const raw = JSON.stringify(value);

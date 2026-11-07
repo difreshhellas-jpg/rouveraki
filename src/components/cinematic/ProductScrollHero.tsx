@@ -71,7 +71,9 @@ export default function ProductScrollHero() {
     if (!ctx) return;
 
     const small = window.innerWidth < 760;
-    const stride = small ? 2 : 1;
+    // Phones: every third frame (~34 instead of 100, about a third of the
+    // download); the cross-fade between neighbours hides the gaps.
+    const stride = small ? 3 : 1;
     const blendSteps = small ? 6 : 24;
     const indices: number[] = [];
     for (let i = 0; i < FRAMES; i += stride) indices.push(i);
@@ -319,8 +321,8 @@ export default function ProductScrollHero() {
     >
       <div
         ref={wrapRef}
-        className="psh-wrap relative"
-        style={{ height: still ? "auto" : "440svh" }}
+        // Phones get a shorter run (2.8 screens): the same film, less thumb work.
+        className={still ? "psh-wrap relative" : "psh-wrap relative h-[280svh] md:h-[440svh]"}
         data-still={still ? "" : undefined}
       >
         <div className="psh-stage sticky top-0 h-[100svh] w-full overflow-hidden">
