@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import clsx from "clsx";
-import { useOrders } from "@/components/admin/useOrders";
+import { useEffect } from "react";
+import { useAlertSound, useOrders } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
 import { PrintHost } from "@/components/admin/PrintTicket";
 import type { OrderStatus } from "@/lib/order-status";
@@ -19,7 +20,34 @@ const COLUMNS: { title: string; statuses: OrderStatus[]; accent: string }[] = [
 ];
 
 export default function DemoKitchenPage() {
-  const { orders, loading, refresh } = useOrders("all");
+  const { orders, loading, refresh, newArrival, clearArrival } = useOrders("all");
+  const { enabled, enable, play } = useAlertSound();
+  const waiting = orders.filter((o) => o.status === "PAID_AWAITING_ACCEPTANCE").length;
+
+  // Browsers only allow sound after a tap, so the first tap anywhere turns it on.
+  useEffect(() => {
+    if (enabled) return;
+    const on = () => enable();
+    window.addEventListener("pointerdown", on, { once: true });
+    window.addEventListener("keydown", on, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", on);
+      window.removeEventListener("keydown", on);
+    };
+  }, [enabled, enable]);
+
+  // Beep when a new order arrives, then every 10 s until it is accepted.
+  useEffect(() => {
+    if (newArrival) {
+      play();
+      clearArrival();
+    }
+  }, [newArrival, play, clearArrival]);
+  useEffect(() => {
+    if (!enabled || waiting === 0) return;
+    const id = window.setInterval(play, 10_000);
+    return () => window.clearInterval(id);
+  }, [enabled, waiting, play]);
   const other = orders.filter(
     (o) => !COLUMNS.some((c) => c.statuses.includes(o.status)),
   );
@@ -33,6 +61,13 @@ export default function DemoKitchenPage() {
             Ρουβεράκι <span className="text-char/50">οθόνη καταστήματος</span>
           </h1>
           <div className="ml-auto flex gap-2">
+            <button
+              type="button"
+              onClick={() => (enabled ? play() : enable())}
+              className={enabled ? "btn-secondary text-sm" : "btn-primary text-sm"}
+            >
+              {enabled ? "🔔 Ήχος ενεργός (δοκιμή)" : "🔔 Ενεργοποίηση ήχου"}
+            </button>
             <Link href="/demo-kitchen/menu" className="btn-primary text-sm">
               Διαχείριση μενού
             </Link>
