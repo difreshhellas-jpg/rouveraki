@@ -17,8 +17,19 @@ import { DEMO_MODE, LAUNCHED } from "@/lib/demo/config";
  * Both inputs are read at build time, so flipping PAYMENT_MODE to live needs a
  * redeploy to drop the notice — which going live needs anyway.
  */
+/**
+ * The production deploy of a project that has its own domain (rouveraki.com,
+ * not *.vercel.app) is the real shop, with or without NEXT_PUBLIC_LAUNCHED.
+ * Both values are Vercel system variables, available at build time.
+ */
+const ON_OWN_DOMAIN =
+  process.env.VERCEL_ENV === "production" &&
+  Boolean(process.env.VERCEL_PROJECT_PRODUCTION_URL) &&
+  !process.env.VERCEL_PROJECT_PRODUCTION_URL!.endsWith(".vercel.app");
+
 export const IS_TEST_DEPLOY =
   !LAUNCHED &&
+  !ON_OWN_DOMAIN &&
   (DEMO_MODE ||
     (Boolean(process.env.VERCEL_ENV) && process.env.PAYMENT_MODE !== "live"));
 
