@@ -9,7 +9,7 @@
  * drop files into /public/images/ and point HERO_IMAGES in lib/images.ts at
  * them. No component changes.
  */
-import { HERO_IMAGES, photo, SITE } from "./images";
+import { HERO_IMAGES } from "./images";
 
 export type Photo = {
   src: string;
@@ -20,10 +20,11 @@ export type Photo = {
 
 export const HERO_PHOTOS: Photo[] = HERO_IMAGES;
 
+/** The real Rouveraki terrace on the marina, from the owner (2026-11-10). */
 export const STORY_PHOTO: Photo = {
-  src: photo(SITE.storyBar, 1200, 900),
-  alt: "Φωτισμένο μπαρ το βράδυ",
-  altEn: "A warm-lit bar in the evening",
+  src: "/images/rouveraki-terrace.jpg",
+  alt: "Η βεράντα του Ρουβεράκι δίπλα στη θάλασσα, στη μαρίνα του Ξυλοκάστρου",
+  altEn: "The Rouveraki terrace by the sea at the Xylokastro marina",
 };
 
 /** Shown behind a hero slide until its image decodes. */
