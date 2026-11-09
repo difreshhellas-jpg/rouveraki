@@ -10,6 +10,7 @@ import { BRAND } from "@/lib/brand";
 import Magnetic from "./motion/Magnetic";
 import LanguageToggle from "./LanguageToggle";
 import ThemeToggle from "./ThemeToggle";
+import InstallButton from "./InstallButton";
 
 export default function Header() {
   const { t } = useI18n();
@@ -100,6 +101,7 @@ export default function Header() {
               <LanguageToggle />
             </div>
             <ThemeToggle />
+            <InstallButton />
             <a
               href={`tel:${BRAND.phone.tel}`}
               className="hidden size-touch items-center justify-center rounded-full text-char/70 transition-colors hover:bg-char/5 hover:text-char sm:inline-flex"
@@ -150,6 +152,7 @@ export default function Header() {
               >
                 {BRAND.phone.display}
               </a>
+              <InstallButton variant="row" />
             </nav>
             <div className="mt-3 flex items-center justify-between gap-3">
               <LanguageToggle />

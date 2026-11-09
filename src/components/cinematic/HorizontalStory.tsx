@@ -29,8 +29,8 @@ const COPY: Record<string, { el: [string, string]; en: [string, string] }> = {
              en: ["To share", "Starters and plates that belong in the middle of the table."] },
   morning: { el: ["Από τις έξι", "Ο πρώτος καφές της ημέρας, πριν ξυπνήσει η μαρίνα."],
              en: ["From six", "The first coffee of the day, before the marina wakes up."] },
-  night:   { el: ["Μέχρι τη μία", "Ένα ποτό όταν ησυχάσουν τα σκάφη."],
-             en: ["Until one", "A drink once the boats have settled."] },
+  night:   { el: ["Μέχρι τη μία", "Ένα τραπέζι δίπλα στο νερό όταν ησυχάσουν τα σκάφη."],
+             en: ["Until one", "A table by the water once the boats have settled."] },
 };
 
 export default function HorizontalStory() {

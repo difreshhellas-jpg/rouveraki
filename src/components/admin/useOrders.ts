@@ -126,6 +126,18 @@ export function useOrders(view: "live" | "all" = "live") {
     return onDemoChange(() => void refresh());
   }, [refresh]);
 
+  // Coming back to the screen (tablet woke, tab switched back): fetch at once
+  // instead of waiting for the next poll.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refresh]);
+
+  const clearArrival = useCallback(() => setNewArrival(null), []);
+
   return {
     orders,
     loading,
@@ -133,52 +145,113 @@ export function useOrders(view: "live" | "all" = "live") {
     live,
     refresh,
     newArrival,
-    clearArrival: () => setNewArrival(null),
+    clearArrival,
   };
 }
 
 /**
- * Short double beep via the Web Audio API — no audio file to ship, cache or
- * 404. Browsers block audio until the page has been interacted with, which is
- * why the admin screens show an "enable sound" control.
+ * New-order chime via the Web Audio API: no audio file to ship, cache or 404.
+ *
+ * Browsers block audio until the page has been tapped once, so the shop
+ * screens call enable() from the first tap. After that:
+ * - iPhone/iPad: the audio session is set to "playback", so the chime still
+ *   sounds with the side switch on silent (Safari 17+).
+ * - A sleeping tablet suspends the audio context; it is resumed when the page
+ *   is visible again and before every chime, so sound never quietly stops.
+ * - Android also vibrates.
  */
+type AudioSessionNav = Navigator & { audioSession?: { type: string } };
+
 export function useAlertSound() {
   const ctxRef = useRef<AudioContext | null>(null);
+  const outRef = useRef<AudioNode | null>(null);
   const [enabled, setEnabled] = useState(false);
 
-  const enable = useCallback(() => {
+  const ensure = useCallback((): AudioContext | null => {
+    if (ctxRef.current) return ctxRef.current;
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return null;
     try {
-      const Ctor =
-        window.AudioContext ??
-        (window as unknown as { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
-      if (!Ctor) return;
-      ctxRef.current ??= new Ctor();
-      void ctxRef.current.resume();
-      setEnabled(true);
+      const nav = navigator as AudioSessionNav;
+      if (nav.audioSession) nav.audioSession.type = "playback";
     } catch {
-      setEnabled(false);
+      /* older Safari: no audio session control */
     }
+    const ctx = new Ctor({ latencyHint: "interactive" });
+    // A compressor lets the chime be loud without clipping on tablet speakers.
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.ratio.value = 6;
+    const master = ctx.createGain();
+    master.gain.value = 0.9;
+    master.connect(comp).connect(ctx.destination);
+    ctxRef.current = ctx;
+    outRef.current = master;
+    return ctx;
+  }, []);
+
+  const enable = useCallback(() => {
+    const ctx = ensure();
+    if (!ctx) return;
+    void ctx.resume().then(
+      () => setEnabled(ctx.state === "running"),
+      () => setEnabled(false),
+    );
+  }, [ensure]);
+
+  // Back from sleep or another app: wake the audio context up again.
+  useEffect(() => {
+    const wake = () => {
+      const ctx = ctxRef.current;
+      if (document.visibilityState === "visible" && ctx && ctx.state !== "running") {
+        void ctx.resume().then(() => setEnabled(ctx.state === "running"));
+      }
+    };
+    document.addEventListener("visibilitychange", wake);
+    window.addEventListener("focus", wake);
+    return () => {
+      document.removeEventListener("visibilitychange", wake);
+      window.removeEventListener("focus", wake);
+    };
+  }, []);
+
+  useEffect(() => () => void ctxRef.current?.close(), []);
+
+  const ring = useCallback((ctx: AudioContext) => {
+    const out = outRef.current;
+    if (!out) return;
+    const now = ctx.currentTime + 0.02;
+    // Three rising bell notes (E6, G#6, B6), each a sine plus a soft octave.
+    [1318.5, 1661.2, 1975.5].forEach((freq, i) => {
+      const start = now + i * 0.16;
+      for (const [mult, level] of [[1, 0.55], [2, 0.12]] as const) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq * mult;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(level, start + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + 0.55);
+        osc.connect(g).connect(out);
+        osc.start(start);
+        osc.stop(start + 0.6);
+      }
+    });
   }, []);
 
   const play = useCallback(() => {
-    const ctx = ctxRef.current;
-    if (!ctx || ctx.state !== "running") return;
-    const now = ctx.currentTime;
-    for (const [i, freq] of [880, 1175].entries()) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      const start = now + i * 0.18;
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(start);
-      osc.stop(start + 0.18);
+    try {
+      navigator.vibrate?.([180, 90, 180]);
+    } catch {
+      /* not supported */
     }
-  }, []);
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+    if (ctx.state === "running") ring(ctx);
+    else void ctx.resume().then(() => ctx.state === "running" && ring(ctx), () => {});
+  }, [ring]);
 
   return { enabled, enable, play };
 }

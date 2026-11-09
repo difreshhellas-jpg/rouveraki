@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { BRAND } from "@/lib/brand";
 import ContactForm from "./ContactForm";
+import InstallButton from "./InstallButton";
 
 export default function Footer() {
   const { t } = useI18n();
@@ -60,6 +61,9 @@ export default function Footer() {
             >
               Facebook
             </a>
+            <div className="mt-4">
+              <InstallButton variant="pill" className="!border-onband/40 !bg-transparent !text-onband" />
+            </div>
           </div>
 
           <div>

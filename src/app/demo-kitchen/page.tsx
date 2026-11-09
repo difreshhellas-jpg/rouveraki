@@ -48,6 +48,32 @@ export default function DemoKitchenPage() {
     const id = window.setInterval(play, 10_000);
     return () => window.clearInterval(id);
   }, [enabled, waiting, play]);
+
+  // Tab title shows the waiting count, so a new order is visible from another tab.
+  useEffect(() => {
+    document.title = waiting > 0 ? `(${waiting}) Νέα παραγγελία · Ρουβεράκι` : "Οθόνη καταστήματος · Ρουβεράκι";
+  }, [waiting]);
+
+  // Keep the shop tablet awake while this screen is open: a sleeping screen
+  // stops checking for orders and cannot ring.
+  useEffect(() => {
+    type Lock = { release: () => Promise<void> };
+    const wl = (navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<Lock> } }).wakeLock;
+    if (!wl) return;
+    let lock: Lock | null = null;
+    const take = () => {
+      if (document.visibilityState === "visible") {
+        wl.request("screen").then((l) => (lock = l), () => {});
+      }
+    };
+    take();
+    document.addEventListener("visibilitychange", take);
+    return () => {
+      document.removeEventListener("visibilitychange", take);
+      void lock?.release().catch(() => {});
+    };
+  }, []);
+
   const other = orders.filter(
     (o) => !COLUMNS.some((c) => c.statuses.includes(o.status)),
   );
@@ -64,7 +90,7 @@ export default function DemoKitchenPage() {
             <button
               type="button"
               onClick={() => (enabled ? play() : enable())}
-              className={enabled ? "btn-secondary text-sm" : "btn-primary text-sm"}
+              className={enabled ? "btn-secondary text-sm" : "btn-primary animate-pulse text-sm"}
             >
               {enabled ? "🔔 Ήχος ενεργός (δοκιμή)" : "🔔 Ενεργοποίηση ήχου"}
             </button>

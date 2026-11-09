@@ -21,11 +21,11 @@ export default function StorySection() {
     locale === "en"
       ? [
           "A renovated space on the Xylokastro marina, open from six in the morning until one at night.",
-          "Coffee and juice for the early walk along the water, the charcoal grill through the afternoon and evening, and a quiet drink once the boats have settled.",
+          "Coffee and juice for the early walk along the water, the charcoal grill through the afternoon and evening, and a quiet table by the water once the boats have settled.",
         ]
       : [
           "Ένας ανακαινισμένος χώρος στη μαρίνα του Ξυλοκάστρου, ανοιχτός από τις έξι το πρωί μέχρι τη μία τη νύχτα.",
-          "Καφές και χυμός για την πρωινή βόλτα δίπλα στο νερό, η ψησταριά στα κάρβουνα το απόγευμα και το βράδυ, και ένα ήσυχο ποτό όταν ησυχάσουν τα σκάφη.",
+          "Καφές και χυμός για την πρωινή βόλτα δίπλα στο νερό, η ψησταριά στα κάρβουνα το απόγευμα και το βράδυ, και ένα ήσυχο τραπέζι δίπλα στο νερό όταν ησυχάσουν τα σκάφη.",
         ];
 
   return (

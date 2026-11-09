@@ -262,12 +262,25 @@ export default function ProductScrollHero() {
       target = total > 0 ? clamp01(-r.top / total) : 0;
       kick();
     };
+    // Scroll events only flag a re-measure; the measuring happens once per
+    // frame inside the rAF tick, never inside the scroll handler itself.
+    let dirty = false;
+    const onScroll = () => {
+      dirty = true;
+      kick();
+    };
     const tick = () => {
+      if (dirty) {
+        dirty = false;
+        const r = wrap.getBoundingClientRect();
+        const total = r.height - window.innerHeight;
+        target = total > 0 ? clamp01(-r.top / total) : 0;
+      }
       const diff = target - shown;
       shown = Math.abs(diff) < 0.0004 ? target : shown + diff * 0.16;
       draw(shown);
       beats(shown);
-      if (shown !== target) raf = requestAnimationFrame(tick);
+      if (shown !== target || dirty) raf = requestAnimationFrame(tick);
       else running = false;
     };
     function kick() {
@@ -286,7 +299,7 @@ export default function ProductScrollHero() {
     readScroll();
     shown = target;
     beats(shown);
-    window.addEventListener("scroll", readScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
     // Frames keep arriving after mount: redraw when the current one lands.
     const poll = window.setInterval(() => {
@@ -300,7 +313,7 @@ export default function ProductScrollHero() {
       near.disconnect();
       cancelAnimationFrame(raf);
       window.clearInterval(poll);
-      window.removeEventListener("scroll", readScroll);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
     };
   }, []);

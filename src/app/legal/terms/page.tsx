@@ -61,27 +61,7 @@ export default function TermsPage() {
         συναλλαγή εκδίδεται νόμιμο φορολογικό παραστατικό.
       </p>
 
-      <h2>5. Αλκοολούχα ποτά - ηλικιακός περιορισμός</h2>
-      <p>
-        Η πώληση αλκοολούχων ποτών επιτρέπεται αποκλειστικά σε άτομα άνω των 18
-        ετών. Το κατάστημα διατηρεί το δικαίωμα να ζητήσει
-        επίδειξη ταυτότητας κατά την παράδοση ή την παραλαβή και να αρνηθεί την
-        παράδοση των αλκοολούχων ειδών εφόσον δεν αποδεικνύεται η ηλικία.
-      </p>
-      <p>
-        {/* TODO:LAWYER/ACCOUNTANT - spec §6: confirm whether a checkbox alone
-            is accepted for alcohol delivery, or whether a driver-side ID check
-            is expected in practice. Also confirm whether the municipality of
-            Xylokastro restricts alcohol sale hours; if it does, set
-            ALCOHOL_HOURS_RESTRICTED in src/lib/hours.ts and update this text. */}
-        <em>
-          Σημείωση προς επιβεβαίωση: ο ακριβής τρόπος ελέγχου ηλικίας και τυχόν
-          τοπικοί περιορισμοί ωραρίου πώλησης αλκοόλ επιβεβαιώνονται πριν τη
-          δημοσίευση.
-        </em>
-      </p>
-
-      <h2>6. Ευθύνη</h2>
+      <h2>5. Ευθύνη</h2>
       <p>
         Καταβάλλουμε κάθε προσπάθεια ώστε οι πληροφορίες του ιστότοπου
         (διαθεσιμότητα, τιμές, περιγραφές, αλλεργιογόνα) να είναι ακριβείς και
@@ -89,7 +69,7 @@ export default function TermsPage() {
         τηλεφωνικά πριν παραγγείλεις.
       </p>
 
-      <h2>7. Επικοινωνία</h2>
+      <h2>6. Επικοινωνία</h2>
       <p>
         {BRAND.nameEl}, {BRAND.address.street}, {BRAND.address.city}{" "}
         {BRAND.address.postalCode}. Τηλέφωνο{" "}

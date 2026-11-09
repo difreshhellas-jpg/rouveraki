@@ -4,20 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { photo, SITE } from "@/lib/images";
 import { useI18n } from "@/i18n/LanguageProvider";
-import { CATEGORIES } from "@/lib/brand";
 import Reveal from "./Reveal";
 import Tilt from "./Tilt";
 
 /**
- * Three cards saying "we are a café, a grill house and a bar" without any live
+ * Three cards saying "we are a café, a grill house and an evening spot" without any live
  * clock logic. Each links straight to the first menu category of its daypart,
  * so the storytelling and the navigation are the same click.
  */
 /** Each card leads with a verified photo of what that part of the day is. */
 const DAYPARTS = [
-  { id: "morning", photo: SITE.dayMorning, icon: CupIcon },
-  { id: "grill", photo: SITE.dayGrill, icon: FlameIcon },
-  { id: "evening", photo: SITE.dayEvening, icon: GlassIcon },
+  { id: "morning", photo: SITE.dayMorning, icon: CupIcon, slug: "kafedes" },
+  { id: "grill", photo: SITE.dayGrill, icon: FlameIcon, slug: "pites" },
+  { id: "evening", photo: SITE.dayEvening, icon: MoonIcon, slug: "orektika" },
 ] as const;
 
 export default function DaypartStrip() {
@@ -38,13 +37,12 @@ export default function DaypartStrip() {
 
       <div className="mt-12 grid gap-5 md:grid-cols-3">
         {DAYPARTS.map((d, i) => {
-          const first = CATEGORIES.find((c) => c.daypart === d.id);
           const Icon = d.icon;
           return (
             <Reveal key={d.id} delayMs={i * 60}>
               <Tilt className="h-full rounded-card">
               <Link
-                href={`/menu#${first?.slug ?? ""}`}
+                href={`/menu#${d.slug}`}
                 className="group card card-tappable flex h-full flex-col overflow-hidden"
               >
                 {/* Photo banner with a bottom scrim so the icon stays legible.
@@ -107,10 +105,10 @@ function FlameIcon() {
   );
 }
 
-function GlassIcon() {
+function MoonIcon() {
   return (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 3h14l-6 8v7h3v3H8v-3h3v-7L5 3z" />
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
     </svg>
   );
 }

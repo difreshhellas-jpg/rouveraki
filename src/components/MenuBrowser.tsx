@@ -61,8 +61,9 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
     return map;
   }, [filtered]);
 
-  const visibleCategories = CATEGORIES.filter(
-    (c) => (grouped.get(c.slug)?.length ?? 0) > 0,
+  const visibleCategories = useMemo(
+    () => CATEGORIES.filter((c) => (grouped.get(c.slug)?.length ?? 0) > 0),
+    [grouped],
   );
 
   /* ---- active pill follows the scroll position ------------------------- */
@@ -131,60 +132,11 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
     window.setTimeout(() => setJustAdded((v) => (v === item.id ? null : v)), 1400);
   };
 
-  return (
-    <>
-      {/* ---- sticky category rail ---------------------------------------- */}
-      <div className="sticky top-[3.75rem] z-40 border-b border-line bg-sand/95 backdrop-blur-md">
-        <div className="mx-auto max-w-content px-4 sm:px-6">
-          <div
-            ref={railRef}
-            role="tablist"
-            aria-label={t("menu.categoryNav")}
-            className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 py-3"
-          >
-            {visibleCategories.map((c) => (
-              <button
-                key={c.slug}
-                data-pill={c.slug}
-                role="tab"
-                aria-selected={active === c.slug}
-                type="button"
-                onClick={() => jumpTo(c.slug)}
-                className={clsx(
-                  "min-h-touch shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors",
-                  active === c.slug && !normalized
-                    ? "bg-rust text-onrust"
-                    : "border border-line bg-surface text-char/75 hover:text-char",
-                )}
-              >
-                {pick(c.el, c.en)}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ---- search ------------------------------------------------------ */}
-      <div className="mx-auto max-w-content px-4 pt-6 sm:px-6">
-        <label className="sr-only" htmlFor="menu-search">
-          {t("menu.searchPlaceholder")}
-        </label>
-        <input
-          id="menu-search"
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("menu.searchPlaceholder")}
-          className="field max-w-md"
-        />
-      </div>
-
-      {/* ---- sections ---------------------------------------------------- */}
-      <div className="mx-auto max-w-content px-4 pb-40 sm:px-6">
-        {visibleCategories.length === 0 && (
-          <p className="py-16 text-center text-char/60">{t("menu.empty")}</p>
-        )}
-
+  // The item list does not depend on the highlighted category, so scrolling
+  // past a section re-renders only the pill rail, not ~130 cards.
+  const sections = useMemo(
+    () => (
+      <>
         {visibleCategories.map((c) => (
           <section
             key={c.slug}
@@ -210,7 +162,7 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
                 const name = pick(item.name, item.nameEn);
                 const desc = pick(item.description ?? "", item.descriptionEn);
                 return (
-                  <Tilt as="li" key={item.id} className="rounded-card">
+                  <Tilt as="li" key={item.id} className="rounded-card" scroll={false}>
                     {/* The <li> is the tilting object; the card inside is the
                         button, so the 3D transform never fights the press
                         scale. The whole card opens the detail sheet; the add
@@ -287,6 +239,67 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
             </ul>
           </section>
         ))}
+      </>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visibleCategories, grouped, pick, t, locale, justAdded],
+  );
+
+  return (
+    <>
+      {/* ---- sticky category rail ---------------------------------------- */}
+      <div className="sticky top-[3.75rem] z-40 border-b border-line bg-sand/[0.97]">
+        <div className="mx-auto max-w-content px-4 sm:px-6">
+          <div
+            ref={railRef}
+            role="tablist"
+            aria-label={t("menu.categoryNav")}
+            className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 py-3"
+          >
+            {visibleCategories.map((c) => (
+              <button
+                key={c.slug}
+                data-pill={c.slug}
+                role="tab"
+                aria-selected={active === c.slug}
+                type="button"
+                onClick={() => jumpTo(c.slug)}
+                className={clsx(
+                  "min-h-touch shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors",
+                  active === c.slug && !normalized
+                    ? "bg-rust text-onrust"
+                    : "border border-line bg-surface text-char/75 hover:text-char",
+                )}
+              >
+                {pick(c.el, c.en)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ---- search ------------------------------------------------------ */}
+      <div className="mx-auto max-w-content px-4 pt-6 sm:px-6">
+        <label className="sr-only" htmlFor="menu-search">
+          {t("menu.searchPlaceholder")}
+        </label>
+        <input
+          id="menu-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("menu.searchPlaceholder")}
+          className="field max-w-md"
+        />
+      </div>
+
+      {/* ---- sections ---------------------------------------------------- */}
+      <div className="mx-auto max-w-content px-4 pb-40 sm:px-6">
+        {visibleCategories.length === 0 && (
+          <p className="py-16 text-center text-char/60">{t("menu.empty")}</p>
+        )}
+
+        {sections}
       </div>
 
       <ItemSheet item={openItem} onClose={() => setOpenItem(null)} />

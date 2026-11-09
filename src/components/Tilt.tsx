@@ -24,11 +24,15 @@ export default function Tilt({
   className,
   maxDeg = 6,
   as: Tag = "div",
+  scroll = true,
 }: {
   children: ReactNode;
   className?: string;
   maxDeg?: number;
   as?: "div" | "article" | "li";
+  /** Rock with the scroll on touch screens. Off for long lists, where a
+   *  scroll animation on every row costs more than it adds. */
+  scroll?: boolean;
 }) {
   const ref = useRef<HTMLElement>(null);
 
@@ -40,7 +44,7 @@ export default function Tilt({
 
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (fine || reduced) return;
+    if (fine || reduced || !scroll) return;
 
     // Where the browser has scroll-driven animations, hand the whole thing to
     // CSS: the card rocks as it crosses the viewport with zero JS per frame.
@@ -49,32 +53,11 @@ export default function Tilt({
       return;
     }
 
-    // Fallback: recompute on scroll, rAF-batched, one write per frame.
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const r = el.getBoundingClientRect();
-      const centre = r.top + r.height / 2;
-      // -1 at the top of the viewport, +1 at the bottom.
-      const progress = (centre / window.innerHeight) * 2 - 1;
-      const clamped = Math.max(-1, Math.min(1, progress));
-      el.style.setProperty("--rx", `${-clamped * maxDeg * 0.6}deg`);
-      el.style.setProperty("--gy", `${50 + clamped * 40}%`);
-      el.style.setProperty("--glint", "0.7");
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [maxDeg]);
+    // Fallback (iOS before Safari 26): one shared scroll loop for every
+    // card on the page, which measures only the cards on screen and does all
+    // reads before all writes, so a long menu never forces layout per card.
+    return watchScrollTilt(el, maxDeg);
+  }, [maxDeg, scroll]);
 
   /* ---- mouse: tilt toward the cursor ------------------------------------ */
   const onMove = (e: PointerEvent<HTMLElement>) => {
@@ -115,4 +98,55 @@ export default function Tilt({
       <span aria-hidden="true" className="tilt-glint" />
     </Comp>
   );
+}
+
+/* ---- shared scroll-tilt loop for browsers without scroll timelines ------ */
+const tilted = new Map<HTMLElement, number>();
+const onScreen = new Set<HTMLElement>();
+let io: IntersectionObserver | null = null;
+let frame = 0;
+
+function runTilt() {
+  frame = 0;
+  const vh = window.innerHeight;
+  const reads: [HTMLElement, number][] = [];
+  for (const el of onScreen) {
+    const r = el.getBoundingClientRect();
+    reads.push([el, Math.max(-1, Math.min(1, ((r.top + r.height / 2) / vh) * 2 - 1))]);
+  }
+  for (const [el, c] of reads) {
+    const deg = tilted.get(el) ?? 6;
+    el.style.setProperty("--rx", `${(-c * deg * 0.6).toFixed(2)}deg`);
+    el.style.setProperty("--sweep", `${(20 * c).toFixed(1)}%`);
+  }
+}
+const schedule = () => {
+  if (!frame) frame = requestAnimationFrame(runTilt);
+};
+
+function watchScrollTilt(el: HTMLElement, maxDeg: number) {
+  if (!io) {
+    io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const t = e.target as HTMLElement;
+          if (e.isIntersecting) onScreen.add(t);
+          else onScreen.delete(t);
+        }
+        schedule();
+      },
+      { rootMargin: "10% 0px" },
+    );
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+  }
+  tilted.set(el, maxDeg);
+  el.dataset.tiltJs = "";
+  io.observe(el);
+  return () => {
+    tilted.delete(el);
+    delete el.dataset.tiltJs;
+    onScreen.delete(el);
+    io?.unobserve(el);
+  };
 }

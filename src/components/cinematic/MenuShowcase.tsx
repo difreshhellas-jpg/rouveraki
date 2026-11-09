@@ -5,7 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { useI18n } from "@/i18n/LanguageProvider";
-import { CATEGORIES } from "@/lib/brand";
+import { CATEGORIES as ALL } from "@/lib/brand";
+
+/** Beer and wine/spirits stay on /menu only, not on the homepage. */
+const CATEGORIES = ALL.filter((c) => c.slug !== "mpyres" && c.slug !== "pota");
 import { categoryPhoto } from "@/lib/images";
 import Reveal from "../Reveal";
 

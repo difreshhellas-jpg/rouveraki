@@ -285,16 +285,36 @@
      work; Tilt.tsx sets data-tilt-scroll only where the timeline exists. */
   @supports (animation-timeline: view()) {
     .tilt[data-tilt-scroll] {
+      view-timeline: --tilt block;
       animation: tilt-rock linear both;
-      animation-timeline: view();
+      animation-timeline: --tilt;
       animation-range: entry 10% exit 90%;
     }
-    .tilt[data-tilt-scroll] .tilt-glint {
-      opacity: 0.55;
+    .tilt[data-tilt-scroll] .tilt-glint::before {
       animation: tilt-sweep linear both;
-      animation-timeline: view();
+      animation-timeline: --tilt;
       animation-range: entry 10% exit 90%;
     }
+  }
+  /* Touch: the shine is a tall fixed gradient that slides with a transform,
+     so the sweep is composited, not repainted on every scroll frame. */
+  .tilt[data-tilt-scroll] .tilt-glint,
+  .tilt[data-tilt-js] .tilt-glint {
+    overflow: hidden;
+    opacity: 0.55;
+    background: none;
+  }
+  .tilt[data-tilt-scroll] .tilt-glint::before,
+  .tilt[data-tilt-js] .tilt-glint::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -50%;
+    height: 200%;
+    background: radial-gradient(420px circle at 50% 50%, rgb(255 255 255 / 0.18), transparent 60%);
+    transform: translate3d(0, var(--sweep, 0%), 0);
+    will-change: transform;
   }
   @keyframes tilt-rock {
     from { transform: perspective(900px) rotateX(5deg); }
@@ -302,8 +322,8 @@
     to   { transform: perspective(900px) rotateX(-5deg); }
   }
   @keyframes tilt-sweep {
-    from { --gy: 110%; }
-    to   { --gy: -10%; }
+    from { transform: translate3d(0, 30%, 0); }
+    to   { transform: translate3d(0, -30%, 0); }
   }
   /* --gy must be registered for the browser to interpolate it rather than
      snapping between keyframes. */

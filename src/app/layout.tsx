@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     template: `%s · ${BRAND.nameEl}`,
   },
   description:
-    "Καφές, ψησταριά και ποτό στη μαρίνα του Ξυλοκάστρου. Ανοιχτά καθημερινά 06:00–01:00, διανομή 08:00–00:00.",
+    "Καφές και ψησταριά στη μαρίνα του Ξυλοκάστρου. Ανοιχτά καθημερινά 06:00–01:00, διανομή 08:00–00:00.",
   openGraph: {
     type: "website",
     locale: "el_GR",
@@ -52,7 +52,10 @@ export const metadata: Metadata = {
     url: siteUrl,
   },
   alternates: { canonical: siteUrl },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+  // A static file rather than app/manifest.ts, so the shop screen can point
+  // to its own manifest (demo-kitchen/layout.tsx) and install as its own app.
+  manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "Ρουβεράκι", statusBarStyle: "default" },
   // A test deploy carries the real name and address; keep it out of search so
   // it never outranks or impersonates the live shop. See lib/site-mode.ts.
@@ -95,7 +98,7 @@ const jsonLd = {
   telephone: BRAND.phone.tel,
   url: siteUrl,
   sameAs: [BRAND.facebook],
-  servesCuisine: ["Greek", "Grill", "Cafe", "Bar"],
+  servesCuisine: ["Greek", "Grill", "Cafe"],
   priceRange: "€€",
   address: {
     "@type": "PostalAddress",
