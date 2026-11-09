@@ -29,8 +29,10 @@ const csp = [
 // No database configured (a fresh fork, a new Vercel project) means the shared
 // demo/ordering mode, not the Prisma + Supabase backend that would crash on
 // every page that touches it. NEXT_PUBLIC_DEMO_MODE=false forces the backend.
-const demoDefault =
-  process.env.NEXT_PUBLIC_DEMO_MODE ?? (process.env.DATABASE_URL ? "false" : "true");
+// Ordering mode (no database) is the default even when an old DATABASE_URL is
+// still set: a Git deploy once built the database version against a paused
+// Supabase and took /menu down. Only an explicit "false" turns the backend on.
+const demoDefault = process.env.NEXT_PUBLIC_DEMO_MODE === "false" ? "false" : "true";
 
 const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_DEMO_MODE: demoDefault },

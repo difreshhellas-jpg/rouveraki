@@ -23,6 +23,10 @@ async function loadMenu(): Promise<MenuItemDTO[]> {
     return loadLiveMenu({ cached: true });
   }
 
+  // Database mode: read at request time, never while building (the page is
+  // otherwise cached, and a build must not depend on the database being up).
+  const { connection } = await import("next/server");
+  await connection();
   const { prisma } = await import("@/lib/prisma");
   const order = new Map<string, number>(CATEGORIES.map((c, i) => [c.slug, i]));
 
