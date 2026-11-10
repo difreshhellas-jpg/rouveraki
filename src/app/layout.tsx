@@ -6,6 +6,7 @@ import { BRAND } from "@/lib/brand";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartBar from "@/components/CartBar";
+import InstallPrompt from "@/components/InstallPrompt";
 import { ToastProvider } from "@/components/Toaster";
 import Intro from "@/components/Intro";
 import { IS_TEST_DEPLOY, siteUrl as resolveSiteUrl } from "@/lib/site-mode";
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     template: `%s · ${BRAND.nameEl}`,
   },
   description:
-    "Καφές και ψησταριά στη μαρίνα του Ξυλοκάστρου. Ανοιχτά καθημερινά 06:00–01:00, διανομή 08:00–00:00.",
+    "Καφές και ψησταριά στη μαρίνα του Ξυλοκάστρου. Ανοιχτά καθημερινά 06:00–24:00, διανομή 12:00–24:00.",
   openGraph: {
     type: "website",
     locale: "el_GR",
@@ -146,6 +147,7 @@ export default function RootLayout({
           <main id="content">{children}</main>
           <Footer />
           <CartBar />
+          <InstallPrompt />
           <ToastProvider />
           <Intro />
         </LanguageProvider>

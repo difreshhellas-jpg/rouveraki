@@ -22,19 +22,20 @@ import {
 export default function InstallButton({
   variant = "icon",
   className,
+  label: labelOverride,
 }: {
-  variant?: "icon" | "row" | "pill";
+  label?: string;
+  variant?: "icon" | "row" | "pill" | "primary";
   className?: string;
 }) {
   const { pick } = useI18n();
-  const mode = useSyncExternalStore<InstallMode>(subscribeInstall, installMode, () => "none");
+  const mode = useInstallMode();
   const [iosOpen, setIosOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   if (!mounted || mode === "none") return null;
 
-  const label = pick("Εγκατάσταση εφαρμογής", "Install the app");
+  const label = labelOverride ?? pick("Εγκατάσταση εφαρμογής", "Install the app");
   const onClick = () => (mode === "prompt" ? void promptInstall() : setIosOpen(true));
 
   return (
@@ -63,6 +64,11 @@ export default function InstallButton({
         >
           <DeviceMobile size={20} weight="regular" aria-hidden />
           {label}
+        </button>
+      ) : variant === "primary" ? (
+        <button type="button" onClick={onClick} className={clsx("btn-primary gap-2 px-6 text-base", className)}>
+          <DeviceMobile size={20} weight="bold" aria-hidden />
+          {pick("Κατέβασε την εφαρμογή", "Get the app")}
         </button>
       ) : (
         <button type="button" onClick={onClick} className={clsx("btn-secondary gap-2 text-sm", className)}>
@@ -120,4 +126,15 @@ export default function InstallButton({
       )}
     </>
   );
+}
+
+/** Current install route for this device: "prompt" (Android/Chrome), "ios", or "none". */
+export function useInstallMode(): InstallMode {
+  return useSyncExternalStore<InstallMode>(subscribeInstall, installMode, () => "none");
+}
+
+export function useMounted(): boolean {
+  const [m, setM] = useState(false);
+  useEffect(() => setM(true), []);
+  return m;
 }

@@ -1,10 +1,11 @@
 import { BRAND } from "./brand";
-import { DEMO_MODE } from "./demo/config";
+/** Real opening hours apply in ordering mode too. Set NEXT_PUBLIC_IGNORE_HOURS=true
+ *  only to test ordering outside opening hours. */
+const IGNORE_HOURS = process.env.NEXT_PUBLIC_IGNORE_HOURS === "true";
 
 /**
- * Opening-hours maths. Both windows wrap past midnight (shop 06:00–01:00,
- * delivery 08:00–00:00), so a naive `now >= open && now < close` comparison is
- * wrong for exactly the late-night drinks orders this site has to handle.
+ * Opening-hours maths. Shop 06:00–24:00, delivery 12:00–24:00. A closes value
+ * of "00:00" means midnight at the end of the day, handled in within().
  *
  * Everything resolves in Europe/Athens regardless of where the server or the
  * visitor's device is set, so a customer abroad checking the site sees the
@@ -15,7 +16,7 @@ export const TZ = "Europe/Athens";
 /**
  * Test clock, honoured only outside production.
  *
- * The shop is shut between 01:00 and 06:00, so every order check in the API
+ * The shop is shut between 00:00 and 06:00, so every order check in the API
  * suite fails with shop_closed if it happens to run overnight — the suite was
  * silently time-dependent. TEST_CLOCK pins "now" to a fixed instant so the
  * suite is runnable at any hour.
@@ -62,10 +63,10 @@ const within = (minutes: number, opens: string, closes: string): boolean => {
 };
 
 export const isShopOpen = (at?: Date): boolean =>
-  DEMO_MODE || within(athensMinutes(at), BRAND.hours.opens, BRAND.hours.closes);
+  IGNORE_HOURS || within(athensMinutes(at), BRAND.hours.opens, BRAND.hours.closes);
 
 export const isDeliveryOpen = (at?: Date): boolean =>
-  DEMO_MODE || within(athensMinutes(at), BRAND.deliveryHours.opens, BRAND.deliveryHours.closes);
+  IGNORE_HOURS || within(athensMinutes(at), BRAND.deliveryHours.opens, BRAND.deliveryHours.closes);
 
 /**
  * Municipal alcohol-hour restriction (spec §6, second bullet).
@@ -83,6 +84,6 @@ export const isAlcoholSaleAllowed = (at?: Date): boolean =>
   !ALCOHOL_HOURS_RESTRICTED ||
   within(athensMinutes(at), ALCOHOL_HOURS.opens, ALCOHOL_HOURS.closes);
 
-/** "06:00 - 01:00" for display. */
+/** "06:00–00:00" for display. */
 export const formatWindow = (w: { opens: string; closes: string }): string =>
   `${w.opens}–${w.closes}`;

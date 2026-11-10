@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import clsx from "clsx";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  enableShopNotifications,
+  notificationPermission,
+  notifyNewOrder,
+} from "@/lib/shop-notify";
 import { useAlertSound, useOrders } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
 import { PrintHost } from "@/components/admin/PrintTicket";
@@ -36,13 +41,26 @@ export default function DemoKitchenPage() {
     };
   }, [enabled, enable]);
 
-  // Beep when a new order arrives, then every 10 s until it is accepted.
+  // Phone/tablet notifications: the device's own alert sound, which gets
+  // through over music and with the screen off.
+  const [notif, setNotif] = useState<string>("default");
+  useEffect(() => setNotif(notificationPermission()), []);
+  const askNotifications = async () => setNotif(await enableShopNotifications());
+
+  // Ring (and notify) when a new order arrives, then ring every 10 s until accepted.
   useEffect(() => {
-    if (newArrival) {
-      play();
-      clearArrival();
-    }
-  }, [newArrival, play, clearArrival]);
+    if (!newArrival) return;
+    play();
+    const o = orders.find((x) => x.orderCode === newArrival);
+    const items = o ? o.items.reduce((n, it) => n + it.quantity, 0) : 0;
+    void notifyNewOrder(
+      newArrival,
+      o
+        ? `${o.customerName} · ${o.fulfillmentType === "delivery" ? "Διανομή" : "Παραλαβή"} · ${items} προϊόντα`
+        : "Άνοιξε την οθόνη καταστήματος",
+    );
+    clearArrival();
+  }, [newArrival, play, clearArrival, orders]);
   useEffect(() => {
     if (!enabled || waiting === 0) return;
     const id = window.setInterval(play, 10_000);
@@ -82,6 +100,15 @@ export default function DemoKitchenPage() {
     <div className="min-h-svh bg-sand">
       <PrintHost />
       <div className="mx-auto max-w-7xl px-4 py-6">
+        {waiting > 0 && (
+          <a
+            href="#col-new"
+            role="alert"
+            className="kitchen-alert sticky top-[4.75rem] z-40 mb-4 flex items-center justify-center gap-3 rounded-2xl bg-rust px-4 py-4 text-center text-xl font-bold text-onrust shadow-lift"
+          >
+            🔔 {waiting === 1 ? "1 νέα παραγγελία" : `${waiting} νέες παραγγελίες`} · πάτα «Αποδοχή»
+          </a>
+        )}
         <header className="mb-5 flex flex-wrap items-center gap-3">
           <h1 className="font-display text-2xl font-bold">
             Ρουβεράκι <span className="text-char/50">οθόνη καταστήματος</span>
@@ -94,6 +121,24 @@ export default function DemoKitchenPage() {
             >
               {enabled ? "🔔 Ήχος ενεργός (δοκιμή)" : "🔔 Ενεργοποίηση ήχου"}
             </button>
+            {notif !== "granted" && (
+              <button
+                type="button"
+                onClick={askNotifications}
+                className="btn-secondary text-sm"
+                title={
+                  notif === "unsupported"
+                    ? "Σε iPhone/iPad: πρόσθεσε πρώτα την οθόνη στην αρχική οθόνη (Κοινοποίηση → Προσθήκη στην οθόνη Αφετηρίας)"
+                    : "Ειδοποίηση με τον ήχο της συσκευής, ακούγεται και πάνω από μουσική"
+                }
+              >
+                {notif === "denied"
+                  ? "📵 Ειδοποιήσεις μπλοκαρισμένες"
+                  : notif === "unsupported"
+                    ? "📲 Ειδοποιήσεις: πρόσθεσε στην αρχική οθόνη"
+                    : "📲 Ενεργοποίηση ειδοποιήσεων"}
+              </button>
+            )}
             <Link href="/demo-kitchen/menu" className="btn-primary text-sm">
               Διαχείριση μενού
             </Link>
@@ -110,7 +155,12 @@ export default function DemoKitchenPage() {
             {COLUMNS.map((col) => {
               const list = orders.filter((o) => col.statuses.includes(o.status));
               return (
-                <section key={col.title} aria-label={col.title}>
+                <section
+                  key={col.title}
+                  id={col.statuses.includes("PAID_AWAITING_ACCEPTANCE") ? "col-new" : undefined}
+                  aria-label={col.title}
+                  className="scroll-mt-24"
+                >
                   <h2
                     className={clsx(
                       "mb-3 text-sm font-bold uppercase tracking-wide",

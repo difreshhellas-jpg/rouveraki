@@ -9,6 +9,7 @@ import { normalizeGreekPhone } from "@/lib/sanitize";
 import { loadLiveMenu } from "@/lib/menu-store";
 import type { AdminOrder, AdminOrderItem } from "@/components/admin/useOrders";
 import type { TrackedOrder } from "@/components/OrderTracker";
+import { isDeliveryOpen, isShopOpen } from "@/lib/hours";
 
 /**
  * Shared orders for demo mode, kept in a small key-value store (lib/kv.ts).
@@ -90,6 +91,11 @@ export const PlaceInput = z.object({
 
 export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Result<{ orderCode: string; trackingUrl: string }>> {
   if (!normalizeGreekPhone(input.customerPhone)) return { ok: false, error: "invalid_phone" };
+  // Opening hours: shop 06:00-24:00, delivery 12:00-24:00 (lib/brand.ts).
+  if (!isShopOpen()) return { ok: false, error: "shop_closed", status: 409 };
+  if (input.fulfillmentType === "delivery" && !isDeliveryOpen()) {
+    return { ok: false, error: "delivery_closed", status: 409 };
+  }
   if (input.fulfillmentType === "delivery" && !input.customerAddress?.trim()) {
     return { ok: false, error: "address_required" };
   }

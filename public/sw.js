@@ -23,3 +23,15 @@ self.addEventListener("fetch", (event) => {
     ),
   );
 });
+
+// Tapping a new-order notification brings the shop screen to the front.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/demo-kitchen";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => new URL(c.url).pathname.startsWith("/demo-kitchen"));
+      return open ? open.focus() : self.clients.openWindow(url);
+    }),
+  );
+});

@@ -150,12 +150,13 @@ export function useOrders(view: "live" | "all" = "live") {
 }
 
 /**
- * New-order chime via the Web Audio API: no audio file to ship, cache or 404.
+ * New-order bell via the Web Audio API: no audio file to ship, cache or 404.
  *
  * Browsers block audio until the page has been tapped once, so the shop
  * screens call enable() from the first tap. After that:
- * - iPhone/iPad: the audio session is set to "playback", so the chime still
- *   sounds with the side switch on silent (Safari 17+).
+ * - iPhone/iPad: the audio session is "transient" (a notification sound), so
+ *   the bell plays over music instead of being silenced by it. The side
+ *   switch must not be on silent.
  * - A sleeping tablet suspends the audio context; it is resumed when the page
  *   is visible again and before every chime, so sound never quietly stops.
  * - Android also vibrates.
@@ -175,7 +176,10 @@ export function useAlertSound() {
     if (!Ctor) return null;
     try {
       const nav = navigator as AudioSessionNav;
-      if (nav.audioSession) nav.audioSession.type = "playback";
+      // "transient" = a notification sound: it plays on top of music from
+      // another app (and turns it down for a moment) instead of being cut off
+      // when the music starts, which is what "playback" did.
+      if (nav.audioSession) nav.audioSession.type = "transient";
     } catch {
       /* older Safari: no audio session control */
     }
@@ -222,23 +226,36 @@ export function useAlertSound() {
   const ring = useCallback((ctx: AudioContext) => {
     const out = outRef.current;
     if (!out) return;
-    const now = ctx.currentTime + 0.02;
-    // Three rising bell notes (E6, G#6, B6), each a sine plus a soft octave.
-    [1318.5, 1661.2, 1975.5].forEach((freq, i) => {
-      const start = now + i * 0.16;
-      for (const [mult, level] of [[1, 0.55], [2, 0.12]] as const) {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq * mult;
-        g.gain.setValueAtTime(0.0001, start);
-        g.gain.exponentialRampToValueAtTime(level, start + 0.012);
-        g.gain.exponentialRampToValueAtTime(0.0001, start + 0.55);
-        osc.connect(g).connect(out);
-        osc.start(start);
-        osc.stop(start + 0.6);
+    // A restaurant service-desk bell, struck twice ("ding-ding"): inharmonic
+    // partials with a fast strike and a long ring, each slightly detuned so it
+    // shimmers like metal instead of sounding like a synth beep. Pitched at
+    // G6, where tablet speakers are loudest and kitchen noise is thinnest.
+    const PARTIALS: [number, number, number][] = [
+      [1, 0.7, 1.6],
+      [2.32, 0.3, 0.9],
+      [4.25, 0.14, 0.45],
+      [6.63, 0.07, 0.25],
+    ];
+    const strike = (t: number, vel: number) => {
+      for (const [ratio, level, decay] of PARTIALS) {
+        for (const det of [-1.5, 1.5]) {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = 1568 * ratio;
+          osc.detune.value = det;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(level * vel * 0.5, t + 0.004);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+          osc.connect(g).connect(out);
+          osc.start(t);
+          osc.stop(t + decay + 0.05);
+        }
       }
-    });
+    };
+    const now = ctx.currentTime + 0.02;
+    strike(now, 1);
+    strike(now + 0.32, 0.85);
   }, []);
 
   const play = useCallback(() => {

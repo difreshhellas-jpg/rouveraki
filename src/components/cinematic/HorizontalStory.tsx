@@ -27,10 +27,10 @@ const COPY: Record<string, { el: [string, string]; en: [string, string] }> = {
              en: ["Over charcoal", "Gyros, skewers and pites, grilled the moment you order."] },
   share:   { el: ["Για μοίρασμα", "Ορεκτικά και πιάτα που μπαίνουν στη μέση του τραπεζιού."],
              en: ["To share", "Starters and plates that belong in the middle of the table."] },
-  morning: { el: ["Από τις έξι", "Ο πρώτος καφές της ημέρας, πριν ξυπνήσει η μαρίνα."],
-             en: ["From six", "The first coffee of the day, before the marina wakes up."] },
-  night:   { el: ["Μέχρι τη μία", "Ένα τραπέζι δίπλα στο νερό όταν ησυχάσουν τα σκάφη."],
-             en: ["Until one", "A table by the water once the boats have settled."] },
+  morning: { el: ["Από τις επτά", "Ο πρώτος καφές της ημέρας, πριν ξυπνήσει η μαρίνα."],
+             en: ["From seven", "The first coffee of the day, before the marina wakes up."] },
+  night:   { el: ["Μέχρι τα μεσάνυχτα", "Μέχρι και την τελευταία αγαπημένη σου γεύση."],
+             en: ["Until midnight", "All the way to your last favourite taste."] },
 };
 
 export default function HorizontalStory() {

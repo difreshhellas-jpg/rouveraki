@@ -941,3 +941,11 @@ html[data-intro-seen] [data-intro] { display: none; }
   .print-ticket .pt-xl { font-size: 30px; letter-spacing: 0.06em; line-height: 1.1; }
   .print-ticket .pt-small { font-size: 12px; margin-top: 3mm; }
 }
+
+/* ===== shop screen: new-order alert bar ===================================== */
+.kitchen-alert { animation: kitchen-alert 1.2s ease-in-out infinite; }
+@keyframes kitchen-alert {
+  0%, 100% { background-color: rgb(var(--accent-rgb)); transform: scale(1); }
+  50% { background-color: #111; transform: scale(1.01); }
+}
+@media (prefers-reduced-motion: reduce) { .kitchen-alert { animation: none; } }

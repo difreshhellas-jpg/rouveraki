@@ -8,6 +8,7 @@ import HorizontalStory from "@/components/cinematic/HorizontalStory";
 import ScrollBreak from "@/components/cinematic/ScrollBreak";
 import MenuShowcase from "@/components/cinematic/MenuShowcase";
 import CursorTrail from "@/components/cinematic/CursorTrail";
+import InstallSection from "@/components/InstallSection";
 
 export default function HomePage() {
   return (
@@ -23,7 +24,7 @@ export default function HomePage() {
           "Φρέσκο καθημερινά",
           "Στα κάρβουνα",
           "Θέα στη μαρίνα",
-          "Ανοιχτά 06:00 - 01:00",
+          "Ανοιχτά 06:00 - 24:00",
           "Ντόπια υλικά",
         ]}
       />
@@ -37,6 +38,7 @@ export default function HomePage() {
 
       <MenuShowcase />
       <StorySection />
+      <InstallSection />
       <LocationSection />
       {/* Desktop pointers only; there is no cursor to trail on touch. */}
       <CursorTrail />

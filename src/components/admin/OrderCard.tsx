@@ -112,6 +112,7 @@ export default function OrderCard({
 
   return (
     <article
+      data-order={order.orderCode}
       className={clsx(
         "card overflow-hidden",
         isNew && "border-rust ring-2 ring-rust/30",
