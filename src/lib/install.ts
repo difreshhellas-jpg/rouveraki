@@ -53,13 +53,32 @@ export function isInAppBrowser(): boolean {
   return /FBAN|FBAV|Instagram|Messenger|Line\//i.test(navigator.userAgent);
 }
 
-export type InstallMode = "prompt" | "ios" | "none";
+/** A computer (mouse/trackpad), as opposed to a phone or tablet. */
+export function isDesktop(): boolean {
+  return window.matchMedia("(pointer: fine)").matches && !isIOS() && !/Android/i.test(navigator.userAgent);
+}
+
+/** Which manual steps to show when the browser has no one-tap install. */
+export function manualKind(): "safari-mac" | "chromium" | "firefox" | "android" {
+  const ua = navigator.userAgent;
+  if (ua.includes("Firefox/")) return "firefox";
+  if (/Android/i.test(ua)) return "android";
+  if (ua.includes("Safari/") && !/Chrome|Chromium|Edg/.test(ua)) return "safari-mac";
+  return "chromium";
+}
+
+/**
+ * "prompt": the browser's own one-tap install (Chrome/Edge on Android and on
+ * computers). "ios": the two Safari steps. "manual": any other browser, shown
+ * where its own install command lives. "none": already running as the app.
+ */
+export type InstallMode = "prompt" | "ios" | "manual" | "none";
 
 export function installMode(): InstallMode {
   if (typeof window === "undefined" || isStandalone()) return "none";
   if (deferred) return "prompt";
   if (isIOS()) return "ios";
-  return "none";
+  return "manual";
 }
 
 /** Shows the browser's own install dialog. Returns true when the user accepted. */

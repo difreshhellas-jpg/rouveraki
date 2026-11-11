@@ -8,7 +8,7 @@ import Reveal from "./Reveal";
 import Tilt from "./Tilt";
 
 /**
- * Three cards saying "we are a café, a grill house and an evening spot" without any live
+ * Two cards saying "we are a café and a grill house" without any live
  * clock logic. Each links straight to the first menu category of its daypart,
  * so the storytelling and the navigation are the same click.
  */
@@ -16,7 +16,6 @@ import Tilt from "./Tilt";
 const DAYPARTS = [
   { id: "morning", photo: SITE.dayMorning, icon: CupIcon, slug: "kafedes" },
   { id: "grill", photo: SITE.dayGrill, icon: FlameIcon, slug: "pites" },
-  { id: "evening", photo: SITE.dayEvening, icon: MoonIcon, slug: "orektika" },
 ] as const;
 
 export default function DaypartStrip() {
@@ -35,7 +34,7 @@ export default function DaypartStrip() {
         <div className="tex-rope mt-6 w-24" />
       </Reveal>
 
-      <div className="mt-12 grid gap-5 md:grid-cols-3">
+      <div className="mt-12 grid gap-5 md:grid-cols-2">
         {DAYPARTS.map((d, i) => {
           const Icon = d.icon;
           return (
@@ -52,7 +51,7 @@ export default function DaypartStrip() {
                     src={photo(d.photo, 900, 600)}
                     alt=""
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -101,14 +100,6 @@ function FlameIcon() {
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2s4 4.5 4 8a4 4 0 0 1-8 0c0-1.2.5-2.3 1-3M12 22a7 7 0 0 0 7-7c0-2-1-4-2.5-5.5" />
       <path d="M12 22a7 7 0 0 1-7-7c0-2 1-4 2.5-5.5" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
     </svg>
   );
 }

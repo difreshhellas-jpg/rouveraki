@@ -11,6 +11,7 @@ import {
 import { useAlertSound, useOrders } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
 import { PrintHost } from "@/components/admin/PrintTicket";
+import InstallButton from "@/components/InstallButton";
 import type { OrderStatus } from "@/lib/order-status";
 
 /**
@@ -139,6 +140,7 @@ export default function DemoKitchenPage() {
                     : "📲 Ενεργοποίηση ειδοποιήσεων"}
               </button>
             )}
+            <InstallButton variant="pill" label="Εγκατάσταση ως εφαρμογή" />
             <Link href="/demo-kitchen/menu" className="btn-primary text-sm">
               Διαχείριση μενού
             </Link>

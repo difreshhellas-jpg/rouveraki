@@ -21,7 +21,7 @@ export default function InstallSection() {
   const perks = [
     { icon: Lightning, el: "Παραγγελία με ένα άγγιγμα", en: "Order in one tap" },
     { icon: ArrowsClockwise, el: "Το μενού πάντα ενημερωμένο", en: "Always the current menu" },
-    { icon: Bell, el: "Χωρίς App Store, χωρίς λογαριασμό", en: "No app store, no account" },
+    { icon: Bell, el: "Σε κινητό, tablet και υπολογιστή, χωρίς App Store", en: "Phone, tablet and computer, no app store" },
   ];
 
   return (

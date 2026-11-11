@@ -30,12 +30,9 @@ export const dict = {
     "daypart.morning.body": "Από τις 07:00. Φρέσκος καφές, χυμοί και ροφήματα στη μαρίνα.",
     "daypart.grill.title": "Ψησταριά",
     "daypart.grill.body": "12:00 - 24:00. Καλαμάκια, μερίδες στα κάρβουνα, πίτες, burger και σαλάτες.",
-    "daypart.evening.title": "Βραδινό",
-    "daypart.evening.body": "Καφές από τις 07:00 και φαγητό από τις 12:00 μέχρι τις 12 το βράδυ.",
     "daypart.cta": "Δες τα",
     "daypart.morning.cta": "Καφέδες & ροφήματα",
     "daypart.grill.cta": "Ψησταριά",
-    "daypart.evening.cta": "Ορεκτικά",
 
     "story.title": "Ο χώρος μας",
     "story.placeholder":
@@ -205,12 +202,9 @@ export const dict = {
     "daypart.morning.body": "From 07:00. Fresh coffee, juices and hot drinks by the marina.",
     "daypart.grill.title": "The Grill",
     "daypart.grill.body": "12:00 - 24:00. Skewers, charcoal grill plates, wraps, burgers and salads.",
-    "daypart.evening.title": "Evening",
-    "daypart.evening.body": "Coffee from 07:00 and food from 12:00 until midnight.",
     "daypart.cta": "Browse",
     "daypart.morning.cta": "Coffee",
     "daypart.grill.cta": "The grill",
-    "daypart.evening.cta": "Starters",
 
     "story.title": "Our place",
     "story.placeholder":

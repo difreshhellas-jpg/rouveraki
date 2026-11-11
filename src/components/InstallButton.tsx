@@ -8,6 +8,7 @@ import Sheet from "./Sheet";
 import {
   installMode,
   isInAppBrowser,
+  manualKind,
   promptInstall,
   subscribeInstall,
   type InstallMode,
@@ -37,6 +38,7 @@ export default function InstallButton({
 
   const label = labelOverride ?? pick("Εγκατάσταση εφαρμογής", "Install the app");
   const onClick = () => (mode === "prompt" ? void promptInstall() : setIosOpen(true));
+  const kind = mode === "manual" ? manualKind() : null;
 
   return (
     <>
@@ -75,6 +77,43 @@ export default function InstallButton({
           <DeviceMobile size={18} weight="bold" aria-hidden />
           {label}
         </button>
+      )}
+
+      {mode === "manual" && kind && (
+        <Sheet
+          open={iosOpen}
+          onClose={() => setIosOpen(false)}
+          title={pick("Εγκατάσταση σαν εφαρμογή", "Install as an app")}
+          titleId="install-manual-title"
+        >
+          <div className="space-y-4 px-5 pb-8 pt-1 text-base">
+            {kind === "chromium" && (
+              <ol className="list-decimal space-y-2 pl-5">
+                <li>{pick("Πάτα το εικονίδιο εγκατάστασης ⊕ δεξιά στη γραμμή διευθύνσεων.", "Click the install icon ⊕ at the right of the address bar.")}</li>
+                <li>{pick("Ή μενού ⋮ → «Μετάδοση, αποθήκευση και κοινοποίηση» → «Εγκατάσταση σελίδας ως εφαρμογής».", "Or menu ⋮ → “Cast, save and share” → “Install page as app”.")}</li>
+                <li>{pick("Πάτα «Εγκατάσταση».", "Click “Install”.")}</li>
+              </ol>
+            )}
+            {kind === "safari-mac" && (
+              <ol className="list-decimal space-y-2 pl-5">
+                <li>{pick("Στο Safari: μενού «Αρχείο» → «Προσθήκη στο Dock».", "In Safari: File menu → “Add to Dock”.")}</li>
+                <li>{pick("Πάτα «Προσθήκη».", "Click “Add”.")}</li>
+              </ol>
+            )}
+            {kind === "android" && (
+              <ol className="list-decimal space-y-2 pl-5">
+                <li>{pick("Άνοιξε το μενού του browser (⋮ ή ≡).", "Open the browser menu (⋮ or ≡).")}</li>
+                <li>{pick("Διάλεξε «Προσθήκη στην αρχική οθόνη» ή «Εγκατάσταση εφαρμογής».", "Choose “Add to Home screen” or “Install app”.")}</li>
+              </ol>
+            )}
+            {kind === "firefox" && (
+              <p>{pick("Ο Firefox σε υπολογιστή δεν εγκαθιστά εφαρμογές. Άνοιξε τη σελίδα σε Chrome ή Edge και πάτα ξανά αυτό το κουμπί.", "Firefox on computers can't install apps. Open this page in Chrome or Edge and press this button again.")}</p>
+            )}
+            <p className="text-sm text-char/60">
+              {pick("Μετά ανοίγει από το δικό της εικονίδιο, σε δικό της παράθυρο.", "It then opens from its own icon, in its own window.")}
+            </p>
+          </div>
+        </Sheet>
       )}
 
       {mode === "ios" && (
