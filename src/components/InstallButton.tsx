@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { DeviceMobile, Export, PlusSquare } from "@phosphor-icons/react";
 import { useI18n } from "@/i18n/LanguageProvider";
 import Sheet from "./Sheet";
 import {
   installMode,
+  installNow,
   isInAppBrowser,
   manualKind,
-  promptInstall,
   subscribeInstall,
   type InstallMode,
 } from "@/lib/install";
@@ -24,8 +25,11 @@ export default function InstallButton({
   variant = "icon",
   className,
   label: labelOverride,
+  app = "site",
 }: {
   label?: string;
+  /** "kitchen" = the separate shop app, only offered after the code is entered. */
+  app?: "site" | "kitchen";
   variant?: "icon" | "row" | "pill" | "primary";
   className?: string;
 }) {
@@ -33,12 +37,25 @@ export default function InstallButton({
   const mode = useInstallMode();
   const [iosOpen, setIosOpen] = useState(false);
   const mounted = useMounted();
+  const pathname = usePathname() ?? "/";
+  const [busy, setBusy] = useState(false);
 
   if (!mounted || mode === "none") return null;
+  // The shop screens only offer the shop app, never the customer one.
+  if (app === "site" && pathname.startsWith("/demo-kitchen")) return null;
 
   const label = labelOverride ?? pick("Εγκατάσταση εφαρμογής", "Install the app");
-  const onClick = () => (mode === "prompt" ? void promptInstall() : setIosOpen(true));
-  const kind = mode === "manual" ? manualKind() : null;
+  // Direct install wherever the browser allows it; the steps only where it can't
+  // (iPhone/iPad Safari, Safari on Mac, Firefox).
+  const onClick = async () => {
+    if (mode === "ios") return setIosOpen(true);
+    if (busy) return;
+    setBusy(true);
+    const r = await installNow();
+    setBusy(false);
+    if (r === "unavailable") setIosOpen(true);
+  };
+  const kind = mode === "manual" || mode === "prompt" ? manualKind() : null;
 
   return (
     <>
@@ -79,7 +96,7 @@ export default function InstallButton({
         </button>
       )}
 
-      {mode === "manual" && kind && (
+      {kind && (
         <Sheet
           open={iosOpen}
           onClose={() => setIosOpen(false)}

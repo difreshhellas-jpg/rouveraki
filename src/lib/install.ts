@@ -11,6 +11,10 @@
 type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
 let deferred: BIPEvent | null = null;
+/** Which manifest the captured event belongs to (site app vs shop app). */
+let deferredFor: string | null = null;
+const currentManifest = () =>
+  document.querySelector<HTMLLinkElement>('link[rel="manifest"]')?.getAttribute("href") ?? null;
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());
 
@@ -18,6 +22,7 @@ if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferred = e as BIPEvent;
+    deferredFor = currentManifest();
     notify();
   });
   window.addEventListener("appinstalled", () => {
@@ -76,9 +81,32 @@ export type InstallMode = "prompt" | "ios" | "manual" | "none";
 
 export function installMode(): InstallMode {
   if (typeof window === "undefined" || isStandalone()) return "none";
-  if (deferred) return "prompt";
+  if (deferred && deferredFor === currentManifest()) return "prompt";
   if (isIOS()) return "ios";
   return "manual";
+}
+
+/**
+ * Installs straight away with the browser's own one-tap dialog. If the browser
+ * has not offered it yet (it can arrive a moment after the page loads), waits
+ * up to 2.5 s for it. Returns "unavailable" when this browser cannot install
+ * directly, so the caller can show that browser's own steps instead.
+ */
+export async function installNow(): Promise<"accepted" | "dismissed" | "unavailable"> {
+  const ready = () => !!deferred && deferredFor === currentManifest();
+  if (!ready()) {
+    await new Promise<void>((res) => {
+      const t = window.setTimeout(done, 2500);
+      const un = subscribeInstall(() => ready() && done());
+      function done() {
+        window.clearTimeout(t);
+        un();
+        res();
+      }
+    });
+  }
+  if (!ready()) return "unavailable";
+  return (await promptInstall()) ? "accepted" : "dismissed";
 }
 
 /** Shows the browser's own install dialog. Returns true when the user accepted. */

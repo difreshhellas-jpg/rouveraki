@@ -7,8 +7,9 @@ import { DEMO_MODE } from "@/lib/demo/config";
 export const metadata: Metadata = {
   title: "Οθόνη καταστήματος",
   robots: { index: false, follow: false },
-  // Installs as its own app ("Παραγγελίες") that opens straight on this screen.
-  manifest: "/kitchen.webmanifest",
+  // No app before the code is entered: AdminGate adds the shop app's manifest
+  // ("Παραγγελίες", opens straight on this screen) only after login.
+  manifest: null,
   appleWebApp: { capable: true, title: "Παραγγελίες", statusBarStyle: "default" },
 };
 

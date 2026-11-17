@@ -1,14 +1,15 @@
 "use client";
 
 /**
- * The owner's password (ADMIN_PASSWORD), kept for this browser tab only and
- * sent as `x-admin-key` to the shop and menu APIs.
+ * The owner's password (ADMIN_PASSWORD), remembered on this device (so the
+ * installed shop app does not ask on every launch) and sent as `x-admin-key`
+ * to the shop and menu APIs. A wrong or changed password is asked again.
  */
 export const ADMIN_KEY_STORE = "rouveraki.admin-key";
 
 export const readAdminKey = (): string => {
   try {
-    return sessionStorage.getItem(ADMIN_KEY_STORE) ?? "";
+    return localStorage.getItem(ADMIN_KEY_STORE) ?? sessionStorage.getItem(ADMIN_KEY_STORE) ?? "";
   } catch {
     return "";
   }
@@ -16,8 +17,11 @@ export const readAdminKey = (): string => {
 
 export const writeAdminKey = (key: string | null) => {
   try {
-    if (key) sessionStorage.setItem(ADMIN_KEY_STORE, key);
-    else sessionStorage.removeItem(ADMIN_KEY_STORE);
+    if (key) localStorage.setItem(ADMIN_KEY_STORE, key);
+    else {
+      localStorage.removeItem(ADMIN_KEY_STORE);
+      sessionStorage.removeItem(ADMIN_KEY_STORE);
+    }
   } catch {
     /* private mode: the password is simply asked again */
   }

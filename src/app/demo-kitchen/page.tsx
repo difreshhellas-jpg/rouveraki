@@ -140,7 +140,7 @@ export default function DemoKitchenPage() {
                     : "📲 Ενεργοποίηση ειδοποιήσεων"}
               </button>
             )}
-            <InstallButton variant="pill" label="Εγκατάσταση ως εφαρμογή" />
+            <InstallButton app="kitchen" variant="pill" label="Εγκατάσταση ως εφαρμογή" />
             <Link href="/demo-kitchen/menu" className="btn-primary text-sm">
               Διαχείριση μενού
             </Link>

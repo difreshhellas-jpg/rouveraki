@@ -15,7 +15,15 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
     void checkAdminKey(saved).then((ok) => setState(ok ? "in" : "out"));
   }, []);
 
-  if (state === "in") return <>{children}</>;
+  if (state === "in")
+    return (
+      <>
+        {/* The shop's own app ("Παραγγελίες"): only offered once the code is
+            entered. React places this link in <head>. */}
+        <link rel="manifest" href="/kitchen.webmanifest" />
+        {children}
+      </>
+    );
   if (state === "checking") return <div className="min-h-svh bg-sand" />;
 
   return (
