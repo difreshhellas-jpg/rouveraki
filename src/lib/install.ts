@@ -53,9 +53,28 @@ export function isIOS(): boolean {
   return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
-/** Instagram / Facebook / Messenger in-app browsers cannot add to Home Screen. */
+/** Instagram / Facebook / Messenger / Google app browsers cannot add to Home Screen. */
 export function isInAppBrowser(): boolean {
-  return /FBAN|FBAV|Instagram|Messenger|Line\//i.test(navigator.userAgent);
+  return /FBAN|FBAV|Instagram|Messenger|Line\/| GSA\//i.test(navigator.userAgent);
+}
+
+/**
+ * Which iPhone/iPad browser this is. They all run on Safari's engine, so none
+ * can install in one press, but each keeps "Add to Home Screen" in a
+ * different place, and the steps must point at the right button.
+ */
+export function iosBrowser(): "safari" | "chrome" | "edge" | "firefox" | "inapp" {
+  const ua = navigator.userAgent;
+  if (isInAppBrowser()) return "inapp";
+  if (ua.includes("CriOS/")) return "chrome";
+  if (ua.includes("EdgiOS/")) return "edge";
+  if (ua.includes("FxiOS/")) return "firefox";
+  return "safari";
+}
+
+/** iPad (Safari keeps its Share button at the top there, not the bottom). */
+export function isIPad(): boolean {
+  return /iPad/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
 /** A computer (mouse/trackpad), as opposed to a phone or tablet. */

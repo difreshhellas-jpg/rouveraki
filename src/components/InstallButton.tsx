@@ -9,7 +9,8 @@ import Sheet from "./Sheet";
 import {
   installMode,
   installNow,
-  isInAppBrowser,
+  iosBrowser,
+  isIPad,
   manualKind,
   subscribeInstall,
   type InstallMode,
@@ -56,6 +57,18 @@ export default function InstallButton({
     if (r === "unavailable") setIosOpen(true);
   };
   const kind = mode === "manual" || mode === "prompt" ? manualKind() : null;
+  const ios = mode === "ios" ? iosBrowser() : null;
+  // Step 1 for the browser actually in use: where its Share button lives.
+  const shareStep: [string, string] =
+    ios === "chrome"
+      ? ["Πάτα το κουμπί Κοινοποίηση (τετράγωνο με βέλος) πάνω δεξιά, στη γραμμή διευθύνσεων του Chrome.", "Tap the Share button (square with an arrow) at the top right, in Chrome's address bar."]
+      : ios === "edge"
+        ? ["Πάτα το μενού ··· στο κάτω μέρος του Edge και μετά Κοινοποίηση.", "Tap the ··· menu at the bottom of Edge, then Share."]
+        : ios === "firefox"
+          ? ["Πάτα το μενού ≡ του Firefox και μετά Κοινοποίηση.", "Tap Firefox's ≡ menu, then Share."]
+          : isIPad()
+            ? ["Πάτα το κουμπί Κοινοποίηση (τετράγωνο με βέλος) πάνω δεξιά στο Safari.", "Tap the Share button (square with an arrow) at the top right of Safari."]
+            : ["Πάτα το κουμπί Κοινοποίηση (τετράγωνο με βέλος) στο κάτω μέρος του Safari.", "Tap the Share button (square with an arrow) at the bottom of Safari."];
 
   return (
     <>
@@ -141,11 +154,11 @@ export default function InstallButton({
           titleId="install-ios-title"
         >
           <div className="space-y-4 px-5 pb-8 pt-1 text-base">
-            {isInAppBrowser() && (
+            {ios === "inapp" && (
               <p className="rounded-xl bg-gold/15 p-3 font-semibold">
                 {pick(
-                  "Άνοιξε πρώτα τη σελίδα στο Safari (μενού ··· → «Άνοιγμα στο Safari»).",
-                  "First open this page in Safari (··· menu → “Open in Safari”).",
+                  "Από εδώ (Google, Instagram, Facebook) δεν γίνεται. Άνοιξε πρώτα τη σελίδα στο Safari ή στο Chrome: μενού ··· ή Κοινοποίηση → «Άνοιγμα στο Safari». Μετά:",
+                  "This can't be done from here (Google, Instagram, Facebook). First open this page in Safari or Chrome: ··· or Share menu → “Open in Safari”. Then:",
                 )}
               </p>
             )}
@@ -154,11 +167,7 @@ export default function InstallButton({
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-char/5">
                   <Export size={22} weight="bold" aria-hidden />
                 </span>
-                <span>
-                  {pick("Πάτα το κουμπί ", "Tap the ")}
-                  <b>{pick("Κοινοποίηση", "Share")}</b>
-                  {pick(" στο κάτω μέρος του Safari.", " button at the bottom of Safari.")}
-                </span>
+                <span>{pick(shareStep[0], shareStep[1])}</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-char/5">
