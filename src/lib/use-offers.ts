@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PublicOffer } from "@/lib/offer-types";
+import type { PublicOffer, PublicRecommendation } from "@/lib/offer-types";
 
 export type OffersData = { offers: PublicOffer[]; pushKey: string | null };
 
@@ -29,6 +29,64 @@ export function useOffers(): OffersData | null {
     };
   }, []);
   return data;
+}
+
+/* ---- checkout recommendations --------------------------------------------- */
+let recsPending: Promise<PublicRecommendation[]> | null = null;
+let recsAt = 0;
+const loadRecs = () => {
+  if (!recsPending || Date.now() - recsAt > 120_000) {
+    recsAt = Date.now();
+    recsPending = fetch("/api/recommendations")
+      .then((r) => (r.ok ? (r.json() as Promise<{ recs: PublicRecommendation[] }>) : { recs: [] }))
+      .then((d) => d.recs)
+      .catch(() => []);
+  }
+  return recsPending;
+};
+
+/** Active recommendations with their products; null while loading. */
+export function useRecommendations(): PublicRecommendation[] | null {
+  const [recs, setRecs] = useState<PublicRecommendation[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    void loadRecs().then((r) => live && setRecs(r));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return recs;
+}
+
+/** Drinks: one of a kind is enough, so a second one is never suggested. */
+const DRINKS = new Set(["kafedes", "rofimata", "chymoi", "anapsyktika", "mpyres", "pota"]);
+
+/**
+ * Up to `max` recommendations for the cart, in the order of its dishes:
+ * never a product already in the cart, never a dish's own category, and
+ * never a second drink of a kind the cart already has.
+ */
+export function pickRecommendations(
+  recs: PublicRecommendation[],
+  cart: { menuItemId: number; category: string }[],
+  max = 3,
+): PublicRecommendation[] {
+  const inCart = new Set(cart.map((l) => l.menuItemId));
+  const cartCats = new Set(cart.map((l) => l.category));
+  const out: PublicRecommendation[] = [];
+  const seen = new Set<number>();
+  for (const cat of [...new Set(cart.map((l) => l.category))]) {
+    for (const r of recs) {
+      if (out.length >= max) return out;
+      if (!r.whenCategories.includes(cat)) continue;
+      const m = r.item;
+      if (seen.has(m.id) || inCart.has(m.id) || m.category === cat) continue;
+      if (DRINKS.has(m.category) && cartCats.has(m.category)) continue;
+      seen.add(m.id);
+      out.push(r);
+    }
+  }
+  return out;
 }
 
 /* ---- offer notifications (Web Push) --------------------------------------- */

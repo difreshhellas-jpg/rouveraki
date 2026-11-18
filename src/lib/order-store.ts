@@ -124,6 +124,23 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
     });
     addonLeft.set(o.id, addonAllowance(o.deal, lines));
   }
+  // A combo is all of its products, the same number of each, nothing else.
+  for (const offerId of new Set(input.lines.flatMap((l) => (l.offerId ? [l.offerId] : [])))) {
+    const o = offers.find((x) => x.id === offerId);
+    if (o?.deal?.kind !== "combo") continue;
+    const qty = new Map<number, number>();
+    for (const l of input.lines) {
+      if (l.offerId === offerId) qty.set(l.menuItemId, (qty.get(l.menuItemId) ?? 0) + l.quantity);
+    }
+    const n = qty.get(o.deal.items[0].itemId) ?? 0;
+    const whole =
+      n > 0 &&
+      qty.size === o.deal.items.length &&
+      o.deal.items.every((p) => qty.get(p.itemId) === n);
+    if (!whole) {
+      return { ok: false, error: "offer_ended", extra: { name: o.title, offerId } };
+    }
+  }
   let subtotalCents = 0;
   let maxPrep = 0;
   const items: AdminOrderItem[] = [];
@@ -133,8 +150,15 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
     if (!m.available) return { ok: false, error: "item_unavailable", extra: { name: m.name } };
     let unit = Math.min(m.priceCents, special.get(m.id) ?? m.priceCents);
     let label = unit < m.priceCents ? " (προσφορά)" : "";
-    if (l.offerId) {
-      const deal = offers.find((o) => o.id === l.offerId)?.deal;
+    const offer = l.offerId ? offers.find((o) => o.id === l.offerId) : undefined;
+    if (offer?.deal?.kind === "combo") {
+      // Checked as a whole above; each product carries its saved share.
+      const part = offer.deal.items.find((p) => p.itemId === m.id);
+      if (!part) return { ok: false, error: "offer_ended", extra: { name: offer.title, offerId: offer.id } };
+      unit = part.priceCents;
+      label = ` (Combo: ${offer.title})`;
+    } else if (l.offerId) {
+      const deal = offer?.deal;
       const left = addonLeft.get(l.offerId) ?? 0;
       // The offer ended, or the products that earn it were removed.
       if (deal?.kind !== "addon" || deal.itemId !== m.id || l.quantity > left) {
@@ -153,7 +177,7 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
     items.push({
       menu_item_id: m.id,
       name: m.name + label,
-      name_en: m.nameEn ? m.nameEn + (label ? " (offer)" : "") : m.nameEn,
+      name_en: m.nameEn ? m.nameEn + (label.startsWith(" (Combo") ? label : label ? " (offer)" : "") : m.nameEn,
       unit_price_cents: unit,
       quantity: l.quantity,
       item_notes: (l.itemNotes ?? "").trim(),

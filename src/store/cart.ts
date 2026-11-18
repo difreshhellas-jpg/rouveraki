@@ -18,6 +18,8 @@ export type CartLine = {
   category: string;
   /** Set on an add-on bought at an offer price (see lib/offer-types.ts). */
   offerId?: string | null;
+  /** Set on every product of a combo: the combo's title. */
+  combo?: string | null;
 };
 
 export type FulfillmentType = "delivery" | "pickup";

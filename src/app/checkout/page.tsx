@@ -208,7 +208,40 @@ export default function CheckoutPage() {
       {/* ---- order ------------------------------------------------------- */}
       <section className="mt-8 space-y-4" aria-label={t("checkout.step.cart")}>
           <ul className="card divide-y divide-line">
-            {lines.map((l) => (
+            {/* A combo is one row: its products together, one quantity, one remove. */}
+            {[...new Set(lines.filter((l) => l.combo && l.offerId).map((l) => l.offerId!))].map((offerId) => {
+              const parts = lines.filter((l) => l.offerId === offerId);
+              const n = parts[0].quantity;
+              const each = parts.reduce((s, l) => s + l.unitPriceCents, 0);
+              return (
+                <li key={`combo-${offerId}`} className="flex gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-snug">
+                      <span className="mr-2 rounded-full bg-rust px-2 py-0.5 align-middle text-xs text-onrust">Combo</span>
+                      {parts[0].combo}
+                    </p>
+                    <p className="mt-0.5 text-sm text-char/60">{parts.map((l) => pick(l.name, l.nameEn)).join(" + ")}</p>
+                    <p className="mt-1 text-sm text-char/60">
+                      {money(each)} × {n} = <span className="font-semibold text-char/80">{money(each * n)}</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => parts.forEach((l) => removeLine(l.lineId))}
+                      className="mt-1 inline-flex min-h-9 items-center text-sm font-semibold text-rust underline underline-offset-4"
+                    >
+                      {t("cart.remove")}
+                    </button>
+                  </div>
+                  <QuantityStepper
+                    min={0}
+                    value={n}
+                    onChange={(q) => parts.forEach((l) => setQuantity(l.lineId, q))}
+                    label={parts[0].combo ?? "Combo"}
+                  />
+                </li>
+              );
+            })}
+            {lines.filter((l) => !l.combo).map((l) => (
               <li key={l.lineId} className="flex gap-3 p-4">
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold leading-snug">

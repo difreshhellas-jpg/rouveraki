@@ -5,6 +5,8 @@ import { useI18n } from "@/i18n/LanguageProvider";
 import { useCart } from "@/store/cart";
 import { formatEuro } from "@/lib/money";
 import type { MenuItemDTO } from "@/lib/menu-types";
+import { pickRecommendations, useRecommendations } from "@/lib/use-offers";
+import { recommendationLine } from "@/lib/offer-cart";
 import ItemThumb from "./ItemThumb";
 import QuantityStepper from "./QuantityStepper";
 import Sheet from "./Sheet";
@@ -35,6 +37,15 @@ export default function ItemSheet({
 
   const money = (cents: number) =>
     formatEuro(cents / 100, locale === "en" ? "en-IE" : "el-GR");
+
+  // Two recommendations for this dish, one tap to add (normal price).
+  const cartLines = useCart((s) => s.lines);
+  const recs = useRecommendations();
+  const pairs = item
+    ? pickRecommendations(recs ?? [], [{ menuItemId: item.id, category: item.category }], 2).filter(
+        (r) => !cartLines.some((l) => l.menuItemId === r.item.id),
+      )
+    : [];
 
   const add = () => {
     if (!item) return;
@@ -113,6 +124,28 @@ export default function ItemSheet({
               />
               <p className="mt-1.5 text-xs text-char/55">{t("menu.notesHelp")}</p>
             </div>
+
+            {pairs.length > 0 && (
+              <div>
+                <p className="label">{locale === "en" ? "Goes well with" : "Ταιριάζει με"}</p>
+                <div className="flex flex-wrap gap-2">
+                  {pairs.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => {
+                        addLine(recommendationLine(r));
+                        toast(pick(r.item.name, r.item.nameEn), { variant: "success" });
+                      }}
+                      className="rounded-full border border-line px-3 py-1.5 text-sm hover:bg-char/5"
+                    >
+                      + {pick(r.item.name, r.item.nameEn)}{" "}
+                      <span className="text-char/55">{money(r.item.priceCents)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <QuantityStepper value={quantity} onChange={setQuantity} />

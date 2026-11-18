@@ -1,0 +1,61 @@
+{
+  "_note": "Default checkout recommendations (normal prices). The owner can change or remove them in /demo-kitchen/offers; once saved there, this file is no longer used. itemId = id in src/data/menu.json.",
+  "recommendations": [
+    { "id": "r-pites-fries", "whenCategories": ["pites"], "itemId": 48, "active": true },
+    { "id": "r-pites-cola", "whenCategories": ["pites"], "itemId": 112, "active": true },
+    { "id": "r-pites-tzatziki", "whenCategories": ["pites"], "itemId": 58, "active": true },
+
+    { "id": "r-kalamakia-pitakia", "whenCategories": ["kalamakia"], "itemId": 60, "active": true },
+    { "id": "r-kalamakia-tzatziki", "whenCategories": ["kalamakia"], "itemId": 58, "active": true },
+    { "id": "r-kalamakia-fries", "whenCategories": ["kalamakia"], "itemId": 48, "active": true },
+    { "id": "r-kalamakia-cola", "whenCategories": ["kalamakia"], "itemId": 112, "active": true },
+
+    { "id": "r-merides-salad", "whenCategories": ["merides"], "itemId": 66, "active": true },
+    { "id": "r-merides-horiatiki", "whenCategories": ["merides"], "itemId": 65, "active": true },
+    { "id": "r-merides-tyrokafteri", "whenCategories": ["merides"], "itemId": 59, "active": true },
+    { "id": "r-merides-water", "whenCategories": ["merides"], "itemId": 117, "active": true },
+    { "id": "r-merides-beer", "whenCategories": ["merides"], "itemId": 75, "active": true },
+
+    { "id": "r-poikilies-horiatiki", "whenCategories": ["poikilies"], "itemId": 65, "active": true },
+    { "id": "r-poikilies-tzatziki", "whenCategories": ["poikilies"], "itemId": 58, "active": true },
+    { "id": "r-poikilies-cheesefries", "whenCategories": ["poikilies"], "itemId": 49, "active": true },
+    { "id": "r-poikilies-wine", "whenCategories": ["poikilies"], "itemId": 90, "active": true },
+
+    { "id": "r-burger-cheesefries", "whenCategories": ["burger"], "itemId": 49, "active": true },
+    { "id": "r-burger-cola", "whenCategories": ["burger"], "itemId": 112, "active": true },
+
+    { "id": "r-santouits-fries", "whenCategories": ["santouits"], "itemId": 48, "active": true },
+    { "id": "r-santouits-orange", "whenCategories": ["santouits"], "itemId": 113, "active": true },
+
+    { "id": "r-orektika-cola", "whenCategories": ["orektika"], "itemId": 112, "active": true },
+    { "id": "r-orektika-water", "whenCategories": ["orektika"], "itemId": 117, "active": true },
+
+    { "id": "r-salates-pitakia", "whenCategories": ["salates"], "itemId": 60, "active": true },
+    { "id": "r-salates-water", "whenCategories": ["salates"], "itemId": 116, "active": true },
+
+    { "id": "r-zymarika-salad", "whenCategories": ["zymarika"], "itemId": 66, "active": true },
+    { "id": "r-zymarika-caesar", "whenCategories": ["zymarika"], "itemId": 63, "active": true },
+    { "id": "r-zymarika-lemonade", "whenCategories": ["zymarika"], "itemId": 114, "active": true },
+
+    { "id": "r-psari-horiatiki", "whenCategories": ["psari"], "itemId": 65, "active": true },
+    { "id": "r-psari-whitewine", "whenCategories": ["psari"], "itemId": 88, "active": true },
+    { "id": "r-psari-salad", "whenCategories": ["psari"], "itemId": 66, "active": true },
+
+    { "id": "r-kafedes-pie", "whenCategories": ["kafedes"], "itemId": 51, "active": true },
+    { "id": "r-kafedes-water", "whenCategories": ["kafedes"], "itemId": 116, "active": true },
+    { "id": "r-kafedes-juice", "whenCategories": ["kafedes"], "itemId": 108, "active": true },
+
+    { "id": "r-rofimata-pie", "whenCategories": ["rofimata"], "itemId": 51, "active": true },
+    { "id": "r-rofimata-feta", "whenCategories": ["rofimata"], "itemId": 56, "active": true },
+    { "id": "r-chymoi-pie", "whenCategories": ["chymoi"], "itemId": 51, "active": true },
+    { "id": "r-chymoi-dakos", "whenCategories": ["chymoi"], "itemId": 64, "active": true },
+    { "id": "r-anapsyktika-fries", "whenCategories": ["anapsyktika"], "itemId": 48, "active": true },
+    { "id": "r-anapsyktika-pita", "whenCategories": ["anapsyktika"], "itemId": 1, "active": true },
+
+    { "id": "r-mpyres-fries", "whenCategories": ["mpyres"], "itemId": 48, "active": true },
+    { "id": "r-mpyres-kalamaki", "whenCategories": ["mpyres"], "itemId": 7, "active": true },
+
+    { "id": "r-pota-feta", "whenCategories": ["pota"], "itemId": 55, "active": true },
+    { "id": "r-pota-keftedakia", "whenCategories": ["pota"], "itemId": 52, "active": true }
+  ]
+}

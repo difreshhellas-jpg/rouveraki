@@ -1,20 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
 import { readAdminKey } from "@/lib/admin-key";
-import { athensToday, type Offer, type OfferDeal } from "@/lib/offer-types";
+import { athensToday, type Offer, type OfferDeal, type Recommendation } from "@/lib/offer-types";
 import { CATEGORIES } from "@/lib/brand";
 import { formatEuro } from "@/lib/money";
 import type { MenuItemDTO } from "@/lib/menu-types";
 
 /**
- * The owner's offers: add, change, show/hide, delete, and send one to the
- * customers who turned on offer notifications. Saved straight to the site.
+ * The owner's offers and checkout recommendations.
+ *  - Offers: add, change, show/hide, delete, photo, and send one to the
+ *    customers who turned on offer notifications.
+ *  - Recommendations: "Θέλεις και πατάτες;" at checkout, at normal prices.
+ * Everything is saved straight to the site.
  */
 type Doc = { offers: Offer[]; push: boolean; subscribers: number };
 type Msg = { kind: "ok" | "error" | "busy"; text: string } | null;
+type Kind = "none" | "item" | "addon" | "combo";
 
 const blank = (): Offer => ({
   id: `o-${Date.now().toString(36)}`,
@@ -25,24 +30,42 @@ const blank = (): Offer => ({
   badge: null,
   active: true,
   endsOn: null,
+  deal: null,
+  image: null,
 });
 
 const money = (c: number) => formatEuro(c / 100, "el-GR");
 const catLabel = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.el ?? slug;
+const euros = (c: number) => (c / 100).toFixed(2).replace(".", ",");
+const parseCents = (t: string) => Math.round(parseFloat(t.replace(",", ".")) * 100);
 
 /** One line describing what the offer does to prices. */
 function dealSummary(d: OfferDeal | null | undefined, menu: MenuItemDTO[]): string | null {
   if (!d) return null;
+  const nameOf = (id: number) => menu.find((x) => x.id === id)?.name ?? "προϊόν που αφαιρέθηκε";
+  if (d.kind === "combo") {
+    const regular = d.items.reduce((n, p) => n + (menu.find((m) => m.id === p.itemId)?.priceCents ?? 0), 0);
+    return `Combo: ${d.items.map((p) => nameOf(p.itemId)).join(" + ")} = ${money(d.priceCents)} αντί ${money(regular)}`;
+  }
   const m = menu.find((x) => x.id === d.itemId);
-  const name = m?.name ?? "προϊόν που αφαιρέθηκε";
-  if (d.kind === "item") return `${name}: ${money(d.priceCents)} αντί ${m ? money(m.priceCents) : "-"}`;
+  if (d.kind === "item") return `${nameOf(d.itemId)}: ${money(d.priceCents)} αντί ${m ? money(m.priceCents) : "-"}`;
   const when = d.withCategories.length ? d.withCategories.map(catLabel).join(", ") : "οποιοδήποτε προϊόν";
-  return `Πρόταση στο ταμείο: ${name} +${money(d.priceCents)} μαζί με ${when}`;
+  return `Πρόταση στο ταμείο: ${nameOf(d.itemId)} +${money(d.priceCents)} μαζί με ${when}`;
+}
+
+/** The photo an offer shows: its own, else its product's. */
+function photoOf(o: Offer, menu: MenuItemDTO[]): string | null {
+  if (o.image) return o.image;
+  const d = o.deal;
+  if (!d) return null;
+  const ids = d.kind === "combo" ? d.items.map((p) => p.itemId) : [d.itemId];
+  return ids.map((id) => menu.find((m) => m.id === id)?.image).find(Boolean) ?? null;
 }
 
 const live = (o: Offer) => o.active && (!o.endsOn || o.endsOn >= athensToday());
 
 export default function OffersManagerPage() {
+  const [tab, setTab] = useState<"offers" | "recs">("offers");
   const [doc, setDoc] = useState<Doc | null>(null);
   const [failed, setFailed] = useState(false);
   const [editing, setEditing] = useState<Offer | null>(null);
@@ -85,6 +108,8 @@ export default function OffersManagerPage() {
     }).catch(() => null);
     if (res?.ok) {
       setMsg({ kind: "ok", text: okText });
+      // Combo prices are worked out by the server: show what it saved.
+      void load();
       return true;
     }
     setDoc(before);
@@ -95,7 +120,7 @@ export default function OffersManagerPage() {
         err === "price_not_lower"
           ? "Η τιμή προσφοράς πρέπει να είναι χαμηλότερη από την κανονική τιμή."
           : err === "unknown_item"
-            ? "Το προϊόν δεν υπάρχει πια στο μενού."
+            ? "Ένα προϊόν δεν υπάρχει πια στο μενού."
             : "Δεν αποθηκεύτηκε. Έλεγξε τη σύνδεση και δοκίμασε ξανά.",
     });
     return false;
@@ -137,24 +162,36 @@ export default function OffersManagerPage() {
             <Link href="/demo-kitchen" className="btn-secondary text-sm">
               Παραγγελίες
             </Link>
-            <button type="button" className="btn-primary text-sm" disabled={!doc} onClick={() => setEditing(blank())}>
-              + Νέα προσφορά
-            </button>
+            {tab === "offers" && (
+              <button type="button" className="btn-primary text-sm" disabled={!doc} onClick={() => setEditing(blank())}>
+                + Νέα προσφορά
+              </button>
+            )}
           </div>
         </header>
 
-        <p className="mt-3 text-sm text-char/65">
-          Οι ενεργές προσφορές φαίνονται στην αρχική και στο μενού, και οι πελάτες βλέπουν μια φορά ένα μικρό
-          παράθυρο για κάθε νέα. Μια προσφορά μπορεί να κατεβάσει την τιμή ενός προϊόντος ή να προτείνει κάτι
-          στο ταμείο (π.χ. «Θέλεις και Coca-Cola; μόνο +1,50 €»). Οι τιμές ισχύουν αμέσως και στο ταμείο.
-        </p>
-        {doc && (
-          <p className="mt-2 text-sm font-semibold">
-            {doc.push
-              ? `🔔 ${doc.subscribers} ${doc.subscribers === 1 ? "πελάτης έχει" : "πελάτες έχουν"} ενεργές ειδοποιήσεις προσφορών.`
-              : "🔕 Οι ειδοποιήσεις στο κινητό των πελατών δεν έχουν ρυθμιστεί ακόμα (χρειάζονται τα κλειδιά VAPID στο Vercel)."}
-          </p>
-        )}
+        <div role="tablist" className="mt-4 flex gap-2">
+          {(
+            [
+              ["offers", `🏷️ Προσφορές (${offers.length})`],
+              ["recs", "🛒 Προτάσεις ταμείου"],
+            ] as const
+          ).map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={tab === k}
+              onClick={() => setTab(k)}
+              className={clsx(
+                "whitespace-nowrap rounded-full border-2 px-4 py-2 text-sm font-semibold",
+                tab === k ? "border-rust bg-rust text-onrust" : "border-line",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         {msg && (
           <p
@@ -168,100 +205,142 @@ export default function OffersManagerPage() {
           </p>
         )}
 
-        {failed && (
-          <p className="mt-6 rounded-card border border-rust/30 bg-rust/10 p-4 text-sm text-rust">
-            Δεν φορτώθηκαν οι προσφορές.{" "}
-            <button type="button" className="underline" onClick={() => void load()}>
-              Δοκίμασε ξανά
-            </button>
-          </p>
-        )}
+        {tab === "recs" ? (
+          <RecommendationsManager menu={menu} setMsg={setMsg} />
+        ) : (
+          <>
+            <p className="mt-4 text-sm text-char/65">
+              Οι ενεργές προσφορές φαίνονται ως banner στην αρχική και στο μενού, με φωτογραφία. Μια προσφορά
+              μπορεί να κατεβάσει την τιμή ενός προϊόντος, να είναι combo (π.χ. πίτα + πατάτες + αναψυκτικό σε
+              μία τιμή) ή να προτείνει κάτι στο ταμείο (π.χ. «Θέλεις και Coca-Cola; μόνο +1,50 €»).
+            </p>
+            {doc && (
+              <p className="mt-2 text-sm font-semibold">
+                {doc.push
+                  ? `🔔 ${doc.subscribers} ${doc.subscribers === 1 ? "πελάτης έχει" : "πελάτες έχουν"} ενεργές ειδοποιήσεις προσφορών.`
+                  : "🔕 Οι ειδοποιήσεις στο κινητό των πελατών δεν έχουν ρυθμιστεί ακόμα (χρειάζονται τα κλειδιά VAPID στο Vercel)."}
+              </p>
+            )}
 
-        {editing && (
-          <OfferForm
-            offer={editing}
-            menu={menu}
-            isNew={!offers.some((o) => o.id === editing.id)}
-            onCancel={() => setEditing(null)}
-            onSave={async (o) => {
-              const exists = offers.some((x) => x.id === o.id);
-              const next = exists ? offers.map((x) => (x.id === o.id ? o : x)) : [o, ...offers];
-              if (await save(next, exists ? "Η προσφορά άλλαξε." : "Η προσφορά δημοσιεύτηκε στο site.")) setEditing(null);
-            }}
-          />
-        )}
+            {failed && (
+              <p className="mt-6 rounded-card border border-rust/30 bg-rust/10 p-4 text-sm text-rust">
+                Δεν φορτώθηκαν οι προσφορές.{" "}
+                <button type="button" className="underline" onClick={() => void load()}>
+                  Δοκίμασε ξανά
+                </button>
+              </p>
+            )}
 
-        {doc && offers.length === 0 && !editing && (
-          <p className="mt-6 rounded-card border border-dashed border-line p-8 text-center text-sm text-char/55">
-            Δεν υπάρχει καμία προσφορά. Πάτα «+ Νέα προσφορά».
-          </p>
-        )}
+            {editing && (
+              <OfferForm
+                offer={editing}
+                menu={menu}
+                isNew={!offers.some((o) => o.id === editing.id)}
+                onCancel={() => setEditing(null)}
+                onSave={async (o) => {
+                  const exists = offers.some((x) => x.id === o.id);
+                  const next = exists ? offers.map((x) => (x.id === o.id ? o : x)) : [o, ...offers];
+                  if (await save(next, exists ? "Η προσφορά άλλαξε." : "Η προσφορά δημοσιεύτηκε στο site."))
+                    setEditing(null);
+                }}
+              />
+            )}
 
-        <ul className="mt-6 space-y-3">
-          {offers.map((o) => (
-            <li key={o.id} className={clsx("card p-4", !live(o) && "opacity-60")}>
-              <div className="flex flex-wrap items-start gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-display text-lg font-semibold">
-                    {o.badge && (
-                      <span className="mr-2 rounded-full bg-rust px-2 py-0.5 text-sm text-onrust">{o.badge}</span>
-                    )}
-                    {o.title}
-                  </p>
-                  {o.text && <p className="mt-1 whitespace-pre-line text-sm text-char/70">{o.text}</p>}
-                  {o.deal && (
-                    <p className="mt-1 text-sm font-semibold text-rust">💶 {dealSummary(o.deal, menu)}</p>
-                  )}
-                  <p className="mt-1 text-xs font-semibold text-char/55">
-                    {live(o)
-                      ? "● Φαίνεται στο site"
-                      : o.active
-                        ? "Έληξε"
-                        : "Κρυφή"}
-                    {o.endsOn && ` · έως ${o.endsOn.split("-").reverse().join("/")}`}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className={o.active ? "btn-secondary text-sm" : "btn-primary text-sm"}
-                    onClick={() =>
-                      void save(
-                        offers.map((x) => (x.id === o.id ? { ...x, active: !x.active } : x)),
-                        o.active ? "Η προσφορά κρύφτηκε." : "Η προσφορά φαίνεται ξανά.",
-                      )
-                    }
-                  >
-                    {o.active ? "Απόκρυψη" : "Εμφάνιση"}
-                  </button>
-                  <button type="button" className="btn-secondary text-sm" onClick={() => setEditing(o)}>
-                    Αλλαγή
-                  </button>
-                  {doc?.push && live(o) && (
-                    <button type="button" className="btn-primary text-sm" onClick={() => void send(o)}>
-                      🔔 Ειδοποίηση
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="btn-secondary text-sm text-rust"
-                    onClick={() => {
-                      if (window.confirm(`Διαγραφή της προσφοράς «${o.title}»;`))
-                        void save(
-                          offers.filter((x) => x.id !== o.id),
-                          "Η προσφορά διαγράφηκε.",
-                        );
-                    }}
-                  >
-                    Διαγραφή
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+            {doc && offers.length === 0 && !editing && (
+              <p className="mt-6 rounded-card border border-dashed border-line p-8 text-center text-sm text-char/55">
+                Δεν υπάρχει καμία προσφορά. Πάτα «+ Νέα προσφορά».
+              </p>
+            )}
+
+            <ul className="mt-6 space-y-3">
+              {offers.map((o) => {
+                const photo = photoOf(o, menu);
+                return (
+                  <li key={o.id} className={clsx("card p-4", !live(o) && "opacity-60")}>
+                    <div className="flex flex-wrap items-start gap-3">
+                      <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-gold to-rust">
+                        {photo && <Image src={photo} alt="" fill sizes="64px" className="object-cover" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-display text-lg font-semibold">
+                          {o.badge && (
+                            <span className="mr-2 rounded-full bg-rust px-2 py-0.5 text-sm text-onrust">{o.badge}</span>
+                          )}
+                          {o.title}
+                        </p>
+                        {o.text && <p className="mt-1 whitespace-pre-line text-sm text-char/70">{o.text}</p>}
+                        {o.deal && (
+                          <p className="mt-1 text-sm font-semibold text-rust">💶 {dealSummary(o.deal, menu)}</p>
+                        )}
+                        <p className="mt-1 text-xs font-semibold text-char/55">
+                          {live(o) ? "● Φαίνεται στο site" : o.active ? "Έληξε" : "Κρυφή"}
+                          {o.endsOn && ` · έως ${o.endsOn.split("-").reverse().join("/")}`}
+                        </p>
+                      </div>
+                      <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                        <button
+                          type="button"
+                          className={o.active ? "btn-secondary text-sm" : "btn-primary text-sm"}
+                          onClick={() =>
+                            void save(
+                              offers.map((x) => (x.id === o.id ? { ...x, active: !x.active } : x)),
+                              o.active ? "Η προσφορά κρύφτηκε." : "Η προσφορά φαίνεται ξανά.",
+                            )
+                          }
+                        >
+                          {o.active ? "Απόκρυψη" : "Εμφάνιση"}
+                        </button>
+                        <button type="button" className="btn-secondary text-sm" onClick={() => setEditing(o)}>
+                          Αλλαγή
+                        </button>
+                        {doc?.push && live(o) && (
+                          <button type="button" className="btn-primary text-sm" onClick={() => void send(o)}>
+                            🔔 Ειδοποίηση
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="btn-secondary text-sm text-rust"
+                          onClick={() => {
+                            if (window.confirm(`Διαγραφή της προσφοράς «${o.title}»;`))
+                              void save(
+                                offers.filter((x) => x.id !== o.id),
+                                "Η προσφορά διαγράφηκε.",
+                              );
+                          }}
+                        >
+                          Διαγραφή
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+/** Menu products grouped by category, for a <select>. */
+function ProductOptions({ menu }: { menu: MenuItemDTO[] }) {
+  return (
+    <>
+      {CATEGORIES.map((c) => {
+        const list = menu.filter((m) => m.category === c.slug);
+        return list.length ? (
+          <optgroup key={c.slug} label={c.el}>
+            {list.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name} ({money(m.priceCents)}){m.available ? "" : " - εξαντλημένο"}
+              </option>
+            ))}
+          </optgroup>
+        ) : null;
+      })}
+    </>
   );
 }
 
@@ -282,24 +361,41 @@ function OfferForm({
   const [busy, setBusy] = useState(false);
   const set = (patch: Partial<Offer>) => setO((prev) => ({ ...prev, ...patch }));
   const str = (v: string) => (v.trim() ? v : null);
-  const kind = o.deal?.kind ?? "none";
-  const item = o.deal ? menu.find((m) => m.id === o.deal!.itemId) : undefined;
+  const d = o.deal ?? null;
+  const kind: Kind = d?.kind ?? "none";
+  const firstId = menu.find((m) => m.available)?.id ?? menu[0]?.id ?? 0;
+
   // Typed in euros; kept as text so "2," can be typed on the way to "2,50".
-  const [priceText, setPriceText] = useState(o.deal ? (o.deal.priceCents / 100).toFixed(2).replace(".", ",") : "");
-  const cents = Math.round(parseFloat(priceText.replace(",", ".")) * 100);
-  const priceOk = Number.isFinite(cents) && cents >= 0 && (kind !== "item" || !item || cents < item.priceCents);
-  const setKind = (k: "none" | "item" | "addon") => {
-    const itemId = o.deal?.itemId ?? menu.find((m) => m.available)?.id ?? 0;
+  const [priceText, setPriceText] = useState(d ? euros(d.priceCents) : "");
+  const cents = parseCents(priceText);
+  const item = d && d.kind !== "combo" ? menu.find((m) => m.id === d.itemId) : undefined;
+  const comboIds = d?.kind === "combo" ? d.items.map((p) => p.itemId) : [];
+  const comboRegular = comboIds.reduce((n, id) => n + (menu.find((m) => m.id === id)?.priceCents ?? 0), 0);
+  const priceOk =
+    Number.isFinite(cents) &&
+    cents >= 0 &&
+    (kind !== "item" || !item || cents < item.priceCents) &&
+    (kind !== "combo" || (comboIds.length >= 2 && cents < comboRegular));
+
+  const setKind = (k: Kind) => {
+    const itemId = d && d.kind !== "combo" ? d.itemId : firstId;
     set({
       deal:
         k === "none"
           ? null
           : k === "item"
             ? { kind: "item", itemId, priceCents: 0 }
-            : { kind: "addon", itemId, priceCents: 0, withCategories: [] },
+            : k === "addon"
+              ? { kind: "addon", itemId, priceCents: 0, withCategories: [] }
+              : { kind: "combo", items: [firstId, firstId].map((id) => ({ itemId: id, priceCents: 0 })), priceCents: 0 },
     });
   };
-  const withCats = o.deal?.kind === "addon" ? o.deal.withCategories : [];
+  const setCombo = (ids: number[]) =>
+    set({ deal: { kind: "combo", items: ids.map((id) => ({ itemId: id, priceCents: 0 })), priceCents: 0 } });
+  const withCats = d?.kind === "addon" ? d.withCategories : [];
+  const photos = menu.filter((m) => m.image);
+  const autoPhoto = photoOf({ ...o, image: null }, menu);
+  const shownPhoto = o.image || autoPhoto;
 
   return (
     <form
@@ -307,7 +403,7 @@ function OfferForm({
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
-        const deal = o.deal ? { ...o.deal, priceCents: cents } : null;
+        const deal = d ? { ...d, priceCents: cents } : null;
         await onSave({ ...o, title: o.title.trim(), deal });
         setBusy(false);
       }}
@@ -355,14 +451,16 @@ function OfferForm({
           placeholder="π.χ. Κάθε μέρα 13:00-17:00, μόνο για παραλαβή."
         />
       </div>
+
       <fieldset className="space-y-3 rounded-card border border-line p-4">
         <legend className="px-1 text-sm font-semibold">Τιμή</legend>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
               ["none", "Μόνο ανακοίνωση", "Δεν αλλάζει καμία τιμή."],
               ["item", "Ειδική τιμή προϊόντος", "Το προϊόν κοστίζει λιγότερο για όλους."],
-              ["addon", "Πρόταση στο ταμείο", "π.χ. «Θέλεις και Coca-Cola; μόνο +2 €»"],
+              ["combo", "Combo", "Πολλά προϊόντα μαζί σε μία τιμή."],
+              ["addon", "Πρόταση στο ταμείο", "π.χ. «Θέλεις και Coca-Cola; μόνο +1,50 €»"],
             ] as const
           ).map(([k, label, help]) => (
             <label
@@ -378,7 +476,8 @@ function OfferForm({
             </label>
           ))}
         </div>
-        {o.deal && (
+
+        {d && d.kind !== "combo" && (
           <div className="grid gap-4 sm:grid-cols-[1fr_9rem]">
             <div>
               <label className="label" htmlFor="of-item">
@@ -387,21 +486,10 @@ function OfferForm({
               <select
                 id="of-item"
                 className="field"
-                value={o.deal.itemId}
-                onChange={(e) => set({ deal: { ...o.deal!, itemId: Number(e.target.value) } })}
+                value={d.itemId}
+                onChange={(e) => set({ deal: { ...d, itemId: Number(e.target.value) } })}
               >
-                {CATEGORIES.map((c) => {
-                  const list = menu.filter((m) => m.category === c.slug);
-                  return list.length ? (
-                    <optgroup key={c.slug} label={c.el}>
-                      {list.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name} ({money(m.priceCents)}){m.available ? "" : " - εξαντλημένο"}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ) : null;
-                })}
+                <ProductOptions menu={menu} />
               </select>
             </div>
             <div>
@@ -420,12 +508,70 @@ function OfferForm({
             </div>
           </div>
         )}
-        {o.deal && item && priceText && !priceOk && (
+
+        {d?.kind === "combo" && (
+          <div className="space-y-3">
+            <p className="label">Προϊόντα του combo (2 έως 6)</p>
+            {comboIds.map((id, i) => (
+              <div key={i} className="flex gap-2">
+                <select
+                  aria-label={`Προϊόν ${i + 1}`}
+                  className="field"
+                  value={id}
+                  onChange={(e) => setCombo(comboIds.map((x, j) => (j === i ? Number(e.target.value) : x)))}
+                >
+                  <ProductOptions menu={menu} />
+                </select>
+                {comboIds.length > 2 && (
+                  <button
+                    type="button"
+                    aria-label="Αφαίρεση προϊόντος"
+                    className="btn-secondary shrink-0 !px-4"
+                    onClick={() => setCombo(comboIds.filter((_, j) => j !== i))}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+            {comboIds.length < 6 && (
+              <button type="button" className="btn-secondary text-sm" onClick={() => setCombo([...comboIds, firstId])}>
+                + Προϊόν
+              </button>
+            )}
+            <div className="grid gap-4 sm:grid-cols-[1fr_9rem] sm:items-end">
+              <p className="text-sm text-char/65">
+                Χωριστά κοστίζουν <strong>{money(comboRegular)}</strong>. Η τιμή του combo πρέπει να είναι μικρότερη.
+              </p>
+              <div>
+                <label className="label" htmlFor="of-price">
+                  Τιμή combo (€)
+                </label>
+                <input
+                  id="of-price"
+                  className="field"
+                  inputMode="decimal"
+                  required
+                  value={priceText}
+                  onChange={(e) => setPriceText(e.target.value)}
+                  placeholder="8,00"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {d && priceText && !priceOk && (
           <p className="text-sm font-semibold text-rust">
-            Η τιμή προσφοράς πρέπει να είναι μικρότερη από {money(item.priceCents)}.
+            {kind === "combo"
+              ? `Η τιμή του combo πρέπει να είναι μικρότερη από ${money(comboRegular)}.`
+              : item
+                ? `Η τιμή προσφοράς πρέπει να είναι μικρότερη από ${money(item.priceCents)}.`
+                : "Έλεγξε την τιμή."}
           </p>
         )}
-        {o.deal?.kind === "addon" && (
+
+        {d?.kind === "addon" && (
           <div>
             <p className="label">Προτείνεται όταν το καλάθι έχει (κανένα επιλεγμένο = οτιδήποτε)</p>
             <div className="flex flex-wrap gap-2">
@@ -438,7 +584,7 @@ function OfferForm({
                     onClick={() =>
                       set({
                         deal: {
-                          ...(o.deal as Extract<OfferDeal, { kind: "addon" }>),
+                          ...d,
                           withCategories: on ? withCats.filter((x) => x !== c.slug) : [...withCats, c.slug],
                         },
                       })
@@ -457,6 +603,49 @@ function OfferForm({
           </div>
         )}
       </fieldset>
+
+      <fieldset className="rounded-card border border-line p-4">
+        <legend className="px-1 text-sm font-semibold">Φωτογραφία banner</legend>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-gold to-rust sm:w-56">
+            {shownPhoto && <Image src={shownPhoto} alt="" fill sizes="224px" className="object-cover" />}
+            {o.badge && (
+              <span className="absolute left-2 top-2 rounded-full bg-rust px-2 py-0.5 text-xs font-bold text-onrust">
+                {o.badge}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <label className="label" htmlFor="of-image">
+              Ποια φωτογραφία
+            </label>
+            <select
+              id="of-image"
+              className="field"
+              value={o.image ?? ""}
+              onChange={(e) => set({ image: e.target.value || null })}
+            >
+              <option value="">Αυτόματα: η φωτογραφία του προϊόντος</option>
+              {CATEGORIES.map((c) => {
+                const list = photos.filter((m) => m.category === c.slug);
+                return list.length ? (
+                  <optgroup key={c.slug} label={c.el}>
+                    {list.map((m) => (
+                      <option key={m.id} value={m.image!}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null;
+              })}
+            </select>
+            <p className="mt-1 text-xs text-char/55">
+              Χωρίς φωτογραφία φαίνεται χρωματιστό φόντο με το σήμα.
+            </p>
+          </div>
+        </div>
+      </fieldset>
+
       <details className="rounded-card border border-line p-3">
         <summary className="cursor-pointer text-sm font-semibold">Στα αγγλικά (προαιρετικό)</summary>
         <div className="mt-3 space-y-3">
@@ -486,6 +675,7 @@ function OfferForm({
           <input
             id="of-ends"
             type="date"
+            lang="el"
             className="field"
             min={athensToday()}
             value={o.endsOn ?? ""}
@@ -498,7 +688,7 @@ function OfferForm({
         </label>
       </div>
       <div className="flex gap-2">
-        <button type="submit" className="btn-primary" disabled={busy || !o.title.trim() || (!!o.deal && (!priceOk || !priceText))}>
+        <button type="submit" className="btn-primary" disabled={busy || !o.title.trim() || (!!d && (!priceOk || !priceText))}>
           {busy ? "Αποθήκευση..." : "Αποθήκευση"}
         </button>
         <button type="button" className="btn-secondary" onClick={onCancel}>
@@ -506,5 +696,136 @@ function OfferForm({
         </button>
       </div>
     </form>
+  );
+}
+
+/** Checkout recommendations: grouped by the category that triggers them. */
+function RecommendationsManager({
+  menu,
+  setMsg,
+}: {
+  menu: MenuItemDTO[];
+  setMsg: (m: Msg) => void;
+}) {
+  const [recs, setRecs] = useState<Recommendation[] | null>(null);
+  const [when, setWhen] = useState<string>(CATEGORIES[0].slug);
+  const [itemId, setItemId] = useState<number>(0);
+
+  useEffect(() => {
+    fetch("/api/recommendations?all=1", { headers: { "x-admin-key": readAdminKey() }, cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { recs: Recommendation[] } | null) => setRecs(d?.recs ?? []))
+      .catch(() => setRecs([]));
+  }, []);
+  useEffect(() => {
+    if (!itemId && menu.length) setItemId(menu.find((m) => m.category !== when)?.id ?? menu[0].id);
+  }, [menu, itemId, when]);
+
+  const save = async (next: Recommendation[], okText: string) => {
+    const before = recs;
+    setRecs(next);
+    setMsg({ kind: "busy", text: "Αποθήκευση..." });
+    const res = await fetch("/api/recommendations", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "x-admin-key": readAdminKey() },
+      body: JSON.stringify({ recs: next }),
+    }).catch(() => null);
+    if (res?.ok) setMsg({ kind: "ok", text: okText });
+    else {
+      setRecs(before);
+      setMsg({ kind: "error", text: "Δεν αποθηκεύτηκε. Έλεγξε τη σύνδεση και δοκίμασε ξανά." });
+    }
+  };
+
+  if (!recs) return <p className="mt-6 text-sm text-char/60">Φόρτωση...</p>;
+  const name = (id: number) => menu.find((m) => m.id === id);
+
+  return (
+    <div className="mt-4 space-y-5">
+      <p className="text-sm text-char/65">
+        Στο ταμείο ο πελάτης βλέπει έως 3 προτάσεις που ταιριάζουν με το καλάθι του (π.χ. «Θέλεις και
+        Πατάτες τηγανητές; +4,00 €»), και 2 μέσα στο κάθε προϊόν του μενού. Χρεώνονται στην κανονική τιμή.
+        Δεν προτείνεται ποτέ κάτι που υπάρχει ήδη στο καλάθι.
+      </p>
+
+      <form
+        className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-end"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!itemId) return;
+          const id = `r-${Date.now().toString(36)}`;
+          void save([{ id, whenCategories: [when], itemId, active: true }, ...recs], "Η πρόταση προστέθηκε.");
+        }}
+      >
+        <div className="flex-1">
+          <label className="label" htmlFor="rec-when">
+            Όταν το καλάθι έχει
+          </label>
+          <select id="rec-when" className="field" value={when} onChange={(e) => setWhen(e.target.value)}>
+            {CATEGORIES.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.el}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1">
+          <label className="label" htmlFor="rec-item">
+            Πρότεινε
+          </label>
+          <select id="rec-item" className="field" value={itemId} onChange={(e) => setItemId(Number(e.target.value))}>
+            <ProductOptions menu={menu} />
+          </select>
+        </div>
+        <button type="submit" className="btn-primary shrink-0">
+          + Προσθήκη
+        </button>
+      </form>
+
+      {CATEGORIES.map((c) => {
+        const list = recs.filter((r) => r.whenCategories.includes(c.slug));
+        if (!list.length) return null;
+        return (
+          <section key={c.slug} className="card p-4">
+            <h3 className="font-display text-lg font-semibold">
+              {c.el} <span className="text-sm font-normal text-char/75">→ προτείνουμε</span>
+            </h3>
+            <ul className="mt-2 divide-y divide-line">
+              {list.map((r) => {
+                const m = name(r.itemId);
+                return (
+                  <li key={r.id} className={clsx("flex flex-wrap items-center gap-3 py-2.5", !r.active && "opacity-50")}>
+                    <span className="min-w-0 flex-1 text-sm">
+                      <strong>{m?.name ?? "προϊόν που αφαιρέθηκε"}</strong>{" "}
+                      <span className="text-char/60">{m ? money(m.priceCents) : ""}</span>
+                      {m && !m.available && <span className="ml-1 text-rust">(εξαντλημένο)</span>}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-secondary text-sm"
+                      onClick={() =>
+                        void save(
+                          recs.map((x) => (x.id === r.id ? { ...x, active: !x.active } : x)),
+                          r.active ? "Η πρόταση σταμάτησε." : "Η πρόταση ενεργοποιήθηκε.",
+                        )
+                      }
+                    >
+                      {r.active ? "Παύση" : "Ενεργοποίηση"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary text-sm text-rust"
+                      onClick={() => void save(recs.filter((x) => x.id !== r.id), "Η πρόταση διαγράφηκε.")}
+                    >
+                      Διαγραφή
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
   );
 }
