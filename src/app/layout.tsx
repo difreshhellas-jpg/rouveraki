@@ -9,6 +9,7 @@ import CartBar from "@/components/CartBar";
 import InstallPrompt from "@/components/InstallPrompt";
 import { ToastProvider } from "@/components/Toaster";
 import Intro from "@/components/Intro";
+import OfferPopup from "@/components/OfferPopup";
 import { IS_TEST_DEPLOY, siteUrl as resolveSiteUrl } from "@/lib/site-mode";
 
 /**
@@ -148,6 +149,7 @@ export default function RootLayout({
           <Footer />
           <CartBar />
           <InstallPrompt />
+          <OfferPopup />
           <ToastProvider />
           <Intro />
         </LanguageProvider>

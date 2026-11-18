@@ -187,6 +187,9 @@ export default function DemoKitchenPage() {
                     : "📲 Ενεργοποίηση ειδοποιήσεων"}
               </button>
             )}
+            <Link href="/demo-kitchen/offers" className="btn-secondary text-sm">
+              🏷️ Προσφορές
+            </Link>
             <Link href="/demo-kitchen/menu" className="btn-primary text-sm">
               Διαχείριση μενού
             </Link>

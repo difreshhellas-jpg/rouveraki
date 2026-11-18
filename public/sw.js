@@ -24,13 +24,34 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Tapping a new-order notification brings the shop screen to the front.
+// An offer the owner sent (Web Push). Customers asked for these on the site.
+self.addEventListener("push", (event) => {
+  let d = {};
+  try {
+    d = event.data ? event.data.json() : {};
+  } catch (e) {
+    d = { title: "Ρουβεράκι", body: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(d.title || "Ρουβεράκι", {
+      body: d.body || "",
+      tag: d.tag || "offer",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url: d.url || "/menu#offers" },
+    }),
+  );
+});
+
+// Tapping a notification opens its page: a new order the shop screen, an
+// offer the menu. An already open window on that page is brought forward.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url) || "/demo-kitchen";
+  const path = new URL(url, self.location.origin).pathname;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
-      const open = list.find((c) => new URL(c.url).pathname.startsWith("/demo-kitchen"));
+      const open = list.find((c) => new URL(c.url).pathname.startsWith(path));
       return open ? open.focus() : self.clients.openWindow(url);
     }),
   );

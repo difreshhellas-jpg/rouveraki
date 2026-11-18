@@ -105,3 +105,43 @@ export async function kvIndexSince(index: string, since: number): Promise<string
   }
   return run<string[]>(["ZREVRANGEBYSCORE", index, "+inf", since]);
 }
+
+/* ---- hashes (offer-notification subscribers) ------------------------------ */
+const memHash = new Map<string, Map<string, string>>();
+
+export async function kvHSet(key: string, field: string, value: unknown): Promise<void> {
+  assertStore();
+  const raw = JSON.stringify(value);
+  if (!hasKv()) {
+    const h = memHash.get(key) ?? new Map();
+    h.set(field, raw);
+    memHash.set(key, h);
+    return;
+  }
+  await run(["HSET", key, field, raw]);
+}
+
+export async function kvHDel(key: string, field: string): Promise<void> {
+  assertStore();
+  if (!hasKv()) {
+    memHash.get(key)?.delete(field);
+    return;
+  }
+  await run(["HDEL", key, field]);
+}
+
+/** Every field of a hash, values parsed. */
+export async function kvHGetAll<T>(key: string): Promise<[string, T][]> {
+  assertStore();
+  if (!hasKv()) return [...(memHash.get(key) ?? [])].map(([f, v]) => [f, JSON.parse(v) as T]);
+  const flat = await run<string[]>(["HGETALL", key]);
+  const out: [string, T][] = [];
+  for (let i = 0; i + 1 < flat.length; i += 2) out.push([flat[i], JSON.parse(flat[i + 1]) as T]);
+  return out;
+}
+
+export async function kvHLen(key: string): Promise<number> {
+  assertStore();
+  if (!hasKv()) return memHash.get(key)?.size ?? 0;
+  return run<number>(["HLEN", key]);
+}

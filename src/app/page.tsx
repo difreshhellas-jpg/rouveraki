@@ -9,11 +9,14 @@ import ScrollBreak from "@/components/cinematic/ScrollBreak";
 import MenuShowcase from "@/components/cinematic/MenuShowcase";
 import CursorTrail from "@/components/cinematic/CursorTrail";
 import InstallSection from "@/components/InstallSection";
+import OffersSection from "@/components/OffersSection";
 
 export default function HomePage() {
   return (
     <>
       <Hero />
+      {/* The owner's current offers; nothing shows while there are none. */}
+      <OffersSection showMenuLink />
 
       {/* Scroll-scrubbed gyros sequence (shared with the Kyknos site) coming apart. */}
       <ProductScrollHero />

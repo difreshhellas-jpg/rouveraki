@@ -4,6 +4,7 @@ import { CATEGORIES } from "@/lib/brand";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import MenuBrowser from "@/components/MenuBrowser";
 import MenuHeader from "@/components/MenuHeader";
+import OffersSection from "@/components/OffersSection";
 
 export const metadata: Metadata = {
   title: "Μενού",
@@ -59,6 +60,7 @@ export default async function MenuPage() {
   return (
     <>
       <MenuHeader />
+      <OffersSection />
       <MenuBrowser items={items} />
     </>
   );
