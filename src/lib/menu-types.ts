@@ -11,4 +11,6 @@ export type MenuItemDTO = {
   available: boolean;
   prepTimeMinutes: number;
   requiresAgeVerification: boolean;
+  /** Set only while an offer lowers the price: the normal price, shown crossed out. */
+  wasPriceCents?: number;
 };

@@ -12,6 +12,7 @@ import { useKitchenOnline } from "@/lib/use-kitchen-online";
 import { normalizeGreekPhone } from "@/lib/sanitize";
 import QuantityStepper from "@/components/QuantityStepper";
 import { apiFetch } from "@/lib/api";
+import CheckoutOffers from "@/components/CheckoutOffers";
 
 /** Both are paid at the door: cash, or card on the delivery driver's POS. */
 type PaymentMethod = "cash" | "card";
@@ -25,6 +26,7 @@ export default function CheckoutPage() {
   const setFulfillment = useCart((s) => s.setFulfillment);
   const setQuantity = useCart((s) => s.setQuantity);
   const removeLine = useCart((s) => s.removeLine);
+  const setItemPrice = useCart((s) => s.setItemPrice);
   const clear = useCart((s) => s.clear);
 
   const [hydrated, setHydrated] = useState(false);
@@ -99,6 +101,7 @@ export default function CheckoutPage() {
             itemNotes: l.itemNotes,
             // Lets the demo backend refuse an order whose price changed meanwhile.
             unitPriceCents: l.unitPriceCents,
+            offerId: l.offerId ?? null,
           })),
           fulfillmentType,
           customerName: name.trim(),
@@ -117,9 +120,20 @@ export default function CheckoutPage() {
         orderCode?: string;
         /** The sold-out or re-priced item, when the error is about one. */
         name?: string;
+        menuItemId?: number;
+        unitPriceCents?: number;
+        offerId?: string;
       };
 
       if (!res.ok) {
+        // An offer started or ended meanwhile: fix the cart so the next tap
+        // goes through, and say what changed.
+        if (data.error === "price_changed" && data.menuItemId && data.unitPriceCents !== undefined) {
+          setItemPrice(data.menuItemId, data.unitPriceCents);
+        }
+        if (data.error === "offer_ended" && data.offerId) {
+          for (const l of lines) if (l.offerId === data.offerId) removeLine(l.lineId);
+        }
         const msg = serverErrorMessage(data.error, t);
         setErrors([data.name ? `${msg} (${data.name})` : msg]);
         setSubmitting(false);
@@ -197,7 +211,14 @@ export default function CheckoutPage() {
             {lines.map((l) => (
               <li key={l.lineId} className="flex gap-3 p-4">
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold leading-snug">{pick(l.name, l.nameEn)}</p>
+                  <p className="font-semibold leading-snug">
+                    {pick(l.name, l.nameEn)}
+                    {l.offerId && (
+                      <span className="ml-2 rounded-full bg-rust px-2 py-0.5 align-middle text-xs text-onrust">
+                        {locale === "en" ? "offer" : "προσφορά"}
+                      </span>
+                    )}
+                  </p>
                   {l.itemNotes && (
                     <p className="mt-0.5 text-sm italic text-char/60">
                       &ldquo;{l.itemNotes}&rdquo;
@@ -226,6 +247,8 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
+
+          <CheckoutOffers />
 
           <Link href="/menu" className="btn-secondary w-full">
             {t("cart.addMore")}
@@ -471,6 +494,8 @@ function serverErrorMessage(
       return tr("checkout.error.itemUnavailable");
     case "price_changed":
       return tr("checkout.error.priceChanged");
+    case "offer_ended":
+      return tr("checkout.error.offerEnded");
     case "menu_unavailable":
       return tr("checkout.error.menuUnavailable");
     case "delivery_closed":

@@ -114,7 +114,9 @@ export const dict = {
     "checkout.payCardPickupHelp": "Πληρώνεις με κάρτα στο κατάστημα όταν παραλάβεις.",
     "checkout.error.itemUnavailable": "Κάποιο προϊόν στο καλάθι μόλις εξαντλήθηκε. Αφαίρεσέ το και δοκίμασε ξανά.",
     "checkout.error.priceChanged":
-      "Η τιμή ενός προϊόντος στο καλάθι άλλαξε. Αφαίρεσέ το και πρόσθεσέ το ξανά από το μενού.",
+      "Η τιμή ενός προϊόντος άλλαξε (ξεκίνησε ή έληξε μια προσφορά). Ενημερώσαμε το καλάθι: έλεγξε το σύνολο και πάτα ξανά.",
+    "checkout.error.offerEnded":
+      "Μια προσφορά στο καλάθι δεν ισχύει πια και αφαιρέθηκε. Έλεγξε το σύνολο και πάτα ξανά.",
     "checkout.error.menuUnavailable": "Δεν φορτώθηκε το μενού. Έλεγξε τη σύνδεσή σου και δοκίμασε ξανά.",
     "checkout.payCash": "Μετρητά",
     "checkout.payCashHelp": "Πληρωμή κατά την παράδοση ή την παραλαβή.",
@@ -288,7 +290,8 @@ export const dict = {
     "checkout.payCardPickupHelp": "Pay by card at the shop when you collect.",
     "checkout.error.itemUnavailable": "Something in your cart just sold out. Remove it and try again.",
     "checkout.error.priceChanged":
-      "The price of something in your cart has changed. Remove it and add it again from the menu.",
+      "A price changed (an offer started or ended). We updated your cart: check the total and tap again.",
+    "checkout.error.offerEnded": "An offer in your cart has ended and was removed. Check the total and tap again.",
     "checkout.error.menuUnavailable": "The menu did not load. Check your connection and try again.",
     "checkout.payCash": "Cash",
     "checkout.payCashHelp": "Pay on delivery or on pickup.",

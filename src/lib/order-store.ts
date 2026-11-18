@@ -11,6 +11,8 @@ import type { AdminOrder, AdminOrderItem } from "@/components/admin/useOrders";
 import type { TrackedOrder } from "@/components/OrderTracker";
 import { isDeliveryOpen, isShopOpen } from "@/lib/hours";
 import { isKitchenOnline, NEEDS_KITCHEN } from "@/lib/kitchen-presence";
+import { loadOffers } from "@/lib/offers-store";
+import { addonAllowance, itemDealPrices, liveOffers } from "@/lib/offer-types";
 
 /**
  * Shared orders for demo mode, kept in a small key-value store (lib/kv.ts).
@@ -78,6 +80,8 @@ export const PlaceInput = z.object({
         quantity: z.number().int().min(1).max(30),
         itemNotes: z.string().max(200).optional(),
         unitPriceCents: z.number().int().min(0).optional(),
+        /** An add-on offer accepted at checkout ("Coca-Cola, only +2 €"). */
+        offerId: z.string().max(40).nullable().optional(),
       }),
     )
     .min(1)
@@ -107,6 +111,19 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
 
   const menu = await loadLiveMenu({ strict: true });
   const byId = new Map(menu.map((m) => [m.id, m]));
+  // Offers decide prices too: special prices for everyone, and add-ons at an
+  // offer price, one per qualifying product. Read fresh, never from a cache.
+  const offers = liveOffers(await loadOffers().catch(() => []));
+  const special = itemDealPrices(offers);
+  const addonLeft = new Map<string, number>();
+  for (const o of offers) {
+    if (o.deal?.kind !== "addon") continue;
+    const lines = input.lines.flatMap((l) => {
+      const m = byId.get(l.menuItemId);
+      return m ? [{ category: m.category, quantity: l.quantity, offerId: l.offerId }] : [];
+    });
+    addonLeft.set(o.id, addonAllowance(o.deal, lines));
+  }
   let subtotalCents = 0;
   let maxPrep = 0;
   const items: AdminOrderItem[] = [];
@@ -114,17 +131,30 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
     const m = byId.get(l.menuItemId);
     if (!m) return { ok: false, error: "unknown_menu_item" };
     if (!m.available) return { ok: false, error: "item_unavailable", extra: { name: m.name } };
-    // Never charge at the door a different amount from the one shown at checkout.
-    if (l.unitPriceCents !== undefined && l.unitPriceCents !== m.priceCents) {
-      return { ok: false, error: "price_changed", extra: { name: m.name } };
+    let unit = Math.min(m.priceCents, special.get(m.id) ?? m.priceCents);
+    let label = unit < m.priceCents ? " (προσφορά)" : "";
+    if (l.offerId) {
+      const deal = offers.find((o) => o.id === l.offerId)?.deal;
+      const left = addonLeft.get(l.offerId) ?? 0;
+      // The offer ended, or the products that earn it were removed.
+      if (deal?.kind !== "addon" || deal.itemId !== m.id || l.quantity > left) {
+        return { ok: false, error: "offer_ended", extra: { name: m.name, menuItemId: m.id, offerId: l.offerId } };
+      }
+      addonLeft.set(l.offerId, left - l.quantity);
+      unit = deal.priceCents;
+      label = " (προσφορά)";
     }
-    subtotalCents += m.priceCents * l.quantity;
+    // Never charge at the door a different amount from the one shown at checkout.
+    if (l.unitPriceCents !== undefined && l.unitPriceCents !== unit) {
+      return { ok: false, error: "price_changed", extra: { name: m.name, menuItemId: m.id, unitPriceCents: unit } };
+    }
+    subtotalCents += unit * l.quantity;
     maxPrep = Math.max(maxPrep, m.prepTimeMinutes);
     items.push({
       menu_item_id: m.id,
-      name: m.name,
-      name_en: m.nameEn,
-      unit_price_cents: m.priceCents,
+      name: m.name + label,
+      name_en: m.nameEn ? m.nameEn + (label ? " (offer)" : "") : m.nameEn,
+      unit_price_cents: unit,
       quantity: l.quantity,
       item_notes: (l.itemNotes ?? "").trim(),
       category: m.category,

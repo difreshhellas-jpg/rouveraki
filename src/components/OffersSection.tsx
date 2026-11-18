@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { pushState, turnOffOfferPush, turnOnOfferPush, useOffers, type PushState } from "@/lib/use-offers";
+import { formatEuro } from "@/lib/money";
+import { dealLine } from "@/lib/offer-cart";
+import { useCart } from "@/store/cart";
+import { useToast } from "./Toaster";
 
 /**
  * The owner's current offers (set from the shop app), with a button to get
@@ -15,6 +19,9 @@ export default function OffersSection({ showMenuLink = false }: { showMenuLink?:
   const en = locale === "en";
   const [push, setPush] = useState<PushState | null>(null);
   const [busy, setBusy] = useState(false);
+  const addLine = useCart((s) => s.addLine);
+  const { toast } = useToast();
+  const money = (c: number) => formatEuro(c / 100, en ? "en-IE" : "el-GR");
 
   useEffect(() => {
     if (data?.pushKey) void pushState().then(setPush);
@@ -90,6 +97,43 @@ export default function OffersSection({ showMenuLink = false }: { showMenuLink?:
               )}
               <h3 className="font-display text-xl font-semibold">{title}</h3>
               {body && <p className="mt-1 whitespace-pre-line text-sm text-stone">{body}</p>}
+              {o.deal && o.item && (
+                <div className="mt-3">
+                  <p className="text-sm">
+                    {o.deal.kind === "addon" && (
+                      <span className="mr-1">
+                        {en ? "With your order:" : "Με την παραγγελία σου:"}{" "}
+                        <strong>{(en && o.item.nameEn) || o.item.name}</strong>
+                      </span>
+                    )}
+                    <s className="mr-1.5 text-char/45">{money(o.item.priceCents)}</s>
+                    <span className="font-display text-lg font-bold text-rust">
+                      {o.deal.kind === "addon" ? "+" : ""}
+                      {money(o.deal.priceCents)}
+                    </span>
+                  </p>
+                  {o.deal.kind === "item" ? (
+                    o.item.available && (
+                      <button
+                        type="button"
+                        className="btn-primary mt-2 text-sm"
+                        onClick={() => {
+                          const line = dealLine(o);
+                          if (!line) return;
+                          addLine(line);
+                          toast((en && line.nameEn) || line.name, { variant: "success" });
+                        }}
+                      >
+                        {en ? "Add to cart" : "Πρόσθεσε στο καλάθι"}
+                      </button>
+                    )
+                  ) : (
+                    <p className="mt-1 text-xs text-char/60">
+                      {en ? "We will offer it at checkout." : "Θα σου το προτείνουμε στο ταμείο."}
+                    </p>
+                  )}
+                </div>
+              )}
               {o.endsOn && (
                 <p className="mt-2 text-xs font-semibold text-char/60">
                   {en ? "Until " : "Έως "}

@@ -16,6 +16,8 @@ export type CartLine = {
   requiresAgeVerification: boolean;
   image?: string | null;
   category: string;
+  /** Set on an add-on bought at an offer price (see lib/offer-types.ts). */
+  offerId?: string | null;
 };
 
 export type FulfillmentType = "delivery" | "pickup";
@@ -33,6 +35,8 @@ type CartState = {
   setQuantity: (lineId: string, quantity: number) => void;
   setNotes: (lineId: string, notes: string) => void;
   removeLine: (lineId: string) => void;
+  /** The server's price for a product, after an offer started or ended. */
+  setItemPrice: (menuItemId: number, unitPriceCents: number) => void;
   clear: () => void;
   setFulfillment: (t: FulfillmentType) => void;
   setZone: (id: string | null) => void;
@@ -41,8 +45,8 @@ type CartState = {
 const MAX_QTY_PER_LINE = 30;
 
 /** Notes are part of the identity of a line, so "no onion" never merges into "extra onion". */
-const makeLineId = (menuItemId: number, notes: string) =>
-  `${menuItemId}::${notes.trim().toLowerCase()}`;
+const makeLineId = (menuItemId: number, notes: string, offerId?: string | null) =>
+  `${menuItemId}::${notes.trim().toLowerCase()}${offerId ? `::offer:${offerId}` : ""}`;
 
 export const useCart = create<CartState>()(
   persist(
@@ -58,7 +62,7 @@ export const useCart = create<CartState>()(
             MAX_QTY_PER_LINE,
             Math.max(1, input.quantity ?? 1),
           );
-          const lineId = makeLineId(input.menuItemId, input.itemNotes);
+          const lineId = makeLineId(input.menuItemId, input.itemNotes, input.offerId);
           const existing = state.lines.find((l) => l.lineId === lineId);
           const lines = existing
             ? state.lines.map((l) =>
@@ -89,7 +93,7 @@ export const useCart = create<CartState>()(
         set((state) => {
           const target = state.lines.find((l) => l.lineId === lineId);
           if (!target) return state;
-          const nextId = makeLineId(target.menuItemId, notes);
+          const nextId = makeLineId(target.menuItemId, notes, target.offerId);
           // Editing notes can collide with an existing line — merge instead of
           // creating a duplicate key.
           const collision = state.lines.find(
@@ -121,6 +125,13 @@ export const useCart = create<CartState>()(
 
       removeLine: (lineId) =>
         set((state) => ({ lines: state.lines.filter((l) => l.lineId !== lineId) })),
+
+      setItemPrice: (menuItemId, unitPriceCents) =>
+        set((state) => ({
+          lines: state.lines.map((l) =>
+            l.menuItemId === menuItemId && !l.offerId ? { ...l, unitPriceCents } : l,
+          ),
+        })),
 
       clear: () => set({ lines: [], lastAddedAt: 0 }),
 

@@ -75,6 +75,9 @@ export default function ItemSheet({
                   {pick(item.name, item.nameEn)}
                 </h2>
                 <p className="shrink-0 text-xl font-bold tabular-nums text-rust">
+                  {item.wasPriceCents !== undefined && (
+                    <s className="mr-1.5 text-base font-normal text-char/45">{money(item.wasPriceCents)}</s>
+                  )}
                   {money(item.priceCents)}
                 </p>
               </div>

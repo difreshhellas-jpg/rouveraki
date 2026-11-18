@@ -7,6 +7,8 @@ import { CATEGORIES } from "@/lib/brand";
 import { formatEuro } from "@/lib/money";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/store/cart";
+import { useOffers } from "@/lib/use-offers";
+import { applyItemDeals } from "@/lib/offer-types";
 import ItemThumb from "./ItemThumb";
 import Tilt from "./Tilt";
 import { useRipple } from "./motion/useRipple";
@@ -18,8 +20,11 @@ const ItemSheet = dynamic(() => import("./ItemSheet"), { ssr: false });
 import { useToast } from "./Toaster";
 import { Plus, Check } from "@phosphor-icons/react";
 
-export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
+export default function MenuBrowser({ items: menuItems }: { items: MenuItemDTO[] }) {
   const { t, pick, locale } = useI18n();
+  // Offer prices apply to the menu as soon as the offers load.
+  const offers = useOffers();
+  const items = useMemo(() => applyItemDeals(menuItems, offers?.offers ?? []), [menuItems, offers]);
   const addLine = useCart((s) => s.addLine);
   const { toast } = useToast();
   const ripple = useRipple();
@@ -204,6 +209,9 @@ export default function MenuBrowser({ items }: { items: MenuItemDTO[] }) {
 
                         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
                           <span className="font-display text-lg font-semibold tabular-nums text-accent">
+                            {item.wasPriceCents !== undefined && (
+                              <s className="mr-1.5 text-sm font-normal text-char/45">{money(item.wasPriceCents)}</s>
+                            )}
                             {money(item.priceCents)}
                           </span>
 

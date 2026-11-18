@@ -1,16 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Offer } from "@/lib/offer-types";
+import type { PublicOffer } from "@/lib/offer-types";
 
-export type OffersData = { offers: Offer[]; pushKey: string | null };
+export type OffersData = { offers: PublicOffer[]; pushKey: string | null };
 
-/** One request per page load, shared by the offers section and the pop-up. */
+/** Shared by every offers component; fetched again after a minute (pages are client-side navigations). */
 let pending: Promise<OffersData> | null = null;
-const load = () =>
-  (pending ??= fetch("/api/offers")
-    .then((r) => (r.ok ? (r.json() as Promise<OffersData>) : { offers: [], pushKey: null }))
-    .catch(() => ({ offers: [], pushKey: null })));
+let fetchedAt = 0;
+const load = () => {
+  if (!pending || Date.now() - fetchedAt > 60_000) {
+    fetchedAt = Date.now();
+    pending = fetch("/api/offers")
+      .then((r) => (r.ok ? (r.json() as Promise<OffersData>) : { offers: [], pushKey: null }))
+      .catch(() => ({ offers: [], pushKey: null }));
+  }
+  return pending;
+};
 
 /** The offers customers see now; null while loading. */
 export function useOffers(): OffersData | null {
