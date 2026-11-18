@@ -45,14 +45,18 @@ export default function KitchenPresence() {
 
   if (ok === null) return null;
   return (
-    <p
-      role="status"
-      className={clsx(
-        "fixed bottom-3 left-3 z-[60] rounded-full px-3 py-1.5 text-xs font-bold shadow-lift print:hidden",
-        ok ? "bg-emerald-600 text-white" : "bg-rust text-onrust",
-      )}
-    >
-      {ok ? "● Διανομή ανοιχτή στο site" : "● Χωρίς σύνδεση: η διανομή κλείνει"}
-    </p>
+    // At the top of the page, in the flow: never floating over the screen's
+    // buttons. Same plain background as the shop screens below it.
+    <div className="bg-sand pt-3 print:hidden">
+      <p
+        role="status"
+        className={clsx(
+          "mx-auto w-fit rounded-full px-3 py-1.5 text-xs font-bold",
+          ok ? "bg-emerald-600 text-white" : "bg-rust text-onrust",
+        )}
+      >
+        {ok ? "● Διανομή ανοιχτή στο site" : "● Χωρίς σύνδεση: η διανομή κλείνει"}
+      </p>
+    </div>
   );
 }
