@@ -133,7 +133,7 @@ export default function OffersManagerPage() {
           <h1 className="font-display text-2xl font-bold">
             Προσφορές <span className="text-char/50">στο site</span>
           </h1>
-          <div className="ml-auto flex gap-2">
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
             <Link href="/demo-kitchen" className="btn-secondary text-sm">
               Παραγγελίες
             </Link>

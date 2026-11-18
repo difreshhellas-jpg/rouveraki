@@ -101,7 +101,7 @@ export default function OffersSection({ showMenuLink = false }: { showMenuLink?:
                 <div className="mt-3">
                   <p className="text-sm">
                     {o.deal.kind === "addon" && (
-                      <span className="mr-1">
+                      <span className="block">
                         {en ? "With your order:" : "Με την παραγγελία σου:"}{" "}
                         <strong>{(en && o.item.nameEn) || o.item.name}</strong>
                       </span>

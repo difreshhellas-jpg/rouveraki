@@ -7,7 +7,6 @@ import { useCart } from "@/store/cart";
 import { useOffers } from "@/lib/use-offers";
 import { dealLine } from "@/lib/offer-cart";
 import { addonAllowance, type PublicOffer } from "@/lib/offer-types";
-import { useToast } from "./Toaster";
 
 /**
  * Offers at checkout:
@@ -24,7 +23,6 @@ export default function CheckoutOffers() {
   const addLine = useCart((s) => s.addLine);
   const setQuantity = useCart((s) => s.setQuantity);
   const setItemPrice = useCart((s) => s.setItemPrice);
-  const { toast } = useToast();
   const money = (c: number) => formatEuro(c / 100, en ? "en-IE" : "el-GR");
   const offers = data?.offers ?? [];
 
@@ -64,8 +62,9 @@ export default function CheckoutOffers() {
   const add = (o: PublicOffer) => {
     const line = dealLine(o);
     if (!line) return;
+    // No toast: the line appears right above, and a toast would follow the
+    // customer onto the order page.
     addLine(line);
-    toast(pick(line.name, line.nameEn ?? null), { variant: "success" });
   };
 
   return (

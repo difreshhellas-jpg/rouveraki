@@ -12,7 +12,12 @@ import type { Offer } from "@/lib/offer-types";
  * shows once per device; closing it or opening it marks it seen.
  */
 const SEEN = "rouveraki.offers-seen";
-const SKIP_ON = ["/demo-kitchen", "/admin", "/checkout", "/order", "/legal"];
+/**
+ * Home page only, and only once the visitor scrolls past the hero: it must
+ * never sit on the hero's buttons or the menu's + buttons (the menu lists the
+ * offers at its top anyway).
+ */
+const SHOW_ON = "/";
 
 const readSeen = (): string[] => {
   try {
@@ -31,7 +36,7 @@ const markSeen = (id: string) => {
 
 export default function OfferPopup() {
   const pathname = usePathname() ?? "/";
-  const skip = SKIP_ON.some((p) => pathname.startsWith(p));
+  const skip = pathname !== SHOW_ON;
   const data = useOffers();
   const { locale } = useI18n();
   const en = locale === "en";
@@ -42,9 +47,13 @@ export default function OfferPopup() {
     const seen = readSeen();
     const next = data.offers.find((o) => !seen.includes(o.id));
     if (!next) return;
-    // After the intro and first paint, not on top of them.
-    const id = window.setTimeout(() => setOffer(next), 3500);
-    return () => window.clearTimeout(id);
+    const onScroll = () => {
+      if (window.scrollY < window.innerHeight * 0.8) return;
+      setOffer(next);
+      window.removeEventListener("scroll", onScroll);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [data, skip]);
 
   if (skip || !offer) return null;
@@ -56,10 +65,9 @@ export default function OfferPopup() {
   const body = (en && offer.textEn) || offer.text;
 
   return (
-    <div
-      role="dialog"
+    <aside
       aria-label={en ? "New offer" : "Νέα προσφορά"}
-      className="fixed inset-x-3 bottom-24 z-50 mx-auto max-w-sm rounded-card border-2 border-gold bg-surface p-4 shadow-lift sm:bottom-6 sm:left-auto sm:right-6 sm:mx-0"
+      className="fixed inset-x-3 bottom-24 z-30 mx-auto max-w-sm rounded-card border-2 border-gold bg-surface p-4 shadow-lift sm:bottom-6 sm:left-auto sm:right-6 sm:mx-0"
     >
       <button
         type="button"
@@ -78,6 +86,6 @@ export default function OfferPopup() {
       <Link href="/menu#offers" onClick={close} className="btn-primary mt-3 inline-flex text-sm">
         {en ? "See the offer" : "Δες την προσφορά"}
       </Link>
-    </div>
+    </aside>
   );
 }
