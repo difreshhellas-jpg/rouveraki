@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { BRAND } from "@/lib/brand";
 
 const SESSION_KEY = "rouveraki.intro.seen";
@@ -33,6 +34,7 @@ const EMBERS = Array.from({ length: 18 }, (_, i) => ({
  */
 export default function Intro() {
   const [show, setShow] = useState(true);
+  const shopScreen = usePathname()?.startsWith("/demo-kitchen");
 
   useEffect(() => {
     let seen = false;
@@ -50,7 +52,7 @@ export default function Intro() {
     return () => window.clearTimeout(id);
   }, []);
 
-  if (!show) return null;
+  if (!show || shopScreen) return null;
 
   const letters = Array.from(BRAND.nameEl);
 

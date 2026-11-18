@@ -20,7 +20,8 @@ export default function Header() {
 
   // Admin screens have their own chrome; the marketing header would only get in
   // the way on a kitchen tablet.
-  const isAdmin = pathname?.startsWith("/admin");
+  // The shop screen (/demo-kitchen) is the owner's app: no site navigation there.
+  const isAdmin = pathname?.startsWith("/admin") || pathname?.startsWith("/demo-kitchen");
 
   /**
    * A one-pixel sentinel near the top of the document, watched by an

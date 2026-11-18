@@ -10,7 +10,7 @@ import InstallButton from "./InstallButton";
 export default function Footer() {
   const { t } = useI18n();
   const pathname = usePathname();
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/demo-kitchen")) return null;
 
   const year = new Date().getFullYear();
 

@@ -11,7 +11,6 @@ import {
 import { ALERT_SOUNDS, useAlertSound, useOrders, type AlertSoundId } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
 import { PrintHost } from "@/components/admin/PrintTicket";
-import InstallButton from "@/components/InstallButton";
 import KitchenInstallCard from "@/components/admin/KitchenInstallCard";
 import type { OrderStatus } from "@/lib/order-status";
 
@@ -117,7 +116,7 @@ export default function DemoKitchenPage() {
           <a
             href="#col-new"
             role="alert"
-            className="kitchen-alert sticky top-[4.75rem] z-40 mb-4 flex items-center justify-center gap-3 rounded-2xl bg-rust px-4 py-4 text-center text-xl font-bold text-onrust shadow-lift"
+            className="kitchen-alert sticky top-2 z-40 mb-4 flex items-center justify-center gap-3 rounded-2xl bg-rust px-4 py-4 text-center text-xl font-bold text-onrust shadow-lift"
           >
             🔔 {waiting === 1 ? "1 νέα παραγγελία" : `${waiting} νέες παραγγελίες`} · πάτα «Αποδοχή»
           </a>
@@ -188,12 +187,8 @@ export default function DemoKitchenPage() {
                     : "📲 Ενεργοποίηση ειδοποιήσεων"}
               </button>
             )}
-            <InstallButton app="kitchen" variant="pill" label="Εγκατάσταση ως εφαρμογή" />
             <Link href="/demo-kitchen/menu" className="btn-primary text-sm">
               Διαχείριση μενού
-            </Link>
-            <Link href="/menu" className="btn-secondary text-sm">
-              Πίσω στο site
             </Link>
           </div>
         </header>
