@@ -50,9 +50,10 @@ static class RouverakiOrders
             {
                 Directory.CreateDirectory(Home);
                 File.Copy(self, installed, true);
-                MakeShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Name + ".lnk"), installed);
-                MakeShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs), Name + ".lnk"), installed);
-                MakeShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), Name + ".lnk"), installed);
+                // Each icon is best-effort: a blocked folder must never stop the app opening.
+                TryShortcut(Environment.SpecialFolder.DesktopDirectory, installed);
+                TryShortcut(Environment.SpecialFolder.Programs, installed);
+                TryShortcut(Environment.SpecialFolder.Startup, installed);
             }
             Open();
             if (firstRun)
@@ -102,17 +103,28 @@ static class RouverakiOrders
         Process.Start(new ProcessStartInfo(Browser(), flags) { UseShellExecute = false });
     }
 
+    static void TryShortcut(Environment.SpecialFolder folder, string target)
+    {
+        try { MakeShortcut(Path.Combine(Environment.GetFolderPath(folder), Name + ".lnk"), target); }
+        catch { }
+    }
+
+    // WScript.Shell cannot save a shortcut whose file name has Greek letters,
+    // so it is saved under a plain name and then renamed.
     static void MakeShortcut(string lnk, string target)
     {
+        string tmp = Path.Combine(Path.GetDirectoryName(lnk), "RouverakiOrders-tmp.lnk");
         Type t = Type.GetTypeFromProgID("WScript.Shell");
         object shell = Activator.CreateInstance(t);
-        object sc = t.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { lnk });
+        object sc = t.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { tmp });
         Type st = sc.GetType();
         st.InvokeMember("TargetPath", BindingFlags.SetProperty, null, sc, new object[] { target });
         st.InvokeMember("WorkingDirectory", BindingFlags.SetProperty, null, sc, new object[] { Path.GetDirectoryName(target) });
         st.InvokeMember("IconLocation", BindingFlags.SetProperty, null, sc, new object[] { target + ",0" });
         st.InvokeMember("Description", BindingFlags.SetProperty, null, sc, new object[] { "Οθόνη παραγγελιών Ρουβεράκι" });
         st.InvokeMember("Save", BindingFlags.InvokeMethod, null, sc, null);
+        if (File.Exists(lnk)) File.Delete(lnk);
+        File.Move(tmp, lnk);
     }
 
     static void Uninstall()
