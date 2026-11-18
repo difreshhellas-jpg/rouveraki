@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { checkAdminKey, readAdminKey, writeAdminKey } from "@/lib/admin-key";
+import KitchenPresence from "./KitchenPresence";
 
 /** Asks for the owner's password before showing the shop screens. */
 export default function AdminGate({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,8 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
         {/* The shop's own app ("Παραγγελίες"): only offered once the code is
             entered. React places this link in <head>. */}
         <link rel="manifest" href="/kitchen.webmanifest" />
+        {/* While this app is open, delivery is open on the site. */}
+        <KitchenPresence />
         {children}
       </>
     );

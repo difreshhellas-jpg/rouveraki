@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import {
   enableShopNotifications,
   notificationPermission,
@@ -12,6 +12,7 @@ import { useAlertSound, useOrders } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
 import { PrintHost } from "@/components/admin/PrintTicket";
 import InstallButton from "@/components/InstallButton";
+import KitchenInstallCard from "@/components/admin/KitchenInstallCard";
 import type { OrderStatus } from "@/lib/order-status";
 
 /**
@@ -110,6 +111,9 @@ export default function DemoKitchenPage() {
             🔔 {waiting === 1 ? "1 νέα παραγγελία" : `${waiting} νέες παραγγελίες`} · πάτα «Αποδοχή»
           </a>
         )}
+        <Suspense fallback={null}>
+          <KitchenInstallCard />
+        </Suspense>
         <header className="mb-5 flex flex-wrap items-center gap-3">
           <h1 className="font-display text-2xl font-bold">
             Ρουβεράκι <span className="text-char/50">οθόνη καταστήματος</span>

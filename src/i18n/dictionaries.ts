@@ -127,6 +127,8 @@ export const dict = {
     "checkout.deliveryClosed":
       "Η διανομή λειτουργεί καθημερινά 12:00-24:00. Μπορείς να παραγγείλεις για παραλαβή.",
     "checkout.shopClosed": "Είμαστε κλειστά αυτή τη στιγμή. Οι παραγγελίες ανοίγουν στις 06:00.",
+    "checkout.deliveryPaused":
+      "Η διανομή δεν είναι διαθέσιμη αυτή τη στιγμή. Μπορείς να παραγγείλεις για παραλαβή.",
 
     "checkout.error.name": "Συμπλήρωσε το όνομά σου.",
     "checkout.error.phone": "Συμπλήρωσε ένα έγκυρο ελληνικό τηλέφωνο.",
@@ -299,6 +301,7 @@ export const dict = {
     "checkout.deliveryClosed":
       "Delivery runs daily 12:00-24:00. You can still order for pickup.",
     "checkout.shopClosed": "We are closed right now. Ordering opens at 06:00.",
+    "checkout.deliveryPaused": "Delivery is not available right now. You can still order for pickup.",
 
     "checkout.error.name": "Please enter your name.",
     "checkout.error.phone": "Please enter a valid Greek phone number.",

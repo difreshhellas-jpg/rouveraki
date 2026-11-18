@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n/LanguageProvider";
 import { useCart, cartTotals, type FulfillmentType } from "@/store/cart";
 import { formatEuro } from "@/lib/money";
 import { isDeliveryOpen, isShopOpen } from "@/lib/hours";
+import { useKitchenOnline } from "@/lib/use-kitchen-online";
 import { normalizeGreekPhone } from "@/lib/sanitize";
 import QuantityStepper from "@/components/QuantityStepper";
 import { apiFetch } from "@/lib/api";
@@ -38,9 +39,13 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const [clock, setClock] = useState<{ shop: boolean; delivery: boolean } | null>(null);
+  const [hours, setHours] = useState<{ shop: boolean; delivery: boolean } | null>(null);
+  // Delivery also needs the shop's app to be open (null = not known yet).
+  const kitchenOnline = useKitchenOnline();
+  const deliveryPaused = kitchenOnline === false && !!hours?.delivery;
+  const clock = hours && { shop: hours.shop, delivery: hours.delivery && !deliveryPaused };
   useEffect(() => {
-    const read = () => setClock({ shop: isShopOpen(), delivery: isDeliveryOpen() });
+    const read = () => setHours({ shop: isShopOpen(), delivery: isDeliveryOpen() });
     read();
     const id = setInterval(read, 30_000);
     return () => clearInterval(id);
@@ -53,11 +58,12 @@ export default function CheckoutPage() {
 
   // Delivery outside its hours is not an option; snap to pickup rather than
   // letting someone fill in an address that cannot be served.
+  const deliveryOff = clock !== null && !clock.delivery;
   useEffect(() => {
-    if (clock && !clock.delivery && fulfillmentType === "delivery") {
+    if (deliveryOff && fulfillmentType === "delivery") {
       setFulfillment("pickup");
     }
-  }, [clock, fulfillmentType, setFulfillment]);
+  }, [deliveryOff, fulfillmentType, setFulfillment]);
 
   /* ---- validation ------------------------------------------------------ */
 
@@ -261,7 +267,9 @@ export default function CheckoutPage() {
               })}
             </div>
             {clock && !clock.delivery && (
-              <p className="mt-3 text-sm text-char/65">{t("checkout.deliveryClosed")}</p>
+              <p className="mt-3 text-sm text-char/65">
+                {t(deliveryPaused ? "checkout.deliveryPaused" : "checkout.deliveryClosed")}
+              </p>
             )}
           </fieldset>
 
@@ -467,6 +475,8 @@ function serverErrorMessage(
       return tr("checkout.error.menuUnavailable");
     case "delivery_closed":
       return tr("checkout.deliveryClosed");
+    case "delivery_paused":
+      return tr("checkout.deliveryPaused");
     case "shop_closed":
       return tr("checkout.shopClosed");
     case "invalid_phone":

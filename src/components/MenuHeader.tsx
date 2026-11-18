@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { isDeliveryOpen, isShopOpen } from "@/lib/hours";
+import { useKitchenOnline } from "@/lib/use-kitchen-online";
 import { BRAND } from "@/lib/brand";
 
 /** Page title plus an honest banner when we are closed or delivery is off. */
@@ -11,6 +12,8 @@ export default function MenuHeader() {
   const [state, setState] = useState<{ shop: boolean; delivery: boolean } | null>(
     null,
   );
+
+  const kitchenOnline = useKitchenOnline();
 
   useEffect(() => {
     const read = () => setState({ shop: isShopOpen(), delivery: isDeliveryOpen() });
@@ -41,6 +44,14 @@ export default function MenuHeader() {
           className="mt-5 rounded-card border border-line bg-surface p-4 text-sm"
         >
           {t("checkout.deliveryClosed")}
+        </p>
+      )}
+      {state && state.shop && state.delivery && kitchenOnline === false && (
+        <p
+          role="status"
+          className="mt-5 rounded-card border border-line bg-surface p-4 text-sm"
+        >
+          {t("checkout.deliveryPaused")}
         </p>
       )}
     </header>

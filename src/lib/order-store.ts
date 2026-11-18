@@ -10,6 +10,7 @@ import { loadLiveMenu } from "@/lib/menu-store";
 import type { AdminOrder, AdminOrderItem } from "@/components/admin/useOrders";
 import type { TrackedOrder } from "@/components/OrderTracker";
 import { isDeliveryOpen, isShopOpen } from "@/lib/hours";
+import { isKitchenOnline, NEEDS_KITCHEN } from "@/lib/kitchen-presence";
 
 /**
  * Shared orders for demo mode, kept in a small key-value store (lib/kv.ts).
@@ -95,6 +96,10 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
   if (!isShopOpen()) return { ok: false, error: "shop_closed", status: 409 };
   if (input.fulfillmentType === "delivery" && !isDeliveryOpen()) {
     return { ok: false, error: "delivery_closed", status: 409 };
+  }
+  // Nobody would see the order: the shop's app is closed (lib/kitchen-presence.ts).
+  if (NEEDS_KITCHEN.includes(input.fulfillmentType) && !(await isKitchenOnline())) {
+    return { ok: false, error: "delivery_paused", status: 409 };
   }
   if (input.fulfillmentType === "delivery" && !input.customerAddress?.trim()) {
     return { ok: false, error: "address_required" };
