@@ -149,24 +149,51 @@ export function useOrders(view: "live" | "all" = "live") {
   };
 }
 
+/** The order-alert sounds (public/sounds), mastered loud for small speakers. */
+export const ALERT_SOUNDS = [
+  { id: "alarm", label: "Συναγερμός (πιο δυνατός)" },
+  { id: "buzzer", label: "Βομβητής κουζίνας" },
+  { id: "phone", label: "Κουδούνι τηλεφώνου" },
+  { id: "bell", label: "Καμπανάκι" },
+  { id: "chime", label: "Ντινγκ-ντονγκ" },
+] as const;
+export type AlertSoundId = (typeof ALERT_SOUNDS)[number]["id"];
+const SOUND_STORE = "rouveraki.alert-sound";
+
+const readChoice = (): { id: AlertSoundId; repeat: number } => {
+  try {
+    const v = JSON.parse(localStorage.getItem(SOUND_STORE) ?? "null");
+    if (v && ALERT_SOUNDS.some((s) => s.id === v.id)) return { id: v.id, repeat: Math.min(3, Math.max(1, v.repeat | 0)) };
+  } catch {
+    /* default below */
+  }
+  return { id: "alarm", repeat: 2 };
+};
+
 /**
- * New-order bell via the Web Audio API: no audio file to ship, cache or 404.
+ * New-order alert: loud recorded sounds (public/sounds/*.wav, peak -1 dBFS)
+ * played through Web Audio at full level, with no compressor in the way. The
+ * old synthesized bell was soft sine tones squeezed by a compressor, which is
+ * why it needed a 600% volume boost to be heard.
  *
  * Browsers block audio until the page has been tapped once, so the shop
  * screens call enable() from the first tap. After that:
  * - iPhone/iPad: the audio session is "transient" (a notification sound), so
- *   the bell plays over music instead of being silenced by it. The side
- *   switch must not be on silent.
+ *   it plays over music instead of being silenced by it.
  * - A sleeping tablet suspends the audio context; it is resumed when the page
- *   is visible again and before every chime, so sound never quietly stops.
+ *   is visible again and before every alert, so sound never quietly stops.
  * - Android also vibrates.
+ * The chosen sound and how many times it plays per alert (1-3) are kept on
+ * this device.
  */
 type AudioSessionNav = Navigator & { audioSession?: { type: string } };
 
 export function useAlertSound() {
   const ctxRef = useRef<AudioContext | null>(null);
-  const outRef = useRef<AudioNode | null>(null);
+  const buffers = useRef(new Map<string, Promise<AudioBuffer | null>>());
   const [enabled, setEnabled] = useState(false);
+  const [choice, setChoiceState] = useState<{ id: AlertSoundId; repeat: number }>({ id: "alarm", repeat: 2 });
+  useEffect(() => setChoiceState(readChoice()), []);
 
   const ensure = useCallback((): AudioContext | null => {
     if (ctxRef.current) return ctxRef.current;
@@ -176,34 +203,35 @@ export function useAlertSound() {
     if (!Ctor) return null;
     try {
       const nav = navigator as AudioSessionNav;
-      // "transient" = a notification sound: it plays on top of music from
-      // another app (and turns it down for a moment) instead of being cut off
-      // when the music starts, which is what "playback" did.
       if (nav.audioSession) nav.audioSession.type = "transient";
     } catch {
       /* older Safari: no audio session control */
     }
-    const ctx = new Ctor({ latencyHint: "interactive" });
-    // A compressor lets the chime be loud without clipping on tablet speakers.
-    const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -18;
-    comp.ratio.value = 6;
-    const master = ctx.createGain();
-    master.gain.value = 0.9;
-    master.connect(comp).connect(ctx.destination);
-    ctxRef.current = ctx;
-    outRef.current = master;
-    return ctx;
+    ctxRef.current = new Ctor({ latencyHint: "interactive" });
+    return ctxRef.current;
+  }, []);
+
+  const load = useCallback((ctx: AudioContext, id: string) => {
+    let p = buffers.current.get(id);
+    if (!p) {
+      p = fetch(`/sounds/${id}.wav`)
+        .then((r) => r.arrayBuffer())
+        .then((b) => ctx.decodeAudioData(b))
+        .catch(() => null);
+      buffers.current.set(id, p);
+    }
+    return p;
   }, []);
 
   const enable = useCallback(() => {
     const ctx = ensure();
     if (!ctx) return;
+    void load(ctx, readChoice().id);
     void ctx.resume().then(
       () => setEnabled(ctx.state === "running"),
       () => setEnabled(false),
     );
-  }, [ensure]);
+  }, [ensure, load]);
 
   // Back from sleep or another app: wake the audio context up again.
   useEffect(() => {
@@ -223,52 +251,62 @@ export function useAlertSound() {
 
   useEffect(() => () => void ctxRef.current?.close(), []);
 
-  const ring = useCallback((ctx: AudioContext) => {
-    const out = outRef.current;
-    if (!out) return;
-    // A restaurant service-desk bell, struck twice ("ding-ding"): inharmonic
-    // partials with a fast strike and a long ring, each slightly detuned so it
-    // shimmers like metal instead of sounding like a synth beep. Pitched at
-    // G6, where tablet speakers are loudest and kitchen noise is thinnest.
-    const PARTIALS: [number, number, number][] = [
-      [1, 0.7, 1.6],
-      [2.32, 0.3, 0.9],
-      [4.25, 0.14, 0.45],
-      [6.63, 0.07, 0.25],
-    ];
-    const strike = (t: number, vel: number) => {
-      for (const [ratio, level, decay] of PARTIALS) {
-        for (const det of [-1.5, 1.5]) {
-          const osc = ctx.createOscillator();
-          const g = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.value = 1568 * ratio;
-          osc.detune.value = det;
-          g.gain.setValueAtTime(0.0001, t);
-          g.gain.exponentialRampToValueAtTime(level * vel * 0.5, t + 0.004);
-          g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
-          osc.connect(g).connect(out);
-          osc.start(t);
-          osc.stop(t + decay + 0.05);
-        }
+  const ring = useCallback(
+    async (ctx: AudioContext, id: string, repeat: number) => {
+      const buf = await load(ctx, id);
+      if (!buf) return;
+      let at = ctx.currentTime + 0.02;
+      for (let i = 0; i < repeat; i++) {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(at);
+        at += buf.duration + 0.15;
       }
-    };
-    const now = ctx.currentTime + 0.02;
-    strike(now, 1);
-    strike(now + 0.32, 0.85);
-  }, []);
+    },
+    [load],
+  );
+
+  const playWith = useCallback(
+    (id: string, repeat: number) => {
+      try {
+        navigator.vibrate?.([300, 120, 300, 120, 300]);
+      } catch {
+        /* not supported */
+      }
+      const ctx = ctxRef.current ?? ensure();
+      if (!ctx) return;
+      if (ctx.state === "running") void ring(ctx, id, repeat);
+      else
+        void ctx.resume().then(
+          () => {
+            setEnabled(ctx.state === "running");
+            if (ctx.state === "running") void ring(ctx, id, repeat);
+          },
+          () => {},
+        );
+    },
+    [ensure, ring],
+  );
 
   const play = useCallback(() => {
-    try {
-      navigator.vibrate?.([180, 90, 180]);
-    } catch {
-      /* not supported */
-    }
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-    if (ctx.state === "running") ring(ctx);
-    else void ctx.resume().then(() => ctx.state === "running" && ring(ctx), () => {});
-  }, [ring]);
+    const c = readChoice();
+    playWith(c.id, c.repeat);
+  }, [playWith]);
 
-  return { enabled, enable, play };
+  /** Save a new sound / repeat choice on this device and play it once as a preview. */
+  const setChoice = useCallback(
+    (next: { id: AlertSoundId; repeat: number }) => {
+      setChoiceState(next);
+      try {
+        localStorage.setItem(SOUND_STORE, JSON.stringify(next));
+      } catch {
+        /* private mode: lasts for this visit */
+      }
+      playWith(next.id, 1);
+    },
+    [playWith],
+  );
+
+  return { enabled, enable, play, choice, setChoice };
 }

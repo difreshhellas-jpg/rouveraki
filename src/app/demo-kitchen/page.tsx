@@ -8,7 +8,7 @@ import {
   notificationPermission,
   notifyNewOrder,
 } from "@/lib/shop-notify";
-import { useAlertSound, useOrders } from "@/components/admin/useOrders";
+import { ALERT_SOUNDS, useAlertSound, useOrders, type AlertSoundId } from "@/components/admin/useOrders";
 import OrderCard from "@/components/admin/OrderCard";
 import { PrintHost } from "@/components/admin/PrintTicket";
 import InstallButton from "@/components/InstallButton";
@@ -16,19 +16,29 @@ import KitchenInstallCard from "@/components/admin/KitchenInstallCard";
 import type { OrderStatus } from "@/lib/order-status";
 
 /**
- * Shop screen: every order from the last two days, from any customer's
- * device, in three columns. The buttons on each ticket move it New → Accepted →
+ * Shop screen: the orders still to handle (new, accepted). Delivered and
+ * cancelled ones move to the 24-hour history view. The buttons move a ticket New → Accepted →
  * Delivered, and the customer's tracking page follows within seconds.
  */
 const COLUMNS: { title: string; statuses: OrderStatus[]; accent: string }[] = [
   { title: "Νέες / New", statuses: ["PAID_AWAITING_ACCEPTANCE"], accent: "text-rust" },
   { title: "Αποδεκτές / Accepted", statuses: ["ACCEPTED", "PREPARING", "READY", "DISPATCHED"], accent: "text-gold" },
-  { title: "Παραδόθηκαν / Delivered", statuses: ["DELIVERED", "COMPLETED"], accent: "text-char/60" },
 ];
+/** Finished orders leave the main screen; the history view keeps the last 24 hours. */
+const FINISHED: OrderStatus[] = [
+  "DELIVERED",
+  "COMPLETED",
+  "REJECTED",
+  "CANCELLED_BY_CUSTOMER",
+  "CANCELLED_BY_RESTAURANT",
+  "PAYMENT_FAILED",
+];
+const HISTORY_MS = 24 * 60 * 60 * 1000;
 
 export default function DemoKitchenPage() {
   const { orders, loading, refresh, newArrival, clearArrival } = useOrders("all");
-  const { enabled, enable, play } = useAlertSound();
+  const { enabled, enable, play, choice, setChoice } = useAlertSound();
+  const [showHistory, setShowHistory] = useState(false);
   const waiting = orders.filter((o) => o.status === "PAID_AWAITING_ACCEPTANCE").length;
 
   // Browsers only allow sound after a tap, so the first tap anywhere turns it on.
@@ -94,9 +104,10 @@ export default function DemoKitchenPage() {
     };
   }, []);
 
-  const other = orders.filter(
-    (o) => !COLUMNS.some((c) => c.statuses.includes(o.status)),
-  );
+  const since = Date.now() - HISTORY_MS;
+  const history = orders
+    .filter((o) => FINISHED.includes(o.status) && new Date(o.createdAt).getTime() >= since)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
     <div className="min-h-svh bg-sand">
@@ -125,6 +136,39 @@ export default function DemoKitchenPage() {
               className={enabled ? "btn-secondary text-sm" : "btn-primary animate-pulse text-sm"}
             >
               {enabled ? "🔔 Ήχος ενεργός (δοκιμή)" : "🔔 Ενεργοποίηση ήχου"}
+            </button>
+            <label className="sr-only" htmlFor="alert-sound">Ήχος παραγγελίας</label>
+            <select
+              id="alert-sound"
+              value={choice.id}
+              onChange={(e) => setChoice({ ...choice, id: e.target.value as AlertSoundId })}
+              className="field !w-auto !py-2 text-sm"
+              title="Ήχος νέας παραγγελίας (παίζει μία φορά για δοκιμή)"
+            >
+              {ALERT_SOUNDS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  🔊 {s.label}
+                </option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="alert-repeat">Επαναλήψεις</label>
+            <select
+              id="alert-repeat"
+              value={choice.repeat}
+              onChange={(e) => setChoice({ ...choice, repeat: Number(e.target.value) })}
+              className="field !w-auto !py-2 text-sm"
+              title="Πόσες φορές παίζει ο ήχος σε κάθε ειδοποίηση"
+            >
+              <option value={1}>×1</option>
+              <option value={2}>×2</option>
+              <option value={3}>×3</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => setShowHistory((v) => !v)}
+              className={showHistory ? "btn-primary text-sm" : "btn-secondary text-sm"}
+            >
+              {showHistory ? "← Τρέχουσες" : `🕘 Ιστορικό 24ώρου (${history.length})`}
             </button>
             {notif !== "granted" && (
               <button
@@ -156,8 +200,23 @@ export default function DemoKitchenPage() {
 
         {loading ? (
           <p className="py-16 text-center text-char/60">Φόρτωση...</p>
+        ) : showHistory ? (
+          <section aria-label="Ιστορικό 24ώρου">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-char/60">
+              Ολοκληρωμένες και ακυρωμένες, τελευταίες 24 ώρες ({history.length})
+            </h2>
+            {history.length === 0 ? (
+              <p className="rounded-card border border-dashed border-line p-6 text-center text-sm text-char/45">—</p>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {history.map((o) => (
+                  <OrderCard key={o.id} order={o} onChanged={refresh} compact />
+                ))}
+              </div>
+            )}
+          </section>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             {COLUMNS.map((col) => {
               const list = orders.filter((o) => col.statuses.includes(o.status));
               return (
@@ -192,18 +251,6 @@ export default function DemoKitchenPage() {
           </div>
         )}
 
-        {other.length > 0 && (
-          <section className="mt-8" aria-label="cancelled">
-            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-char/50">
-              Ακυρωμένες / Cancelled ({other.length})
-            </h2>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {other.map((o) => (
-                <OrderCard key={o.id} order={o} onChanged={refresh} compact />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </div>
   );
