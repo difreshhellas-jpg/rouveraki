@@ -39,22 +39,46 @@ const siteUrl = resolveSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  // Both spellings in the title: people search "Rouveraki" in Latin letters
+  // as often as "Ρουβεράκι", and Google matches the words that are there.
   title: {
-    default: `${BRAND.nameEl} — Ξυλόκαστρο`,
-    template: `%s · ${BRAND.nameEl}`,
+    default: `${BRAND.nameEl} (${BRAND.nameEn}) — Καφέ & Ψησταριά στο Ξυλόκαστρο`,
+    template: `%s · ${BRAND.nameEl} ${BRAND.nameEn}`,
   },
   description:
-    "Καφές και ψησταριά στη μαρίνα του Ξυλοκάστρου. Ανοιχτά καθημερινά 06:00–24:00, διανομή 12:00–24:00.",
+    "Ρουβεράκι (Rouveraki): καφές, ψησταριά και delivery στη μαρίνα του Ξυλοκάστρου. Πίτες, καλαμάκια, μερίδες στα κάρβουνα. Ανοιχτά καθημερινά 06:00–24:00, παραγγελία online 12:00–24:00.",
+  applicationName: BRAND.nameEl,
+  keywords: [
+    "Ρουβεράκι", "Rouveraki", "Ξυλόκαστρο", "Xylokastro", "ψησταριά Ξυλόκαστρο",
+    "delivery Ξυλόκαστρο", "καφέ Ξυλόκαστρο", "σουβλάκια Ξυλόκαστρο", "μαρίνα Ξυλοκάστρου",
+  ],
   openGraph: {
     type: "website",
     locale: "el_GR",
-    siteName: BRAND.nameEl,
-    title: `${BRAND.nameEl} — Ξυλόκαστρο`,
+    alternateLocale: ["en_US"],
+    siteName: `${BRAND.nameEl} · ${BRAND.nameEn}`,
+    title: `${BRAND.nameEl} (${BRAND.nameEn}) — Ξυλόκαστρο`,
     description: BRAND.taglineEl,
-    url: siteUrl,
+    url: "/",
+    images: [{ url: "/images/rouveraki-terrace.jpg", alt: BRAND.taglineEl }],
   },
-  alternates: { canonical: siteUrl },
-  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+  twitter: { card: "summary_large_image" },
+  // Each page names itself as canonical ("./" resolves against the page's own
+  // URL). A fixed home URL here made /menu and the legal pages tell Google
+  // they were copies of the homepage, so only the homepage could be indexed.
+  alternates: { canonical: "./" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
+  // Google Search Console: set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION to the code
+  // from the "HTML tag" method to verify the site and submit the sitemap.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
   // A static file rather than app/manifest.ts, so the shop screen can point
   // to its own manifest (demo-kitchen/layout.tsx) and install as its own app.
   manifest: "/manifest.webmanifest",
@@ -70,21 +94,22 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6efe6" },
-    { media: "(prefers-color-scheme: dark)", color: "#1b1815" },
-  ],
+  // Light is the starting theme for everyone, so the browser bar matches it.
+  themeColor: "#fbf6ee",
 };
 
 /**
  * Applied before first paint so a visitor who chose a theme never sees a flash
- * of the other one. Kept tiny and dependency-free on purpose.
+ * of the other one. Light is the start for everyone (whatever the phone is set
+ * to); dark only once the visitor picks it with the toggle.
  */
 const themeBootstrap = `
+var t = 'light';
 try {
-  var t = localStorage.getItem('rouveraki.theme');
-  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+  var s = localStorage.getItem('rouveraki.theme');
+  if (s === 'dark' || s === 'light') t = s;
 } catch (e) {}
+document.documentElement.dataset.theme = t;
 try {
   if (sessionStorage.getItem('rouveraki.intro.seen') === '1') document.documentElement.setAttribute('data-intro-seen', '');
 } catch (e) {}
@@ -99,6 +124,9 @@ const jsonLd = {
   description: BRAND.taglineEl,
   telephone: BRAND.phone.tel,
   url: siteUrl,
+  image: `${siteUrl}/images/rouveraki-terrace.jpg`,
+  logo: `${siteUrl}/icons/icon-512.png`,
+  hasMenu: `${siteUrl}/menu`,
   sameAs: [BRAND.facebook],
   servesCuisine: ["Greek", "Grill", "Cafe"],
   priceRange: "€€",
@@ -134,7 +162,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="el" suppressHydrationWarning>
+    <html lang="el" data-theme="light" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
         <script

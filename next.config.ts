@@ -77,6 +77,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // www.rouveraki.com served the same pages as rouveraki.com; one address
+  // keeps Google from splitting the site in two.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.rouveraki.com" }],
+        destination: "https://rouveraki.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

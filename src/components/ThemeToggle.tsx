@@ -6,8 +6,8 @@ import { useI18n } from "@/i18n/LanguageProvider";
 type Theme = "light" | "dark";
 
 /**
- * Explicit light/dark override. With nothing stored the site follows the
- * viewer's OS setting; the toggle stamps data-theme on <html>, which the CSS in
+ * Explicit light/dark override. With nothing stored the site starts in light
+ * (see themeBootstrap in app/layout.tsx); the toggle stamps data-theme on <html>, which the CSS in
  * globals.css lets win over prefers-color-scheme in both directions.
  */
 export default function ThemeToggle() {
@@ -19,9 +19,7 @@ export default function ThemeToggle() {
     if (stored === "dark" || stored === "light") {
       setTheme(stored);
     } else {
-      setTheme(
-        window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
-      );
+      setTheme("light");
     }
   }, []);
 

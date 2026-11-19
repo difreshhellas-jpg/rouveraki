@@ -47,5 +47,5 @@ export const siteUrl = (): string => {
   if (explicit) return explicit.replace(/\/+$/, "");
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (vercel) return `https://${vercel}`;
-  return "https://rouveraki.gr";
+  return "https://rouveraki.com";
 };

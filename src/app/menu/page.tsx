@@ -7,7 +7,7 @@ import MenuHeader from "@/components/MenuHeader";
 import OffersSection from "@/components/OffersSection";
 
 export const metadata: Metadata = {
-  title: "Μενού",
+  title: "Μενού & Delivery",
   description:
     "Πίτες, καλαμάκια, μερίδες στα κάρβουνα, burger, σαλάτες, ζυμαρικά και ποτά. Παραγγελία online με διανομή στο Ξυλόκαστρο.",
 };
