@@ -145,3 +145,12 @@ export async function kvHLen(key: string): Promise<number> {
   if (!hasKv()) return memHash.get(key)?.size ?? 0;
   return run<number>(["HLEN", key]);
 }
+
+export async function kvDel(key: string): Promise<void> {
+  assertStore();
+  if (!hasKv()) {
+    mem.delete(key);
+    return;
+  }
+  await run(["DEL", key]);
+}

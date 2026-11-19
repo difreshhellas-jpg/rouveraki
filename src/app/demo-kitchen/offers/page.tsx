@@ -396,6 +396,28 @@ function OfferForm({
   const photos = menu.filter((m) => m.image);
   const autoPhoto = photoOf({ ...o, image: null }, menu);
   const shownPhoto = o.image || autoPhoto;
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const upload = async (file: File) => {
+    setUploading(true);
+    setUploadErr(null);
+    try {
+      const body = new FormData();
+      body.append("file", await shrinkPhoto(file));
+      const res = await fetch("/api/offers/image", {
+        method: "POST",
+        headers: { "x-admin-key": readAdminKey() },
+        body,
+      });
+      const j = (await res.json().catch(() => ({}))) as { url?: string };
+      if (!res.ok || !j.url) throw new Error();
+      set({ image: j.url });
+    } catch {
+      setUploadErr("Η φωτογραφία δεν ανέβηκε. Δοκίμασε άλλη (JPG, PNG ή WebP).");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <form
@@ -626,6 +648,9 @@ function OfferForm({
               onChange={(e) => set({ image: e.target.value || null })}
             >
               <option value="">Αυτόματα: η φωτογραφία του προϊόντος</option>
+              {o.image && !photos.some((m) => m.image === o.image) && (
+                <option value={o.image}>📷 Η δική σου φωτογραφία</option>
+              )}
               {CATEGORIES.map((c) => {
                 const list = photos.filter((m) => m.category === c.slug);
                 return list.length ? (
@@ -639,8 +664,28 @@ function OfferForm({
                 ) : null;
               })}
             </select>
+            <label
+              className={`btn-secondary mt-3 inline-flex cursor-pointer text-sm ${uploading ? "pointer-events-none opacity-60" : ""}`}
+            >
+              {uploading ? "Ανεβαίνει…" : "📷 Ανέβασε δική σου φωτογραφία"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void upload(f);
+                }}
+              />
+            </label>
+            {uploadErr && (
+              <p role="alert" className="mt-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                {uploadErr}
+              </p>
+            )}
             <p className="mt-1 text-xs text-char/55">
-              Χωρίς φωτογραφία φαίνεται χρωματιστό φόντο με το σήμα.
+              Καλύτερα οριζόντια φωτογραφία. Χωρίς φωτογραφία φαίνεται χρωματιστό φόντο με το σήμα.
             </p>
           </div>
         </div>
@@ -828,4 +873,18 @@ function RecommendationsManager({
       })}
     </div>
   );
+}
+
+/** Makes a phone photo small enough to upload (longest side 1600 px, JPEG). */
+async function shrinkPhoto(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode"))), "image/jpeg", 0.84),
+  );
+  return new File([blob], "offer.jpg", { type: "image/jpeg" });
 }

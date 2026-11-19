@@ -79,7 +79,7 @@ export default function OfferPopup() {
       </button>
       <p className="eyebrow">{en ? "New offer" : "Νέα προσφορά"}</p>
       <p className="mt-1 pr-8 font-display text-lg font-semibold">
-        {offer.badge && <span className="mr-2 rounded-full bg-rust px-2 py-0.5 text-sm text-onrust">{offer.badge}</span>}
+        {offer.badge && <span className="mr-2 rounded-full bg-offerDeep px-2 py-0.5 text-sm font-bold text-white">{offer.badge}</span>}
         {title}
       </p>
       {body && <p className="mt-1 line-clamp-3 text-sm text-stone">{body}</p>}

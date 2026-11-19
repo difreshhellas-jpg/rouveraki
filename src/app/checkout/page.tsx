@@ -217,7 +217,7 @@ export default function CheckoutPage() {
                 <li key={`combo-${offerId}`} className="flex gap-3 p-4">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold leading-snug">
-                      <span className="mr-2 rounded-full bg-rust px-2 py-0.5 align-middle text-xs text-onrust">Combo</span>
+                      <span className="mr-2 rounded-full bg-offerDeep px-2 py-0.5 align-middle text-xs font-bold text-white">Combo</span>
                       {parts[0].combo}
                     </p>
                     <p className="mt-0.5 text-sm text-char/60">{parts.map((l) => pick(l.name, l.nameEn)).join(" + ")}</p>
@@ -247,7 +247,7 @@ export default function CheckoutPage() {
                   <p className="font-semibold leading-snug">
                     {pick(l.name, l.nameEn)}
                     {l.offerId && (
-                      <span className="ml-2 rounded-full bg-rust px-2 py-0.5 align-middle text-xs text-onrust">
+                      <span className="ml-2 rounded-full bg-offerDeep px-2 py-0.5 align-middle text-xs font-bold text-white">
                         {locale === "en" ? "offer" : "προσφορά"}
                       </span>
                     )}

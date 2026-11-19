@@ -1,7 +1,7 @@
 import "server-only";
 import webpush from "web-push";
-import { createHash } from "node:crypto";
-import { kvGet, kvHDel, kvHGetAll, kvHLen, kvHSet, kvSet } from "@/lib/kv";
+import { createHash, randomBytes } from "node:crypto";
+import { kvDel, kvGet, kvHDel, kvHGetAll, kvHLen, kvHSet, kvSet } from "@/lib/kv";
 import type { Offer } from "@/lib/offer-types";
 
 /**
@@ -22,6 +22,43 @@ export async function loadOffers(): Promise<Offer[]> {
 
 export async function saveOffers(offers: Offer[]): Promise<void> {
   await kvSet(OFFERS_KEY, { offers, savedAt: new Date().toISOString() });
+  await pruneOfferImages(offers).catch(() => {});
+}
+
+/* ---- the owner's own banner photos ----------------------------------------
+ * Kept in the same store (no separate file storage needed). The shop app
+ * shrinks each photo to about 200-400 KB before it is sent.
+ */
+const IMG_INDEX = "offers:images";
+const imgKey = (id: string) => `offer-img:${id}`;
+export const OFFER_IMAGE_PATH = "/api/offers/image/";
+type StoredImage = { type: string; b64: string };
+
+/** Saves one photo and returns the URL the offer uses. */
+export async function saveOfferImage(type: string, bytes: Buffer): Promise<string> {
+  const id = randomBytes(12).toString("hex");
+  await kvSet(imgKey(id), { type, b64: bytes.toString("base64") } satisfies StoredImage);
+  await kvHSet(IMG_INDEX, id, Date.now());
+  return OFFER_IMAGE_PATH + id;
+}
+
+export async function loadOfferImage(id: string): Promise<{ type: string; bytes: Buffer } | null> {
+  if (!/^[a-f0-9]{24}$/.test(id)) return null;
+  const img = await kvGet<StoredImage>(imgKey(id));
+  return img ? { type: img.type, bytes: Buffer.from(img.b64, "base64") } : null;
+}
+
+/** Deletes uploaded photos no offer uses any more (giving a fresh upload a day to be saved). */
+async function pruneOfferImages(offers: Offer[]): Promise<void> {
+  const used = new Set(
+    offers.flatMap((o) => (o.image?.startsWith(OFFER_IMAGE_PATH) ? [o.image.slice(OFFER_IMAGE_PATH.length)] : [])),
+  );
+  const dayAgo = Date.now() - 86_400_000;
+  for (const [id, at] of await kvHGetAll<number>(IMG_INDEX)) {
+    if (used.has(id) || at > dayAgo) continue;
+    await kvDel(imgKey(id));
+    await kvHDel(IMG_INDEX, id);
+  }
 }
 
 /* ---- push ---------------------------------------------------------------- */

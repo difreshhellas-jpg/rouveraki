@@ -10,29 +10,33 @@
 // Keys keep their legacy names so the cases below read unchanged:
 // rust = accent (gold), gold = accent-bright, sand = paper, char = ink.
 const LIGHT = {
-  rust: "#a16207",
-  navy: "#1c1917",
-  sand: "#f8f6f1",
-  char: "#0c0a09",
-  gold: "#a56408",
-  surface: "#fdfcfa",
-  line: "#e4e0d8",
+  rust: "#b45309",
+  navy: "#1b1410",
+  sand: "#fbf6ee",
+  char: "#1b1410",
+  gold: "#b9530a",
+  surface: "#ffffff",
+  line: "#e3d4bd",
   onRust: "#ffffff",
-  stone: "#57534e",
+  stone: "#5e5045",
   white: "#ffffff",
+  offer: "#c0341d",
+  offerDeep: "#c0341d",
 };
 
 const DARK = {
-  rust: "#e0b458",
-  navy: "#050403",
-  sand: "#0c0a09",
-  char: "#faf9f6",
-  gold: "#f0c86e",
-  surface: "#1c1917",
-  line: "#363230",
-  onRust: "#0c0a09",
-  stone: "#a8a29e",
+  rust: "#f4b740",
+  navy: "#080605",
+  sand: "#100d0b",
+  char: "#f8f0e3",
+  gold: "#ffcb5e",
+  surface: "#1d1814",
+  line: "#4a3d31",
+  onRust: "#1a1206",
+  stone: "#c9bba8",
   white: "#ffffff",
+  offer: "#f0603f",
+  offerDeep: "#c8432a",
 };
 
 const srgbToLinear = (c: number) =>
@@ -55,6 +59,9 @@ const ratio = (a: string, b: string): number => {
 type Case = { label: string; fg: string; bg: string; min: number };
 
 const cases = (p: typeof LIGHT): Case[] => [
+  { label: "offer price on card", fg: p.offer, bg: p.surface, min: 4.5 },
+  { label: "offer price on page", fg: p.offer, bg: p.sand, min: 4.5 },
+  { label: "white text on offer badge", fg: p.white, bg: p.offerDeep, min: 4.5 },
   { label: "body text on page background", fg: p.char, bg: p.sand, min: 4.5 },
   { label: "body text on card surface", fg: p.char, bg: p.surface, min: 4.5 },
   { label: "muted text (75%) on page", fg: mix(p.char, p.sand, 0.75), bg: p.sand, min: 4.5 },

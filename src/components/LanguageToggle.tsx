@@ -26,8 +26,8 @@ export default function LanguageToggle() {
           className={clsx(
             "min-h-touch min-w-touch rounded-full px-3 transition-colors",
             locale === l
-              ? "bg-rust text-onrust"
-              : "text-char/70 hover:bg-char/5 hover:text-char",
+              ? "bg-surface2 text-ink ring-1 ring-inset ring-line"
+              : "text-stone hover:bg-char/5 hover:text-ink",
           )}
         >
           {l === "el" ? "ΕΛ" : "EN"}

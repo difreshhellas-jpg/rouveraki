@@ -31,7 +31,7 @@ export function ToastProvider() {
       // so let it follow the system and let our classNames carry the colours.
       theme="system"
       icons={{
-        success: <CheckCircle size={20} weight="fill" className="text-emerald-600" />,
+        success: <CheckCircle size={20} weight="fill" className="text-success" />,
         error: <Warning size={20} weight="fill" className="text-rust" />,
         info: <Info size={20} weight="fill" className="text-char/60" />,
       }}

@@ -16,18 +16,21 @@
    ========================================================================= */
 :root {
   /* ---- light ---------------------------------------------------------- */
-  --paper: #f8f6f1;        --paper-rgb: 248 246 241;    /* warm bone, never pure white */
-  --surface: #fdfcfa;      --surface-rgb: 253 252 250;  /* cards, one step up          */
-  --surface-2: #efece6;    --surface-2-rgb: 239 236 230;/* wells, inset areas          */
-  --ink: #0c0a09;          --ink-rgb: 12 10 9;          /* text, never pure black      */
-  --stone: #57534e;        --stone-rgb: 87 83 78;       /* secondary text              */
-  --line: #e4e0d8;         --line-rgb: 228 224 216;     /* hairlines                   */
-  --band: #1c1917;         --band-rgb: 28 25 23;        /* dark structural bands       */
-  --on-band: #f8f6f1;      --on-band-rgb: 248 246 241;
+  --paper: #fbf6ee;        --paper-rgb: 251 246 238;    /* warm bone, never pure white */
+  --surface: #ffffff;      --surface-rgb: 255 255 255;  /* cards, one step up          */
+  --surface-2: #f4eadb;    --surface-2-rgb: 244 234 219;/* wells, inset areas          */
+  --ink: #1b1410;          --ink-rgb: 27 20 16;          /* text, never pure black      */
+  --stone: #5e5045;        --stone-rgb: 94 80 69;       /* secondary text              */
+  --line: #e3d4bd;         --line-rgb: 227 212 189;     /* hairlines                   */
+  --band: #1b1410;         --band-rgb: 27 20 16;        /* dark structural bands       */
+  --on-band: #fbf6ee;      --on-band-rgb: 251 246 238;
 
-  --accent: #a16207;       --accent-rgb: 161 98 7;      /* gold: 4.8:1 on paper        */
-  --accent-bright: #a56408;--accent-bright-rgb: 165 100 8;  /* hover bg: 4.75:1 with white */
+  --accent: #b45309;       --accent-rgb: 180 83 9;      /* amber: 4.6:1 on paper       */
+  --accent-bright: #b9530a;--accent-bright-rgb: 185 83 10;  /* hover bg: 4.75:1 with white */
   --on-accent: #ffffff;    --on-accent-rgb: 255 255 255;
+  --offer: #c0341d;        --offer-rgb: 192 52 29;      /* offers: paprika red, 5.5:1 on paper */
+  --offer-deep: #c0341d;   --offer-deep-rgb: 192 52 29;
+  --success: #2e7d32;      --success-rgb: 46 125 50;
 
   /* ---- legacy aliases (do not use in new code) ------------------------ */
   --rouveraki-rust: var(--accent);         --rouveraki-rust-rgb: var(--accent-rgb);
@@ -59,17 +62,20 @@
 /* Dark is the primary mood for this brand; light is the daytime variant. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #0c0a09;        --paper-rgb: 12 10 9;
-    --surface: #1c1917;      --surface-rgb: 28 25 23;
-    --surface-2: #292524;    --surface-2-rgb: 41 37 36;
-    --ink: #faf9f6;          --ink-rgb: 250 249 246;
-    --stone: #a8a29e;        --stone-rgb: 168 162 158;
-    --line: #363230;         --line-rgb: 54 50 48;
-    --band: #050403;         --band-rgb: 5 4 3;
-    --on-band: #faf9f6;      --on-band-rgb: 250 249 246;
-    --accent: #e0b458;       --accent-rgb: 224 180 88;   /* gold: 9.8:1 on paper */
-    --accent-bright: #f0c86e;--accent-bright-rgb: 240 200 110;
-    --on-accent: #0c0a09;    --on-accent-rgb: 12 10 9;
+    --paper: #100d0b;        --paper-rgb: 16 13 11;
+    --surface: #1d1814;      --surface-rgb: 29 24 20;
+    --surface-2: #2a221c;    --surface-2-rgb: 42 34 28;
+    --ink: #f8f0e3;          --ink-rgb: 248 240 227;
+    --stone: #c9bba8;        --stone-rgb: 201 187 168;
+    --line: #4a3d31;         --line-rgb: 74 61 49;
+    --band: #080605;         --band-rgb: 8 6 5;
+    --on-band: #f8f0e3;      --on-band-rgb: 248 240 227;
+    --accent: #f4b740;       --accent-rgb: 244 183 64;   /* gold: 11:1 on paper */
+    --accent-bright: #ffcb5e;--accent-bright-rgb: 255 203 94;
+    --on-accent: #1a1206;    --on-accent-rgb: 26 18 6;
+    --offer: #f0603f;        --offer-rgb: 240 96 63;     /* offers: paprika red, prices & tags */
+    --offer-deep: #c8432a;   --offer-deep-rgb: 200 67 42; /* offer badges (white text 4.9:1) */
+    --success: #7dc77b;      --success-rgb: 125 199 123;
     --shadow-card:
       0 1px 2px rgb(0 0 0 / 0.4),
       0 12px 32px -14px rgb(0 0 0 / 0.7);
@@ -81,17 +87,20 @@
   }
 }
 :root[data-theme="dark"] {
-  --paper: #0c0a09;        --paper-rgb: 12 10 9;
-  --surface: #1c1917;      --surface-rgb: 28 25 23;
-  --surface-2: #292524;    --surface-2-rgb: 41 37 36;
-  --ink: #faf9f6;          --ink-rgb: 250 249 246;
-  --stone: #a8a29e;        --stone-rgb: 168 162 158;
-  --line: #363230;         --line-rgb: 54 50 48;
-  --band: #050403;         --band-rgb: 5 4 3;
-  --on-band: #faf9f6;      --on-band-rgb: 250 249 246;
-  --accent: #e0b458;       --accent-rgb: 224 180 88;
-  --accent-bright: #f0c86e;--accent-bright-rgb: 240 200 110;
-  --on-accent: #0c0a09;    --on-accent-rgb: 12 10 9;
+  --paper: #100d0b;        --paper-rgb: 16 13 11;
+  --surface: #1d1814;      --surface-rgb: 29 24 20;
+  --surface-2: #2a221c;    --surface-2-rgb: 42 34 28;
+  --ink: #f8f0e3;          --ink-rgb: 248 240 227;
+  --stone: #c9bba8;        --stone-rgb: 201 187 168;
+  --line: #4a3d31;         --line-rgb: 74 61 49;
+  --band: #080605;         --band-rgb: 8 6 5;
+  --on-band: #f8f0e3;      --on-band-rgb: 248 240 227;
+  --accent: #f4b740;       --accent-rgb: 244 183 64;
+  --accent-bright: #ffcb5e;--accent-bright-rgb: 255 203 94;
+  --on-accent: #1a1206;    --on-accent-rgb: 26 18 6;
+  --offer: #f0603f;        --offer-rgb: 240 96 63;     /* offers: paprika red, prices & tags */
+  --offer-deep: #c8432a;   --offer-deep-rgb: 200 67 42; /* offer badges (white text 4.9:1) */
+  --success: #7dc77b;      --success-rgb: 125 199 123;
   --shadow-card:
     0 1px 2px rgb(0 0 0 / 0.4),
     0 12px 32px -14px rgb(0 0 0 / 0.7);
@@ -152,7 +161,7 @@
 @layer components {
   /* ---- small caps label (eyebrows, meta) -------------------------------- */
   .eyebrow {
-    @apply text-xs font-semibold uppercase text-stone;
+    @apply text-xs font-semibold uppercase text-accent;
     letter-spacing: 0.08em;
   }
 
@@ -949,3 +958,68 @@ html[data-intro-seen] [data-intro] { display: none; }
   50% { background-color: #111; transform: scale(1.01); }
 }
 @media (prefers-reduced-motion: reduce) { .kitchen-alert { animation: none; } }
+
+/* ---- offers slideshow (OffersSection) ------------------------------------ */
+/* Entrance: the photo opens out of a point (circle reveal) and drifts in
+   slowly (Ken Burns), the badge and price pop, the words rise in, and a light
+   sheen crosses the card. Changing offer morphs: the old slide closes its
+   photo towards the new one, shrinks a little and blurs away while the new
+   one opens. The current tab fills up like a timer. */
+.offer-slide .offer-media {
+  clip-path: circle(0% at var(--ox, 85%) 50%);
+  transition: clip-path 1050ms cubic-bezier(0.7, 0, 0.2, 1);
+}
+.offer-slide.offer-active .offer-media { clip-path: circle(150% at var(--ox, 85%) 50%); }
+.offer-morph {
+  opacity: 0;
+  transform: scale(0.965);
+  filter: blur(10px);
+  pointer-events: none;
+  transition: opacity 600ms var(--ease-out), transform 900ms var(--ease-out), filter 700ms var(--ease-out);
+}
+.offer-morph.offer-current {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+  transition-delay: 120ms;
+}
+.offer-slide:not(.offer-active) .offer-rise,
+.offer-slide:not(.offer-active) .offer-pop { opacity: 0; }
+.offer-active .offer-photo { animation: offer-kenburns 9s cubic-bezier(0.2, 0.6, 0.3, 1) both; }
+.offer-active .offer-rise { animation: offer-rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--d, 0ms) + 250ms); }
+.offer-active .offer-pop { animation: offer-pop 600ms cubic-bezier(0.2, 0.8, 0.3, 1.25) both; animation-delay: calc(var(--d, 0ms) + 350ms); }
+.offer-active .offer-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.14) 50%, transparent 65%);
+  animation: offer-sheen 1400ms 600ms ease-out both;
+}
+.offer-glow { animation: offer-glow-in 1200ms ease-out both; }
+.offer-progress { transform-origin: left; animation: offer-progress var(--dur, 6500ms) linear both; }
+.offer-paused .offer-progress { animation-play-state: paused; }
+@keyframes offer-kenburns {
+  from { transform: scale(1.16) translate3d(1.5%, 1%, 0); }
+  to { transform: scale(1.03) translate3d(0, 0, 0); }
+}
+@keyframes offer-rise { from { opacity: 0; transform: translateY(22px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes offer-pop {
+  0% { opacity: 0; transform: scale(0.5) rotate(-10deg); }
+  70% { opacity: 1; transform: scale(1.1) rotate(2deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes offer-sheen { from { transform: translateX(-110%); } to { transform: translateX(110%); } }
+@keyframes offer-glow-in { from { opacity: 0; } }
+@keyframes offer-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .offer-slide .offer-media { clip-path: none; transition: none; }
+  .offer-morph { transform: none; filter: none; transition: opacity 200ms linear; }
+  .offer-slide:not(.offer-active) .offer-rise,
+  .offer-slide:not(.offer-active) .offer-pop { opacity: 1; }
+  .offer-active .offer-photo, .offer-active .offer-rise, .offer-active .offer-pop,
+  .offer-active .offer-card::after, .offer-glow, .offer-progress { animation: none; }
+  .offer-active .offer-card::after { display: none; }
+  .offer-progress { transform: scaleX(1); }
+}

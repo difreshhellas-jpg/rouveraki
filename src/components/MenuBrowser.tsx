@@ -208,9 +208,9 @@ export default function MenuBrowser({ items: menuItems }: { items: MenuItemDTO[]
                         )}
 
                         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-                          <span className="font-display text-lg font-semibold tabular-nums text-accent">
+                          <span className={clsx("font-display text-lg font-bold tabular-nums", item.wasPriceCents !== undefined ? "text-offer" : "text-ink")}>
                             {item.wasPriceCents !== undefined && (
-                              <s className="mr-1.5 text-sm font-normal text-char/45">{money(item.wasPriceCents)}</s>
+                              <s className="mr-1.5 text-sm font-normal text-stone">{money(item.wasPriceCents)}</s>
                             )}
                             {money(item.priceCents)}
                           </span>
@@ -227,8 +227,8 @@ export default function MenuBrowser({ items: menuItems }: { items: MenuItemDTO[]
                               className={clsx(
                                 "ripple-host inline-flex size-touch items-center justify-center rounded-full text-lg font-bold transition-colors",
                                 justAdded === item.id
-                                  ? "bg-emerald-600 text-white"
-                                  : "bg-accent text-onaccent shadow-accent hover:bg-accentBright",
+                                  ? "bg-success text-white"
+                                  : "bg-accent/15 text-accent ring-1 ring-inset ring-accent/40 hover:bg-accent hover:text-onaccent",
                               )}
                             >
                               {justAdded === item.id ? <Check size={18} weight="bold" /> : <Plus size={18} weight="bold" />}
@@ -275,8 +275,8 @@ export default function MenuBrowser({ items: menuItems }: { items: MenuItemDTO[]
                 className={clsx(
                   "min-h-touch shrink-0 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors",
                   active === c.slug && !normalized
-                    ? "bg-rust text-onrust"
-                    : "border border-line bg-surface text-char/75 hover:text-char",
+                    ? "bg-accent text-onaccent shadow-accent ring-2 ring-accent ring-offset-2 ring-offset-paper"
+                    : "border border-line bg-surface text-stone hover:border-accent/60 hover:text-ink",
                 )}
               >
                 {pick(c.el, c.en)}

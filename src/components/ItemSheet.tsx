@@ -85,9 +85,9 @@ export default function ItemSheet({
                 <h2 id="item-sheet-title" className="font-display text-2xl font-bold">
                   {pick(item.name, item.nameEn)}
                 </h2>
-                <p className="shrink-0 text-xl font-bold tabular-nums text-rust">
+                <p className={`shrink-0 text-xl font-bold tabular-nums ${item.wasPriceCents !== undefined ? "text-offer" : "text-ink"}`}>
                   {item.wasPriceCents !== undefined && (
-                    <s className="mr-1.5 text-base font-normal text-char/45">{money(item.wasPriceCents)}</s>
+                    <s className="mr-1.5 text-base font-normal text-stone">{money(item.wasPriceCents)}</s>
                   )}
                   {money(item.priceCents)}
                 </p>

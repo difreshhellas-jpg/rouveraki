@@ -96,7 +96,7 @@ export default function CheckoutOffers() {
           <div key={o.id} className="flex items-center gap-3 rounded-card border-2 border-gold bg-gold/10 p-4">
             <div className="min-w-0 flex-1">
               <p className="font-semibold leading-snug">
-                {o.badge && <span className="mr-2 rounded-full bg-rust px-2 py-0.5 text-xs text-onrust">{o.badge}</span>}
+                {o.badge && <span className="mr-2 rounded-full bg-offerDeep px-2 py-0.5 text-xs font-bold text-white">{o.badge}</span>}
                 {question}
               </p>
               {d.kind === "combo" && (
@@ -105,8 +105,8 @@ export default function CheckoutOffers() {
                 </p>
               )}
               <p className="mt-0.5 text-sm">
-                <s className="mr-1.5 text-char/45">{money(was)}</s>
-                <span className="font-bold text-rust">{now}</span>
+                <s className="mr-1.5 text-stone">{money(was)}</s>
+                <span className="font-bold text-offer">{now}</span>
               </p>
             </div>
             <button type="button" onClick={() => addOffer(o)} className="btn-primary shrink-0 text-sm">

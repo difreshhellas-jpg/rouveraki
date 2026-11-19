@@ -25,6 +25,9 @@ const config: Config = {
         accent: withAlpha("--accent-rgb"),
         accentBright: withAlpha("--accent-bright-rgb"),
         onaccent: withAlpha("--on-accent-rgb"),
+        offer: withAlpha("--offer-rgb"),
+        offerDeep: withAlpha("--offer-deep-rgb"),
+        success: withAlpha("--success-rgb"),
         // Legacy keys, aliased in globals.css so existing classes keep working.
         rust: withAlpha("--rouveraki-rust-rgb"),
         navy: withAlpha("--rouveraki-navy-rgb"),
