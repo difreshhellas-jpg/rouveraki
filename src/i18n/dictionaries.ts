@@ -48,7 +48,8 @@ export const dict = {
     "location.directions": "Οδηγίες πρόσβασης",
     "location.mapLabel": "Χάρτης με τη θέση του καταστήματος",
 
-    "contact.title": "Στείλε μας μήνυμα",
+    "contact.title": "Τηλεφώνησέ μας",
+    "footer.callLead": "Για ό,τι χρειαστείς, μια παραγγελία ή μια ερώτηση, είμαστε ένα τηλεφώνημα μακριά.",
     "contact.name": "Όνομα",
     "contact.email": "Email",
     "contact.message": "Μήνυμα",
@@ -131,6 +132,8 @@ export const dict = {
     "checkout.shopClosed": "Είμαστε κλειστά αυτή τη στιγμή. Οι παραγγελίες ανοίγουν στις 12:00.",
     "checkout.deliveryPaused":
       "Η διανομή δεν είναι διαθέσιμη αυτή τη στιγμή. Μπορείς να παραγγείλεις για παραλαβή.",
+    "checkout.ordersPaused":
+      "Οι online παραγγελίες δεν είναι διαθέσιμες αυτή τη στιγμή. Για παραγγελία τηλεφώνησέ μας:",
 
     "checkout.error.name": "Συμπλήρωσε το όνομά σου.",
     "checkout.error.phone": "Συμπλήρωσε ένα έγκυρο ελληνικό τηλέφωνο.",
@@ -224,7 +227,8 @@ export const dict = {
     "location.directions": "Get directions",
     "location.mapLabel": "Map showing the restaurant location",
 
-    "contact.title": "Send us a message",
+    "contact.title": "Give us a call",
+    "footer.callLead": "For anything you need, an order or a question, we are one call away.",
     "contact.name": "Name",
     "contact.email": "Email",
     "contact.message": "Message",
@@ -305,6 +309,7 @@ export const dict = {
       "Delivery runs daily 12:00-24:00. You can still order for pickup.",
     "checkout.shopClosed": "We are closed right now. Ordering opens at 12:00.",
     "checkout.deliveryPaused": "Delivery is not available right now. You can still order for pickup.",
+    "checkout.ordersPaused": "Online ordering is not available right now. To order, give us a call:",
 
     "checkout.error.name": "Please enter your name.",
     "checkout.error.phone": "Please enter a valid Greek phone number.",

@@ -11,6 +11,7 @@ import Magnetic from "./motion/Magnetic";
 import LanguageToggle from "./LanguageToggle";
 import ThemeToggle from "./ThemeToggle";
 import InstallButton from "./InstallButton";
+import ActiveOrderBar from "./ActiveOrderBar";
 
 export default function Header() {
   const { t } = useI18n();
@@ -163,6 +164,7 @@ export default function Header() {
             </div>
           </div>
         )}
+        <ActiveOrderBar />
       </header>
     </>
   );

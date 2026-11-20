@@ -13,6 +13,8 @@ import { normalizeGreekPhone } from "@/lib/sanitize";
 import QuantityStepper from "@/components/QuantityStepper";
 import { apiFetch } from "@/lib/api";
 import CheckoutOffers from "@/components/CheckoutOffers";
+import { BRAND } from "@/lib/brand";
+import { saveActiveOrder } from "@/lib/active-order";
 
 /** Both are paid at the door: cash, or card on the delivery driver's POS. */
 type PaymentMethod = "cash" | "card";
@@ -42,10 +44,14 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [hours, setHours] = useState<{ shop: boolean; delivery: boolean } | null>(null);
-  // Delivery also needs the shop's app to be open (null = not known yet).
+  // Every order also needs the shop's app to be open (null = not known yet).
   const kitchenOnline = useKitchenOnline();
-  const deliveryPaused = kitchenOnline === false && !!hours?.delivery;
-  const clock = hours && { shop: hours.shop, delivery: hours.delivery && !deliveryPaused };
+  const ordersPaused = kitchenOnline === false && !!hours?.shop;
+  const deliveryPaused = false;
+  const clock = hours && {
+    shop: hours.shop && !ordersPaused,
+    delivery: hours.delivery && !ordersPaused,
+  };
   useEffect(() => {
     const read = () => setHours({ shop: isShopOpen(), delivery: isDeliveryOpen() });
     read();
@@ -145,6 +151,7 @@ export default function CheckoutPage() {
       // The cart has done its job; clearing it here stops a browser Back from
       // letting the same order be placed twice.
       clear();
+      if (data.orderCode) saveActiveOrder(data.orderCode);
 
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
@@ -188,7 +195,10 @@ export default function CheckoutPage() {
 
       {clock && !clock.shop && (
         <p role="alert" className="mt-6 rounded-card border border-rust/30 bg-rust/10 p-4 text-sm font-semibold text-rust">
-          {t("checkout.shopClosed")}
+          {t(ordersPaused ? "checkout.ordersPaused" : "checkout.shopClosed")}{" "}
+          <a href={`tel:${BRAND.phone.tel}`} className="underline underline-offset-4">
+            {BRAND.phone.display}
+          </a>
         </p>
       )}
 
@@ -534,7 +544,8 @@ function serverErrorMessage(
     case "delivery_closed":
       return tr("checkout.deliveryClosed");
     case "delivery_paused":
-      return tr("checkout.deliveryPaused");
+    case "orders_paused":
+      return tr("checkout.ordersPaused");
     case "shop_closed":
       return tr("checkout.shopClosed");
     case "invalid_phone":

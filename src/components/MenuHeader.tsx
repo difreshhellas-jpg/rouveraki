@@ -38,7 +38,7 @@ export default function MenuHeader() {
           {t("checkout.shopClosed")}
         </p>
       )}
-      {state && state.shop && !state.delivery && (
+      {state && state.shop && kitchenOnline !== false && !state.delivery && (
         <p
           role="status"
           className="mt-5 rounded-card border border-line bg-surface p-4 text-sm"
@@ -46,12 +46,15 @@ export default function MenuHeader() {
           {t("checkout.deliveryClosed")}
         </p>
       )}
-      {state && state.shop && state.delivery && kitchenOnline === false && (
+      {state && state.shop && kitchenOnline === false && (
         <p
           role="status"
-          className="mt-5 rounded-card border border-line bg-surface p-4 text-sm"
+          className="mt-5 rounded-card border border-rust/30 bg-rust/10 p-4 text-sm font-semibold text-rust"
         >
-          {t("checkout.deliveryPaused")}
+          {t("checkout.ordersPaused")}{" "}
+          <a href={`tel:${BRAND.phone.tel}`} className="underline underline-offset-4">
+            {BRAND.phone.display}
+          </a>
         </p>
       )}
     </header>

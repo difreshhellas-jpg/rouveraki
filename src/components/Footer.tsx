@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/i18n/LanguageProvider";
 import { BRAND } from "@/lib/brand";
-import ContactForm from "./ContactForm";
+import { Phone } from "@phosphor-icons/react";
 import InstallButton from "./InstallButton";
 
 export default function Footer() {
@@ -28,9 +28,16 @@ export default function Footer() {
         <div>
           <h2 className="font-display text-2xl font-bold">{t("contact.title")}</h2>
           <div className="tex-rope mt-4 w-20 opacity-80" />
-          <div className="mt-6">
-            <ContactForm />
-          </div>
+          <p className="mt-6 max-w-sm text-sm opacity-85">
+            {t("footer.callLead")}
+          </p>
+          <a
+            href={`tel:${BRAND.phone.tel}`}
+            className="btn-primary mt-5 inline-flex items-center gap-2 text-lg"
+          >
+            <Phone size={22} weight="fill" aria-hidden />
+            {BRAND.phone.display}
+          </a>
         </div>
 
         <div className="grid gap-8 sm:grid-cols-2 lg:pl-8">

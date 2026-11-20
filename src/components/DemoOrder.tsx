@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import OrderTracker, { type TrackedOrder } from "@/components/OrderTracker";
 import { apiFetch } from "@/lib/api";
+import { saveActiveOrder } from "@/lib/active-order";
+import { isOrderStatus, isTerminal } from "@/lib/order-status";
 
 /**
  * Demo-mode order page: the order is read from the shared store (/api/shop)
@@ -15,7 +17,12 @@ export default function DemoOrder({ code }: { code: string }) {
   useEffect(() => {
     void apiFetch(`/api/orders/${code}`)
       .then((r) => (r.ok ? r.json() : { order: null }))
-      .then((d: { order: TrackedOrder | null }) => setOrder(d.order))
+      .then((d: { order: TrackedOrder | null }) => {
+        setOrder(d.order);
+        // Opened from a link (an SMS, say): remember it so the site can bring
+        // the visitor back here while it is still in progress.
+        if (d.order && isOrderStatus(d.order.status) && !isTerminal(d.order.status)) saveActiveOrder(code);
+      })
       .catch(() => setOrder(null));
   }, [code]);
 

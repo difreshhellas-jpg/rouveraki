@@ -103,7 +103,7 @@ export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Res
   }
   // Nobody would see the order: the shop's app is closed (lib/kitchen-presence.ts).
   if (NEEDS_KITCHEN.includes(input.fulfillmentType) && !(await isKitchenOnline())) {
-    return { ok: false, error: "delivery_paused", status: 409 };
+    return { ok: false, error: "orders_paused", status: 409 };
   }
   if (input.fulfillmentType === "delivery" && !input.customerAddress?.trim()) {
     return { ok: false, error: "address_required" };

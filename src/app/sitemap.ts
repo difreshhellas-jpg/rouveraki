@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pages: [string, number, "daily" | "weekly" | "yearly"][] = [
     ["", 1, "weekly"],
     ["/menu", 0.9, "daily"],
+    ["/app", 0.5, "weekly"],
     ["/legal/allergens", 0.3, "yearly"],
     ["/legal/terms", 0.2, "yearly"],
     ["/legal/privacy", 0.2, "yearly"],
