@@ -4,7 +4,7 @@ import { BRAND } from "./brand";
 const IGNORE_HOURS = process.env.NEXT_PUBLIC_IGNORE_HOURS === "true";
 
 /**
- * Opening-hours maths. Shop 06:00–24:00, delivery 12:00–24:00. A closes value
+ * Opening-hours maths. Shop and delivery 12:00–24:00. A closes value
  * of "00:00" means midnight at the end of the day, handled in within().
  *
  * Everything resolves in Europe/Athens regardless of where the server or the
@@ -16,7 +16,7 @@ export const TZ = "Europe/Athens";
 /**
  * Test clock, honoured only outside production.
  *
- * The shop is shut between 00:00 and 06:00, so every order check in the API
+ * The shop is shut between 00:00 and 12:00, so every order check in the API
  * suite fails with shop_closed if it happens to run overnight — the suite was
  * silently time-dependent. TEST_CLOCK pins "now" to a fixed instant so the
  * suite is runnable at any hour.
@@ -84,6 +84,6 @@ export const isAlcoholSaleAllowed = (at?: Date): boolean =>
   !ALCOHOL_HOURS_RESTRICTED ||
   within(athensMinutes(at), ALCOHOL_HOURS.opens, ALCOHOL_HOURS.closes);
 
-/** "06:00–00:00" for display. */
+/** "12:00–00:00" for display. */
 export const formatWindow = (w: { opens: string; closes: string }): string =>
   `${w.opens}–${w.closes}`;

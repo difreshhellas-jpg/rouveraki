@@ -96,7 +96,7 @@ export const PlaceInput = z.object({
 
 export async function placeOrder(input: z.infer<typeof PlaceInput>): Promise<Result<{ orderCode: string; trackingUrl: string }>> {
   if (!normalizeGreekPhone(input.customerPhone)) return { ok: false, error: "invalid_phone" };
-  // Opening hours: shop 06:00-24:00, delivery 12:00-24:00 (lib/brand.ts).
+  // Opening hours: 12:00-24:00 (lib/brand.ts); delivery also needs the shop app open.
   if (!isShopOpen()) return { ok: false, error: "shop_closed", status: 409 };
   if (input.fulfillmentType === "delivery" && !isDeliveryOpen()) {
     return { ok: false, error: "delivery_closed", status: 409 };

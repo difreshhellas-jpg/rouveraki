@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     template: `%s · ${BRAND.nameEl} ${BRAND.nameEn}`,
   },
   description:
-    "Ρουβεράκι (Rouveraki): καφές, ψησταριά και delivery στη μαρίνα του Ξυλοκάστρου. Πίτες, καλαμάκια, μερίδες στα κάρβουνα. Ανοιχτά καθημερινά 06:00–24:00, παραγγελία online 12:00–24:00.",
+    "Ρουβεράκι (Rouveraki): καφές, ψησταριά και delivery στη μαρίνα του Ξυλοκάστρου. Πίτες, καλαμάκια, μερίδες στα κάρβουνα. Ανοιχτά καθημερινά 12:00–24:00, με παραγγελία online και delivery.",
   applicationName: BRAND.nameEl,
   keywords: [
     "Ρουβεράκι", "Rouveraki", "Ξυλόκαστρο", "Xylokastro", "ψησταριά Ξυλόκαστρο",

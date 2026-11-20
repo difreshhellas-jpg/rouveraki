@@ -18,7 +18,7 @@ export const dict = {
     "nav.themeToggle": "Εναλλαγή θέματος",
 
     "hero.title": "Ρουβεράκι",
-    "hero.subtitle": "Στη μαρίνα του Ξυλοκάστρου. Καφές από τις 7 το πρωί, φαγητό από τις 12 το μεσημέρι μέχρι τις 12 το βράδυ.",
+    "hero.subtitle": "Στη μαρίνα του Ξυλοκάστρου. Καφές και φαγητό από τις 12 το μεσημέρι μέχρι τις 12 το βράδυ.",
     "hero.cta": "Παράγγειλε τώρα",
     "hero.secondaryCta": "Δες το μενού",
     "hero.openNow": "Ανοιχτά τώρα",
@@ -26,8 +26,8 @@ export const dict = {
 
     "daypart.title": "Όλη μέρα, κάθε μέρα",
     "daypart.lead": "Από τον πρώτο καφέ μέχρι και την τελευταία αγαπημένη σου γεύση.",
-    "daypart.morning.title": "Πρωινό & Καφές",
-    "daypart.morning.body": "Από τις 07:00. Φρέσκος καφές, χυμοί και ροφήματα στη μαρίνα.",
+    "daypart.morning.title": "Καφές & Ροφήματα",
+    "daypart.morning.body": "Από τις 12:00. Φρέσκος καφές, χυμοί και ροφήματα στη μαρίνα.",
     "daypart.grill.title": "Ψησταριά",
     "daypart.grill.body": "12:00 - 24:00. Καλαμάκια, μερίδες στα κάρβουνα, πίτες, burger και σαλάτες.",
     "daypart.cta": "Δες τα",
@@ -36,11 +36,11 @@ export const dict = {
 
     "story.title": "Ο χώρος μας",
     "story.placeholder":
-      "Ένας ανακαινισμένος χώρος στη μαρίνα του Ξυλοκάστρου, ανοιχτός από τις 6 το πρωί μέχρι τα μεσάνυχτα.",
+      "Ένας ανακαινισμένος χώρος στη μαρίνα του Ξυλοκάστρου, ανοιχτός από τις 12 το μεσημέρι μέχρι τα μεσάνυχτα.",
 
     "location.title": "Πού θα μας βρεις",
     "location.hoursTitle": "Ώρες λειτουργίας",
-    "location.hoursValue": "Καθημερινά 06:00-24:00",
+    "location.hoursValue": "Καθημερινά 12:00-24:00",
     "location.deliveryTitle": "Ώρες διανομής",
     "location.deliveryValue": "Καθημερινά 12:00-24:00",
     "location.addressTitle": "Διεύθυνση",
@@ -128,7 +128,7 @@ export const dict = {
     "checkout.submitting": "Γίνεται καταχώρηση...",
     "checkout.deliveryClosed":
       "Η διανομή λειτουργεί καθημερινά 12:00-24:00. Μπορείς να παραγγείλεις για παραλαβή.",
-    "checkout.shopClosed": "Είμαστε κλειστά αυτή τη στιγμή. Οι παραγγελίες ανοίγουν στις 06:00.",
+    "checkout.shopClosed": "Είμαστε κλειστά αυτή τη στιγμή. Οι παραγγελίες ανοίγουν στις 12:00.",
     "checkout.deliveryPaused":
       "Η διανομή δεν είναι διαθέσιμη αυτή τη στιγμή. Μπορείς να παραγγείλεις για παραλαβή.",
 
@@ -194,7 +194,7 @@ export const dict = {
     "nav.themeToggle": "Toggle theme",
 
     "hero.title": "Rouveraki",
-    "hero.subtitle": "On the Xylokastro marina. Coffee from 7am, food from noon until midnight.",
+    "hero.subtitle": "On the Xylokastro marina. Coffee and food from noon until midnight.",
     "hero.cta": "Order now",
     "hero.secondaryCta": "See the menu",
     "hero.openNow": "Open now",
@@ -202,8 +202,8 @@ export const dict = {
 
     "daypart.title": "All day, every day",
     "daypart.lead": "From the first coffee to your last favourite taste.",
-    "daypart.morning.title": "Breakfast & Coffee",
-    "daypart.morning.body": "From 07:00. Fresh coffee, juices and hot drinks by the marina.",
+    "daypart.morning.title": "Coffee & Drinks",
+    "daypart.morning.body": "From 12:00. Fresh coffee, juices and hot drinks by the marina.",
     "daypart.grill.title": "The Grill",
     "daypart.grill.body": "12:00 - 24:00. Skewers, charcoal grill plates, wraps, burgers and salads.",
     "daypart.cta": "Browse",
@@ -212,11 +212,11 @@ export const dict = {
 
     "story.title": "Our place",
     "story.placeholder":
-      "A renovated space on the Xylokastro marina, open from 6am until midnight.",
+      "A renovated space on the Xylokastro marina, open from noon until midnight.",
 
     "location.title": "Find us",
     "location.hoursTitle": "Opening hours",
-    "location.hoursValue": "Daily 06:00-24:00",
+    "location.hoursValue": "Daily 12:00-24:00",
     "location.deliveryTitle": "Delivery hours",
     "location.deliveryValue": "Daily 12:00-24:00",
     "location.addressTitle": "Address",
@@ -303,7 +303,7 @@ export const dict = {
     "checkout.submitting": "Placing order...",
     "checkout.deliveryClosed":
       "Delivery runs daily 12:00-24:00. You can still order for pickup.",
-    "checkout.shopClosed": "We are closed right now. Ordering opens at 06:00.",
+    "checkout.shopClosed": "We are closed right now. Ordering opens at 12:00.",
     "checkout.deliveryPaused": "Delivery is not available right now. You can still order for pickup.",
 
     "checkout.error.name": "Please enter your name.",

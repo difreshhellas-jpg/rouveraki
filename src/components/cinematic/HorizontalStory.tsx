@@ -27,8 +27,8 @@ const COPY: Record<string, { el: [string, string]; en: [string, string] }> = {
              en: ["Over charcoal", "Gyros, skewers and pites, grilled the moment you order."] },
   share:   { el: ["Για μοίρασμα", "Ορεκτικά και πιάτα που μπαίνουν στη μέση του τραπεζιού."],
              en: ["To share", "Starters and plates that belong in the middle of the table."] },
-  morning: { el: ["Από τις επτά", "Ο πρώτος καφές της ημέρας, πριν ξυπνήσει η μαρίνα."],
-             en: ["From seven", "The first coffee of the day, before the marina wakes up."] },
+  morning: { el: ["Από το μεσημέρι", "Ένας καφές δίπλα στο νερό, με θέα τη μαρίνα."],
+             en: ["From noon", "A coffee by the water, looking out over the marina."] },
   night:   { el: ["Μέχρι τα μεσάνυχτα", "Μέχρι και την τελευταία αγαπημένη σου γεύση."],
              en: ["Until midnight", "All the way to your last favourite taste."] },
 };

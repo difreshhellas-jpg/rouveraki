@@ -19,9 +19,10 @@ export const BRAND = {
   /** Dial-safe and display forms of the same number. */
   phone: { display: "27430 26683", tel: "+302743026683" },
   facebook: "https://www.facebook.com/rouveraki",
-  /** Open every day 06:00–24:00. Coffee from 07:00, food 12:00–24:00. */
-  hours: { opens: "06:00", closes: "00:00" },
-  /** Delivery runs a narrower window than the shop itself. */
+  /** Open every day 12:00–24:00. */
+  hours: { opens: "12:00", closes: "00:00" },
+  /** Same window as the shop. Delivery also needs the shop's orders app to be
+   *  open (lib/kitchen-presence.ts), so it starts when the shop opens the app. */
   deliveryHours: { opens: "12:00", closes: "00:00" },
   /** Approximate marina coordinates, used only for the map embed. */
   geo: { lat: 38.0784, lng: 22.6305 },
