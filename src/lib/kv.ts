@@ -154,3 +154,16 @@ export async function kvDel(key: string): Promise<void> {
   }
   await run(["DEL", key]);
 }
+
+/** SET key only if it does not exist yet (a one-time claim). True when this caller got it. */
+export async function kvSetNX(key: string, value: unknown, ttlSeconds: number): Promise<boolean> {
+  assertStore();
+  const raw = JSON.stringify(value);
+  if (!hasKv()) {
+    if (mem.has(key)) return false;
+    mem.set(key, raw);
+    setTimeout(() => mem.delete(key), ttlSeconds * 1000).unref?.();
+    return true;
+  }
+  return (await run<string | null>(["SET", key, raw, "NX", "EX", ttlSeconds])) === "OK";
+}

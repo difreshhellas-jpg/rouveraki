@@ -9,6 +9,7 @@ import { athensToday, type Offer, type OfferDeal, type Recommendation } from "@/
 import { CATEGORIES } from "@/lib/brand";
 import { formatEuro } from "@/lib/money";
 import type { MenuItemDTO } from "@/lib/menu-types";
+import NotificationScheduler from "./NotificationScheduler";
 
 /**
  * The owner's offers and checkout recommendations.
@@ -65,7 +66,8 @@ function photoOf(o: Offer, menu: MenuItemDTO[]): string | null {
 const live = (o: Offer) => o.active && (!o.endsOn || o.endsOn >= athensToday());
 
 export default function OffersManagerPage() {
-  const [tab, setTab] = useState<"offers" | "recs">("offers");
+  const [tab, setTab] = useState<"offers" | "recs" | "notifs">("offers");
+  const [scheduleFor, setScheduleFor] = useState<string | null>(null);
   const [doc, setDoc] = useState<Doc | null>(null);
   const [failed, setFailed] = useState(false);
   const [editing, setEditing] = useState<Offer | null>(null);
@@ -170,11 +172,12 @@ export default function OffersManagerPage() {
           </div>
         </header>
 
-        <div role="tablist" className="mt-4 flex gap-2">
+        <div role="tablist" className="mt-4 flex flex-wrap gap-2">
           {(
             [
               ["offers", `🏷️ Προσφορές (${offers.length})`],
               ["recs", "🛒 Προτάσεις ταμείου"],
+              ["notifs", "⏰ Ειδοποιήσεις"],
             ] as const
           ).map(([k, label]) => (
             <button
@@ -207,6 +210,13 @@ export default function OffersManagerPage() {
 
         {tab === "recs" ? (
           <RecommendationsManager menu={menu} setMsg={setMsg} />
+        ) : tab === "notifs" ? (
+          <NotificationScheduler
+            offers={offers.filter(live)}
+            subscribers={doc?.subscribers ?? 0}
+            preselect={scheduleFor}
+            setMsg={setMsg}
+          />
         ) : (
           <>
             <p className="mt-4 text-sm text-char/65">
@@ -296,6 +306,18 @@ export default function OffersManagerPage() {
                         {doc?.push && live(o) && (
                           <button type="button" className="btn-primary text-sm" onClick={() => void send(o)}>
                             🔔 Ειδοποίηση
+                          </button>
+                        )}
+                        {doc?.push && live(o) && (
+                          <button
+                            type="button"
+                            className="btn-secondary text-sm"
+                            onClick={() => {
+                              setScheduleFor(o.id);
+                              setTab("notifs");
+                            }}
+                          >
+                            ⏰ Προγραμματισμός
                           </button>
                         )}
                         <button
