@@ -1,5 +1,5 @@
 import "server-only";
-import { kvGet, kvSet } from "@/lib/kv";
+import { kvDel, kvGet, kvSet } from "@/lib/kv";
 
 /**
  * Is the shop's own app (the /demo-kitchen screen) open right now?
@@ -11,7 +11,7 @@ import { kvGet, kvSet } from "@/lib/kv";
  * KITCHEN_TTL_SECONDS, and reopens on the first heartbeat after the app opens.
  */
 const KEY = "kitchen:last-seen";
-export const KITCHEN_TTL_SECONDS = Number(process.env.KITCHEN_TTL_SECONDS) || 150;
+export const KITCHEN_TTL_SECONDS = Number(process.env.KITCHEN_TTL_SECONDS) || 75;
 
 /** Order types that need the shop app to be open: all of them. With the app
  *  closed nobody would see the order, so the site takes no orders at all. */
@@ -19,6 +19,11 @@ export const NEEDS_KITCHEN: readonly ("delivery" | "pickup")[] = ["delivery", "p
 
 export async function markKitchenAlive(): Promise<void> {
   await kvSet(KEY, Date.now(), KITCHEN_TTL_SECONDS * 2);
+}
+
+/** The app was closed on purpose: close ordering at once, not after the TTL. */
+export async function markKitchenClosed(): Promise<void> {
+  await kvDel(KEY);
 }
 
 /** Fails closed: if the store cannot be read, delivery counts as closed. */

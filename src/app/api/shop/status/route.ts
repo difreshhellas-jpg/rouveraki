@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   return NextResponse.json(
     { kitchenOnline: await isKitchenOnline() },
-    // Shared for 15 s at the edge so every visitor does not hit the store.
-    { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=15" } },
+    // Shared for 5 s at the edge so every visitor does not hit the store.
+    { headers: { "Cache-Control": "public, s-maxage=5" } },
   );
 }

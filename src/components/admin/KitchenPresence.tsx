@@ -36,7 +36,17 @@ export default function KitchenPresence() {
       void wake(); // the browser drops the wake lock whenever the page is hidden
     };
     document.addEventListener("visibilitychange", onVisible);
+    // Window closed: tell the site now (keepalive lets the request outlive the page).
+    const onClose = () => {
+      try {
+        void fetch("/api/shop/heartbeat", { method: "DELETE", headers: { "x-admin-key": readAdminKey() }, keepalive: true });
+      } catch {
+        /* the heartbeat timeout closes ordering anyway */
+      }
+    };
+    window.addEventListener("pagehide", onClose);
     return () => {
+      window.removeEventListener("pagehide", onClose);
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
       void lock?.release().catch(() => {});

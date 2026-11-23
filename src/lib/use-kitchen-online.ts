@@ -17,7 +17,7 @@ export function useKitchenOnline(): boolean | null {
         .then((b) => !dead && setOnline(b.kitchenOnline))
         .catch(() => {});
     void read();
-    const id = window.setInterval(read, 30_000);
+    const id = window.setInterval(read, 15_000);
     const onVisible = () => document.visibilityState === "visible" && void read();
     document.addEventListener("visibilitychange", onVisible);
     return () => {
