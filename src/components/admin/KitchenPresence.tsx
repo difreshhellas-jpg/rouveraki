@@ -15,14 +15,33 @@ export default function KitchenPresence() {
 
   useEffect(() => {
     let lock: { release: () => Promise<void> } | null = null;
-    const beat = () =>
-      fetch("/api/shop/heartbeat", { method: "POST", headers: { "x-admin-key": readAdminKey() } })
+    // On a phone, leaving the app (Home button, switching apps, locking the
+    // screen) only hides the page: it is not closed, and the browser keeps
+    // running its timers for minutes, so the heartbeat kept delivery open.
+    // There, hidden means closed. On the Windows app a minimised window stays
+    // open on purpose, so only a real close counts.
+    const phone =
+      (navigator as Navigator & { userAgentData?: { mobile?: boolean } }).userAgentData?.mobile ??
+      /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const hidden = () => document.visibilityState !== "visible";
+    const beat = () => {
+      if (phone && hidden()) return;
+      return fetch("/api/shop/heartbeat", { method: "POST", headers: { "x-admin-key": readAdminKey() } })
         .then((r) => setOk(r.ok))
         .catch(() => setOk(false));
+    };
+    // Tell the site now (keepalive lets the request outlive the page).
+    const close = () => {
+      try {
+        void fetch("/api/shop/heartbeat", { method: "DELETE", headers: { "x-admin-key": readAdminKey() }, keepalive: true });
+      } catch {
+        /* the heartbeat timeout closes ordering anyway */
+      }
+    };
     const wake = async () => {
       try {
         const wl = (navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> } }).wakeLock;
-        if (wl && document.visibilityState === "visible") lock = await wl.request("screen");
+        if (wl && !hidden()) lock = await wl.request("screen");
       } catch {
         /* not supported or refused: the screen may sleep */
       }
@@ -31,19 +50,15 @@ export default function KitchenPresence() {
     void wake();
     const id = window.setInterval(beat, 30_000);
     const onVisible = () => {
-      if (document.visibilityState !== "visible") return;
+      if (hidden()) {
+        if (phone) close();
+        return;
+      }
       void beat();
       void wake(); // the browser drops the wake lock whenever the page is hidden
     };
     document.addEventListener("visibilitychange", onVisible);
-    // Window closed: tell the site now (keepalive lets the request outlive the page).
-    const onClose = () => {
-      try {
-        void fetch("/api/shop/heartbeat", { method: "DELETE", headers: { "x-admin-key": readAdminKey() }, keepalive: true });
-      } catch {
-        /* the heartbeat timeout closes ordering anyway */
-      }
-    };
+    const onClose = () => close();
     window.addEventListener("pagehide", onClose);
     return () => {
       window.removeEventListener("pagehide", onClose);
